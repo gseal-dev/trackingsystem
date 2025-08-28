@@ -2,13 +2,19 @@
 
 ## First Time Setup
 
-1. Clone the repository
-2. Install dependencies: `composer install`
-3. Copy environment file: `cp .env.example .env`
-4. Configure your database credentials in `.env`
-5. Run setup command: `php artisan project:setup --fresh`
-6. Start the server: `php artisan serve`
+# Clone the project
+1. git clone https://github.com/YourUsername/Document-Tracking-System.git
+2. cd Document-Tracking-System/dts
 
+# Install dependencies
+3. composer install
+
+# Copy environment file
+4. cp .env.example .env
+
+# Configure your database in .env file
+# Then run the setup command
+5. php artisan project:setup --fresh
 ## Manual Setup (Alternative)
 
 ```bash
