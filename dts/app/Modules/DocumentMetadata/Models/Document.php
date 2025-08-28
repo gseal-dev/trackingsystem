@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Modules\DocumentMetadata\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,8 +26,6 @@ class Document extends Model
         'googleDriveId'
     ];
 
-    // Use Laravel's standard timestamps instead of custom ones
-    // Remove these lines if you want to use created_at/updated_at
     // const CREATED_AT = 'createdAt';
     // const UPDATED_AT = 'updatedAt';
 
