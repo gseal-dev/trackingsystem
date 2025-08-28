@@ -40,6 +40,7 @@
                     <option value="Report">Report</option>
                     <option value="Letter">Letter</option>
                     <option value="Proposal">Proposal</option>
+                    <option value="Instructions">Instructions</option>
                     <option value="Other">Other</option>
                 </select>
             </div>
