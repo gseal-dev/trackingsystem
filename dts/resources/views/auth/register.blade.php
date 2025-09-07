@@ -52,8 +52,13 @@
                 <label class="form-label">Department</label>
                 <select class="form-control" name="departmentID" required>
                     <option value="">Select Department</option>
-                    <option value="1">CIT - College of Information Technology</option>
-                    <option value="2">COT - College of Technology</option>
+                    <option value="5">COT - College of Technology</option>
+                    <option value="6">CIT - College of Information Technology</option>
+                    <option value="7">COM - College of Management</option>
+                    <option value="8">COE - College of Engineering</option>
+                    <option value="9">CE - College of Education</option>
+                    <option value="10">ICJE - Institute of Crimial Justice Education</option>
+                    <option value="11">CAS - College of Arts and Sciences</option>
                 </select>
             </div>
             <div class="mb-3">

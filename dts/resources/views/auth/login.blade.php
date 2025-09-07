@@ -29,7 +29,7 @@
                 <label  class="form-label">Password</label>
                 <input type="password" class="form-control" name="password">
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary">Login</button>
             <a href="{{ route('registration') }}" class="btn btn-link">Don't have an account? Register</a>
         </form>
     </div>
