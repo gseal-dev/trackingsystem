@@ -19,6 +19,9 @@ class DocumentController extends Controller
 
     public function create()
     {
+        if (auth()->user()->roleID != 1) { // Only admin
+        abort(403, 'Only admin can register documents.');
+        }
         // Check authentication manually
         if (!Session::has('user_data')) {
             return redirect()->route('login')->with('error', 'Please login first');
@@ -40,7 +43,7 @@ class DocumentController extends Controller
         $result = $this->documentService->store(
             $request->validated(), 
             $request->file('file'), 
-            $userData['userID']
+            $request->input('ownerID')
         );
         
         if ($result['success']) {

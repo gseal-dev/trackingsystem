@@ -12,19 +12,43 @@ class AuthController extends Controller
 {
     protected $authService;
 
+    
+
     public function __construct(AuthService $authService)
     {
         $this->authService = $authService;
     }
 
-    public function login()
+    public function login(LoginRequest $request)
     {
-        return view('auth.login');
+        $credentials = $request->only('email', 'password');
+        $result = $this->authService->login($credentials);
+
+        if ($result['success']) {
+            $user = $result['user'];
+            // Redirect based on role
+            if ($user->roleID == 1) { // Admin
+                return redirect()->route('admin.dashboard');
+            } elseif ($user->roleID == 2) { // Document Owner
+                return redirect()->route('owner.dashboard');
+            } elseif ($user->roleID == 3) { // Staff
+                return redirect()->route('staff.dashboard');
+            } else {
+                return redirect()->route('dashboard');
+            }
+        }
+
+        return back()->withErrors(['email' => $result['message']]);
     }
 
     public function registration()
     {
         return view('auth.register');
+    }
+
+    public function showLoginForm()
+    {
+        return view('auth.login');
     }
 
     public function loginPost(LoginRequest $request)
