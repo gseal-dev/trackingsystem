@@ -1,51 +1,47 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Modules\Authentication\Controllers\AuthController;
-use App\Modules\Authentication\Controllers\AdminUserController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\DocumentRegistrationController;
+use App\Http\Controllers\Admin\DocumentRoutingController;
+use App\Http\Controllers\Staff\StaffDocumentController;
 
+
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+
+Route::get('/admin/user-management', [UserManagementController::class, 'index'])->name('admin.userManagement');
+Route::post('/admin/user-management/add', [UserManagementController::class, 'add'])->name('admin.userManagement.add');
+Route::post('/admin/user-management/edit/{user}', [UserManagementController::class, 'edit'])->name('admin.userManagement.edit');
+Route::post('/admin/user-management/delete/{user}', [UserManagementController::class, 'delete'])->name('admin.userManagement.delete');
+
+Route::get('/admin/user-management/add', [UserManagementController::class, 'addForm'])->name('admin.userManagement.addForm');
+Route::post('/admin/user-management/add', [UserManagementController::class, 'add'])->name('admin.userManagement.add');
+
+Route::get('/admin/user-management/edit/{user}', [UserManagementController::class, 'editForm'])->name('admin.userManagement.editForm');
+Route::post('/admin/user-management/edit/{user}', [UserManagementController::class, 'edit'])->name('admin.userManagement.edit');
+
+Route::get('/admin/document-registration', [DocumentRegistrationController::class, 'showForm'])->name('admin.documentRegistration');
+Route::post('/admin/document-registration', [DocumentRegistrationController::class, 'register'])->name('admin.documentRegistration.submit');
+Route::get('/admin/user-search', [UserManagementController::class, 'searchUser'])->name('admin.userSearch');
+
+Route::get('/admin/send-document', [DocumentRoutingController::class, 'listDocuments'])->name('admin.sendDocumentList');
+Route::get('/admin/send-document/{document}', [DocumentRoutingController::class, 'showSendForm'])->name('admin.sendDocumentForm');
+Route::post('/admin/send-document/{document}', [DocumentRoutingController::class, 'send'])->name('admin.sendDocument');
+
+Route::get('/staff/documents', [StaffDocumentController::class, 'index'])->name('staff.documents');
+Route::post('/staff/documents/{document}/process', [StaffDocumentController::class, 'processDocument'])->name('staff.processDocument');
+Route::post('/staff/documents/{document}/route', [StaffDocumentController::class, 'routeDocument'])->name('staff.routeDocument');
+Route::post('/staff/documents/{document}/process-route', [StaffDocumentController::class, 'processAndRouteDocument'])->name('staff.processAndRouteDocument');
+
+Route::get('/admin/processed-documents', [DocumentRoutingController::class, 'processedDocuments'])->name('admin.processedDocuments');
 
 Route::get('/', function () {
-    if (auth()->check()) {
-        $user = auth()->user();
-        if ($user->roleID == 1) {
-            return redirect()->route('admin.dashboard');
-        } elseif ($user->roleID == 2) {
-            return redirect()->route('owner.dashboard');
-        } elseif ($user->roleID == 3) {
-            return redirect()->route('staff.dashboard');
-        }
-    }
     return view('welcome');
-})->name('home');
-
-Route::get('/admin/document-owners/search', [App\Modules\Authentication\Controllers\AdminUserController::class, 'searchDocumentOwners'])->name('admin.document-owners.search');
-
-// Auth routes
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::get('/registration', [AuthController::class, 'registration'])->name('registration');
-Route::post('/registration', [AuthController::class, 'registrationPost'])->name('registration.post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-// Admin user management
-Route::middleware(['web', 'auth', 'is_admin'])->prefix('admin')->group(function () {
-    Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
-    Route::get('/users/create', [AdminUserController::class, 'create'])->name('admin.users.create');
-    Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
 });
-
-// Admin Dashboard (includes document registration)
-Route::get('/admin/dashboard', function () {
-    return view('Admin.adminDashboard');
-})->name('admin.dashboard')->middleware(['auth', 'is_admin']);
-
-// Document Owner Dashboard
-Route::get('/owner/dashboard', function () {
-    return view('dashboard', ['role' => 'owner']);
-})->name('owner.dashboard')->middleware(['auth']);
-
-// Staff Dashboard
-Route::get('/staff/dashboard', function () {
-    return view('dashboard', ['role' => 'staff']);
-})->name('staff.dashboard')->middleware(['auth']);

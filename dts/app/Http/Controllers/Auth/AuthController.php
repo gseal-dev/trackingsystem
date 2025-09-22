@@ -1,0 +1,78 @@
+<?php
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use App\Models\Role;
+
+class AuthController extends Controller
+{
+    public function showLoginForm()
+    {
+        return view('auth.login');
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'login' => 'required',
+            'password' => 'required',
+        ]);
+
+        if (Auth::attempt(['username' => $credentials['login'], 'password' => $credentials['password']]) ||
+            Auth::attempt(['email' => $credentials['login'], 'password' => $credentials['password']])) {
+            $request->session()->regenerate();
+            return redirect()->route('dashboard');
+        }
+
+        return back()->withErrors([
+            'login' => 'Invalid credentials.',
+        ]);
+    }
+
+    public function showRegistrationForm()
+    {
+        return view('auth.register');
+    }
+
+    public function register(Request $request)
+    {
+        $role = Role::where('roleName', 'DocumentOwner')->first();
+
+        $request->validate([
+            'username' => 'required|string|max:255|unique:users,username',
+            'email' => 'required|email|unique:users,email',
+            'firstName' => 'required|string|max:255',
+            'middleName' => 'nullable|string|max:255',
+            'lastName' => 'required|string|max:255',
+            'departmentID' => 'required|integer|in:5,6,7,8,9,10,11',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::create([
+            'username' => $request->username,
+            'email' => $request->email,
+            'firstName' => $request->firstName,
+            'middleName' => $request->middleName,
+            'lastName' => $request->lastName,
+            'password' => Hash::make($request->password),
+            'roleID' => $role->roleID,
+            'departmentID' => $request->departmentID,
+            'phoneNo' => $request->phoneNo ?? null,
+        ]);
+
+        Auth::login($user);
+
+        return redirect()->route('dashboard');
+    }
+    public function logout(\Illuminate\Http\Request $request)
+    {
+        \Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login');
+    }
+}

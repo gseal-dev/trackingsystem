@@ -18,9 +18,6 @@ return new class extends Migration
             $table->unsignedBigInteger('currentStatus');
             $table->unsignedBigInteger('currentDepartmentID')->default(1);
             $table->string('filePath')->nullable(); 
-            $table->string('googleDriveId')->nullable(); 
-            $table->timestamp('createdAt')->useCurrent();
-            $table->timestamp('updatedAt')->useCurrent()->useCurrentOnUpdate();
             $table->timestamps();
             
             // Foreign key constraints
