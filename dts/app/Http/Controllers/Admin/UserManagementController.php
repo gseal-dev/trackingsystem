@@ -16,17 +16,18 @@ class UserManagementController extends Controller
         $staffs = User::whereHas('role', fn($q) => $q->where('roleName', 'Staff'))->get();
         $auditors = User::whereHas('role', fn($q) => $q->where('roleName', 'Auditor'))->get();
 
-        return view('admin.userManagement.userManagement', compact('admins', 'owners', 'staffs', 'auditors'));
+        // FIXED: Use correct case for folder name
+        return view('admin.UserManagement.userManagement', compact('admins', 'owners', 'staffs', 'auditors'));
     }
 
     public function addForm()
     {
-        return view('admin.userManagement.addUser');
+        return view('admin.UserManagement.addUser');
     }
 
     public function editForm(User $user)
     {
-        return view('admin.userManagement.editUser', compact('user'));
+        return view('admin.UserManagement.editUser', compact('user'));
     }
 
     public function add(Request $request)
