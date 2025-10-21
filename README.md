@@ -71,8 +71,17 @@ If the setup command fails or is unavailable, you can manually run each step bel
 
 ```bash
 git status
+```
+
+```bash
 git add .
+```
+
+```bash
 git commit -m "Message on what you did"
+```
+
+```bash
 git push origin
 ```
 
