@@ -1,152 +1,60 @@
 @extends('layouts.app')
+@section('title', 'Document Registration')
 @section('content')
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Registration</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --cafe-noir: #4C3D19;
-            --kombu-green: #354024;
-            --moss-green: #889063;
-            --tan: #CFBB99;
-            --bone: #ffffff; /* clean white background */
-        }
-
-        body {
-            font-family: "Poppins", "Segoe UI", sans-serif;
-            background-color: var(--bone);
-            color: var(--kombu-green);
-            margin: 0;
-            padding: 0;
-        }
-
-        .container-custom {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-
-        h2 {
-            color: var(--cafe-noir);
-            font-weight: 700;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        .card-custom {
-            background-color: var(--tan);
-            border: 2px solid var(--moss-green);
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            font-weight: 600;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input[type="text"],
-        input[type="file"],
-        input[type="email"],
-        textarea,
-        select,
-        input[type="password"] {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid var(--moss-green);
-            border-radius: 8px;
-            font-size: 0.95rem;
-        }
-
-        textarea {
-            resize: vertical;
-        }
-
-        .btn-custom {
-            background-color: var(--kombu-green);
-            color: var(--bone);
-            border: none;
-            border-radius: 8px;
-            padding: 10px 25px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s ease;
-        }
-
-        .btn-custom:hover {
-            background-color: var(--cafe-noir);
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border-radius: 8px;
-            padding: 10px 15px;
-            margin-bottom: 20px;
-        }
-
-        #ownerSuggestions div:hover {
-            background-color: #f1f1f1;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container-custom">
-    <h2>Document Registration</h2>
+<div class="page-container">
+  <div class="container" style="max-width: 820px;">
+    <div class="page-header mb-3 d-flex align-items-end justify-content-between flex-wrap gap-3">
+      <div>
+        <h1 class="h3 mb-1">Document Registration</h1>
+        <div class="text-muted">Register new incoming documents</div>
+      </div>
+      <form method="POST" action="{{ route('logout') }}" class="ms-auto">
+        @csrf
+        <button type="submit" class="logout-btn"><i class="bi bi-box-arrow-right"></i> Logout</button>
+      </form>
+    </div>
 
     @if(session('success'))
-        <div class="alert-success">{{ session('success') }}</div>
+      <div class="alert alert-success card-surface border-0">{{ session('success') }}</div>
     @endif
 
-    <div class="card-custom">
-        <form method="POST" action="{{ route('admin.documentRegistration.submit') }}" enctype="multipart/form-data">
-            @csrf
-            <div class="form-group">
-                <label for="documentNo">Document No</label>
-                <input type="text" id="documentNo" name="documentNo" required>
-            </div>
-
-            <div class="form-group">
-                <label for="title">Title</label>
-                <input type="text" id="title" name="title" required>
-            </div>
-
-            <div class="form-group">
-                <label for="description">Description</label>
-                <textarea id="description" name="description"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="documentType">Document Type</label>
-                <input type="text" id="documentType" name="documentType" required>
-            </div>
-
-            <div class="form-group" style="position:relative;">
-                <label for="ownerID">Owner (Username)</label>
-                <input type="text" id="ownerInput" name="ownerInput" autocomplete="off" required>
-                <input type="hidden" id="ownerID" name="ownerID" required>
-                <div id="ownerSuggestions" style="border:1px solid #ccc; display:none; position:absolute; background:#fff; z-index:1000;"></div>
-            </div>
-
-            <div class="form-group">
-                <label for="file">Upload Document</label>
-                <input type="file" id="file" name="file" required>
-            </div>
-
-            <button type="submit" class="btn-custom">Register Document</button>
-        </form>
+    <div class="card-surface p-4">
+      <form method="POST" action="{{ route('admin.documentRegistration.submit') }}" enctype="multipart/form-data">
+        @csrf
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="documentNo" class="form-label fw-semibold">Document No</label>
+            <input type="text" id="documentNo" name="documentNo" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label for="documentType" class="form-label fw-semibold">Document Type</label>
+            <input type="text" id="documentType" name="documentType" class="form-control" required>
+          </div>
+          <div class="col-12">
+            <label for="title" class="form-label fw-semibold">Title</label>
+            <input type="text" id="title" name="title" class="form-control" required>
+          </div>
+          <div class="col-12">
+            <label for="description" class="form-label fw-semibold">Description</label>
+            <textarea id="description" name="description" class="form-control" rows="4"></textarea>
+          </div>
+          <div class="col-12 position-relative">
+            <label for="ownerID" class="form-label fw-semibold">Owner (Username)</label>
+            <input type="text" id="ownerInput" name="ownerInput" class="form-control" autocomplete="off" required>
+            <input type="hidden" id="ownerID" name="ownerID" required>
+            <div id="ownerSuggestions" class="card-surface" style="display:none; position:absolute; inset:auto 0 0 0; transform:translateY(100%); z-index:1000;"></div>
+          </div>
+          <div class="col-12">
+            <label for="file" class="form-label fw-semibold">Upload Document</label>
+            <input type="file" id="file" name="file" class="form-control" required>
+          </div>
+        </div>
+        <div class="mt-3">
+          <button type="submit" class="btn btn-brand"><i class="bi bi-journal-plus"></i> Register Document</button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 
 <script>
@@ -192,7 +100,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
-</body>
-</html>
 @endsection

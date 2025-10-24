@@ -1,147 +1,71 @@
 @extends('layouts.app')
+@section('title', 'Staff Dashboard')
 @section('content')
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --cafe-noir: #4C3D19;
-            --kombu-green: #354024;
-            --moss-green: #889063;
-            --tan: #CFBB99;
-            --bone: #ffffff;
-        }
-
-        body {
-            font-family: "Poppins", "Segoe UI", sans-serif;
-            background-color: var(--bone);
-            color: var(--kombu-green);
-            margin: 0;
-            padding: 0;
-        }
-
-        .container-custom {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-
-        h2 {
-            color: var(--cafe-noir);
-            font-weight: 700;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border-radius: 8px;
-            padding: 10px 15px;
-            margin-bottom: 20px;
-        }
-
-        .card-custom {
-            background-color: var(--tan);
-            border: 2px solid var(--moss-green);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-        }
-
-        .card-custom strong {
-            font-size: 1.1rem;
-            color: var(--cafe-noir);
-        }
-
-        .btn-custom {
-            background-color: var(--kombu-green);
-            color: var(--bone);
-            border: none;
-            border-radius: 8px;
-            padding: 8px 20px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s ease;
-            margin-top: 8px;
-        }
-
-        .btn-custom:hover {
-            background-color: var(--cafe-noir);
-        }
-
-        .form-group {
-            margin-top: 8px;
-        }
-
-        select, input[type="file"] {
-            margin-top: 4px;
-            margin-bottom: 8px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-        }
-
-    </style>
-</head>
-<body>
-<div class="container-custom">
-    <h2>Staff Dashboard</h2>
+<div class="page-container">
+  <div class="container" style="max-width: 1100px;">
+    <div class="page-header mb-3 d-flex align-items-end justify-content-between flex-wrap gap-3">
+      <div>
+        <h1 class="h3 mb-1">Staff Dashboard</h1>
+        <div class="text-muted">Process, upload, and route assigned documents</div>
+      </div>
+      <form method="POST" action="{{ route('logout') }}" class="ms-auto">
+        @csrf
+        <button type="submit" class="logout-btn"><i class="bi bi-box-arrow-right"></i> Logout</button>
+      </form>
+    </div>
 
     @if(session('success'))
-        <div class="alert-success">{{ session('success') }}</div>
+      <div class="alert alert-success card-surface border-0">{{ session('success') }}</div>
     @endif
 
-    <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button type="submit" class="btn-custom">Logout</button>
-    </form>
-
     @foreach($documents as $doc)
-        <div class="card-custom">
-            <strong>{{ $doc->title }}</strong> ({{ $doc->documentNo }})<br>
-            Status: {{ $doc->status->statusName ?? 'Unknown' }}<br>
+      <div class="card-surface p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <div class="fw-bold">{{ $doc->title }}</div>
+            <div class="text-muted">{{ $doc->documentNo }}</div>
+            <div class="small mt-1">Status: <span class="fw-semibold">{{ $doc->status->statusName ?? 'Unknown' }}</span></div>
+          </div>
+          <div>
             @if($doc->filePath)
-                <a href="{{ asset('storage/' . $doc->filePath) }}" class="btn-custom" download>Download</a>
+              <a href="{{ asset('storage/' . $doc->filePath) }}" class="btn btn-brand btn-sm" download><i class="bi bi-download"></i> Download</a>
             @else
-                <span>No file available</span>
+              <span class="text-muted">No file available</span>
             @endif
-
-            <form method="POST" action="{{ route('staff.processAndRouteDocument', $doc->documentId) }}" enctype="multipart/form-data">
-                @csrf
-                <div class="form-group">
-                    <label>Reupload Processed Document</label>
-                    <input type="file" name="file" required>
-                </div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select name="statusID" required>
-                        <option value="2">Approved</option>
-                        <option value="3">Rejected</option>
-                        <option value="4">In Review</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Send To:</label>
-                    <select name="departmentID" required>
-                        <option value="1">Admin</option>
-                        @foreach($departments as $dep)
-                            <option value="{{ $dep->depID }}">{{ $dep->depName }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <button type="submit" class="btn-custom">Send & Upload</button>
-            </form>
+          </div>
         </div>
+
+        <form class="mt-3" method="POST" action="{{ route('staff.processAndRouteDocument', $doc->documentId) }}" enctype="multipart/form-data">
+          @csrf
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Reupload Processed Document</label>
+              <input type="file" name="file" class="form-control" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Status</label>
+              <select name="statusID" class="form-select" required>
+                <option value="2">Approved</option>
+                <option value="3">Rejected</option>
+                <option value="4">In Review</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold">Send To</label>
+              <select name="departmentID" class="form-select" required>
+                <option value="1">Admin</option>
+                @foreach($departments as $dep)
+                  <option value="{{ $dep->depID }}">{{ $dep->depName }}</option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button type="submit" class="btn btn-brand"><i class="bi bi-send"></i> Send & Upload</button>
+          </div>
+        </form>
+      </div>
     @endforeach
+  </div>
 </div>
-</body>
-</html>
 @endsection
