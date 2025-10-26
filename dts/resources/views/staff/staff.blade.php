@@ -18,54 +18,20 @@
       <div class="alert alert-success card-surface border-0">{{ session('success') }}</div>
     @endif
 
-    @foreach($documents as $doc)
-      <div class="card-surface p-3 mb-3">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-          <div>
-            <div class="fw-bold">{{ $doc->title }}</div>
-            <div class="text-muted">{{ $doc->documentNo }}</div>
-            <div class="small mt-1">Status: <span class="fw-semibold">{{ $doc->status->statusName ?? 'Unknown' }}</span></div>
-          </div>
-          <div>
-            @if($doc->filePath)
-              <a href="{{ asset('storage/' . $doc->filePath) }}" class="btn btn-brand btn-sm" download><i class="bi bi-download"></i> Download</a>
-            @else
-              <span class="text-muted">No file available</span>
-            @endif
-          </div>
-        </div>
-
-        <form class="mt-3" method="POST" action="{{ route('staff.processAndRouteDocument', $doc->documentId) }}" enctype="multipart/form-data">
-          @csrf
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Reupload Processed Document</label>
-              <input type="file" name="file" class="form-control" required>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-semibold">Status</label>
-              <select name="statusID" class="form-select" required>
-                <option value="2">Approved</option>
-                <option value="3">Rejected</option>
-                <option value="4">In Review</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-semibold">Send To</label>
-              <select name="departmentID" class="form-select" required>
-                <option value="1">Admin</option>
-                @foreach($departments as $dep)
-                  <option value="{{ $dep->depID }}">{{ $dep->depName }}</option>
-                @endforeach
-              </select>
-            </div>
-          </div>
-          <div class="mt-3">
-            <button type="submit" class="btn btn-brand"><i class="bi bi-send"></i> Send & Upload</button>
-          </div>
-        </form>
-      </div>
-    @endforeach
+   <div class="card-grid mb-4">
+      <a href="{{ route('staff.documents') }}" class="dash-card text-decoration-none">
+        <div class="dash-icon"><i class="bi bi-file-earmark-text"></i></div>
+        <div class="dash-title">Documents</div>
+        <div class="dash-subtitle">View and process assigned documents.</div>
+        <div class="dash-action"><i class="bi bi-arrow-right"></i> Go to Documents</div>
+      </a>
+      <a href="{{ route('staff.history') }}" class="dash-card text-decoration-none">
+        <div class="dash-icon"><i class="bi bi-check2-circle"></i></div>
+        <div class="dash-title">Processed Documents</div>
+        <div class="dash-subtitle">View documents you have processed and returned.</div>
+        <div class="dash-action"><i class="bi bi-arrow-right"></i> View Processed</div>
+      </a>
+    </div>
   </div>
 </div>
 @endsection

@@ -8,10 +8,7 @@
         <h1 class="h3 mb-1">Document Registration</h1>
         <div class="text-muted">Register new incoming documents</div>
       </div>
-      <form method="POST" action="{{ route('logout') }}" class="ms-auto">
-        @csrf
-        <button type="submit" class="logout-btn"><i class="bi bi-box-arrow-right"></i> Logout</button>
-      </form>
+        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
     </div>
 
     @if(session('success'))

@@ -39,8 +39,13 @@ Route::get('/staff/documents', [StaffDocumentController::class, 'index'])->name(
 Route::post('/staff/documents/{document}/process', [StaffDocumentController::class, 'processDocument'])->name('staff.processDocument');
 Route::post('/staff/documents/{document}/route', [StaffDocumentController::class, 'routeDocument'])->name('staff.routeDocument');
 Route::post('/staff/documents/{document}/process-route', [StaffDocumentController::class, 'processAndRouteDocument'])->name('staff.processAndRouteDocument');
+Route::get('/staff/documents', [StaffDocumentController::class, 'documents'])->name('staff.documents');
+Route::get('/staff/history', [StaffDocumentController::class, 'history'])->name('staff.history');
+Route::get('/staff/documents/{document}/process', [StaffDocumentController::class, 'processDocumentForm'])->name('staff.processDocumentForm');
 
 Route::get('/admin/processed-documents', [DocumentRoutingController::class, 'processedDocuments'])->name('admin.processedDocuments');
+
+
 
 Route::get('/', function () {
     return view('welcome');

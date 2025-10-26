@@ -82,4 +82,25 @@ class StaffDocumentController extends Controller
 
         return back()->with('success', 'Document routed!');
     }
+
+    public function documents()
+    {
+        $user = auth()->user();
+        $documents = \App\Models\Document::where('currentDepartmentID', $user->departmentID)->get();
+        $departments = \App\Models\Department::all();
+        return view('staff.documents', compact('documents', 'departments'));
+    }
+
+    public function history()
+    {
+        $user = auth()->user();
+        $histories = \App\Models\DocumentHistory::where('userID', $user->userID)->with('document')->get();
+        return view('staff.history', compact('histories'));
+    }
+
+    public function processDocumentForm(Document $document)
+    {
+        $departments = \App\Models\Department::all();
+        return view('staff.process_document', compact('document', 'departments'));
+    }
 }

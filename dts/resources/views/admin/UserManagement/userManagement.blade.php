@@ -12,10 +12,7 @@
       </div>
       <div class="d-flex gap-2">
         <a href="{{ route('admin.userManagement.addForm') }}" class="btn btn-brand"><i class="bi bi-person-plus"></i> Add User</a>
-        <form method="POST" action="{{ route('logout') }}">
-          @csrf
-          <button type="submit" class="logout-btn"><i class="bi bi-box-arrow-right"></i> Logout</button>
-        </form>
+          <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
       </div>
     </div>
 

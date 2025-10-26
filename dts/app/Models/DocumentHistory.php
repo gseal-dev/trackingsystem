@@ -10,4 +10,9 @@ class DocumentHistory extends Model
         'documentId', 'prevDepartmentID', 'currentDepartmentID', 'statusID', 'userID', 'action'
     ];
     public $timestamps = true;
+
+    public function document()
+    {
+        return $this->belongsTo(Document::class, 'documentId', 'documentId');
+    }
 }

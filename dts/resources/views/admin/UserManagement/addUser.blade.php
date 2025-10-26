@@ -10,10 +10,7 @@
         <h1 class="h3 mb-1">Add User</h1>
         <div class="text-muted">Create an account and assign role and department</div>
       </div>
-      <form method="POST" action="{{ route('logout') }}" class="ms-auto">
-        @csrf
-        <button type="submit" class="logout-btn"><i class="bi bi-box-arrow-right"></i> Logout</button>
-      </form>
+      <a href="{{ route('admin.userManagement') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to User Management</a>
     </div>
 
     <div class="card-surface p-4">

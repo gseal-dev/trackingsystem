@@ -10,10 +10,7 @@
         <h1 class="h3 mb-1">Send Document</h1>
         <div class="text-muted">{{ $document->title }}</div>
       </div>
-      <form method="POST" action="{{ route('logout') }}" class="ms-auto">
-        @csrf
-        <button type="submit" class="logout-btn"><i class="bi bi-box-arrow-right"></i> Logout</button>
-      </form>
+        <a href="{{ route('admin.sendDocumentList') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to List</a>
     </div>
 
     <div class="card-surface p-4">

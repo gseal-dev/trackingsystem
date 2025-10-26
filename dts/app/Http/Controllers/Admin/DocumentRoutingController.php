@@ -12,7 +12,9 @@ class DocumentRoutingController extends Controller
     // List all documents for sending
     public function listDocuments()
     {
-        $documents = \App\Models\Document::where('currentDepartmentID', 1)->get();
+        $documents = \App\Models\Document::where('currentDepartmentID', 1)
+            ->where('currentStatus', 1) // 1 = Pending
+            ->get();
         return view('admin.DocumentRouting.listDocuments', compact('documents'));
     }
 
