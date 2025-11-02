@@ -14,10 +14,11 @@
       </form>
     </div>
 
-    <div class="dash-card text-center">
-      <div class="dash-icon mx-auto"><i class="bi bi-shield-check"></i></div>
-      <div class="dash-title mb-1">You're all set</div>
-      <div class="dash-subtitle">Use the navigation to access your tasks.</div>
+    <div class="dash-card">
+      <div class="dash-icon"><i class="bi bi-folder2-open"></i></div>
+      <div class="dash-title">Document Transactions</div>
+      <div class="dash-subtitle">View all document transactions except pending ones.</div>
+      <a href="{{ route('auditor.documentTransactions') }}" class="dash-action"><i class="bi bi-arrow-right-circle"></i> Open</a>
     </div>
   </div>
 </div>

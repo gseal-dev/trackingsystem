@@ -7,6 +7,9 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\DocumentRegistrationController;
 use App\Http\Controllers\Admin\DocumentRoutingController;
 use App\Http\Controllers\Staff\StaffDocumentController;
+use App\Http\Controllers\DocumentOwner\DocumentOwnerController;
+use App\Http\Controllers\Auditor\AuditorController;
+
 
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -45,7 +48,12 @@ Route::get('/staff/documents/{document}/process', [StaffDocumentController::clas
 
 Route::get('/admin/processed-documents', [DocumentRoutingController::class, 'processedDocuments'])->name('admin.processedDocuments');
 
+Route::get('/document-owner/submitted-documents', [\App\Http\Controllers\DocumentOwner\DocumentOwnerController::class, 'submittedDocuments'])->name('documentOwner.submittedDocuments');
+Route::get('/document-owner/pending-documents', [\App\Http\Controllers\DocumentOwner\DocumentOwnerController::class, 'pendingDocuments'])->name('documentOwner.pendingDocuments');
+Route::get('/document-owner/completed-documents', [\App\Http\Controllers\DocumentOwner\DocumentOwnerController::class, 'completedDocuments'])->name('documentOwner.completedDocuments');
 
+Route::get('/auditor/document-transactions', [AuditorController::class, 'documentTransactions'])->name('auditor.documentTransactions');
+Route::get('/auditor/document-transactions/export', [AuditorController::class, 'exportDocumentTransactions'])->name('auditor.documentTransactions.export');
 
 Route::get('/', function () {
     return view('welcome');
