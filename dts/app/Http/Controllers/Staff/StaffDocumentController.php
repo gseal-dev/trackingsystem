@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Document;
 use App\Models\Department;
+use App\Notifications\DocumentProcessedNotification;
 
 class StaffDocumentController extends Controller
 {
@@ -42,6 +43,11 @@ class StaffDocumentController extends Controller
         $document->currentStatus = $request->statusID;
         $document->currentDepartmentID = $request->departmentID;
         $document->save();
+
+        $owner = $document->owner;
+        if ($owner && $owner->email) {
+            $owner->notify(new \App\Notifications\DocumentProcessedNotification($document));
+        }
 
         \DB::table('document_histories')->insert([
             'documentId' => $document->documentId,
