@@ -54,7 +54,7 @@ class StaffDocumentController extends Controller
             'updated_at' => now(),
         ]);
 
-        return back()->with('success', 'Document processed, updated, and sent!');
+        return redirect()->route('dashboard')->with('success', 'Document processed, updated, and sent!');
     }
 
     // Staff routes document to another department or admin
@@ -91,10 +91,28 @@ class StaffDocumentController extends Controller
         return view('staff.documents', compact('documents', 'departments'));
     }
 
-    public function history()
+    public function history(Request $request)
     {
         $user = auth()->user();
-        $histories = \App\Models\DocumentHistory::where('userID', $user->userID)->with('document')->get();
+        $search = $request->input('search');
+
+        $historiesQuery = \App\Models\DocumentHistory::where('userID', $user->userID)
+            ->with(['document.owner', 'document.status']);
+
+        if ($search) {
+            $historiesQuery->whereHas('document', function ($q) use ($search) {
+                $q->where('title', 'LIKE', "%$search%")
+                ->orWhere('documentNo', 'LIKE', "%$search%")
+                ->orWhereHas('owner', function ($oq) use ($search) {
+                    $oq->where('username', 'LIKE', "%$search%")
+                        ->orWhere('firstName', 'LIKE', "%$search%")
+                        ->orWhere('lastName', 'LIKE', "%$search%");
+                });
+            });
+        }
+
+        $histories = $historiesQuery->get();
+
         return view('staff.history', compact('histories'));
     }
 

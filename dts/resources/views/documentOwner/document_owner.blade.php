@@ -64,10 +64,6 @@
                 <h1 class="h3 mb-1">Welcome, Document Owner</h1>
                 <div class="text-muted">Track your documents through the workflow</div>
             </div>
-            <form method="POST" action="{{ route('logout') }}" class="ms-auto">
-                @csrf
-                <button type="submit" class="logout-btn"><i class="bi bi-box-arrow-right"></i> Logout</button>
-            </form>
         </div>
 
         <div class="card-grid">

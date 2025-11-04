@@ -22,6 +22,13 @@
                 <div class="fw-bold">{{ $doc->title }}</div>
                 <div class="text-muted">{{ $doc->documentNo }}</div>
                 <div class="small mt-1">Status: <span class="fw-semibold">{{ $doc->status->statusName ?? 'Unknown' }}</span></div>
+                <div class="small mt-1">
+                  Owner: 
+                  <span class="fw-semibold">
+                    {{ $doc->owner->username ?? 'Unknown' }} 
+                    ({{ $doc->owner->firstName ?? '' }} {{ $doc->owner->lastName ?? '' }})
+                  </span>
+                </div>
             </div>
             <div>
                 @if($doc->filePath)
@@ -37,7 +44,7 @@
             </a>
             </div>
         </div>
-        @endforeach
+    @endforeach
   </div>
 </div>
 @endsection

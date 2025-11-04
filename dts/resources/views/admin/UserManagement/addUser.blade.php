@@ -1,25 +1,18 @@
 @extends('layouts.app')
-
 @section('title', 'Add User')
-
 @section('content')
 <div class="page-container">
   <div class="container" style="max-width: 760px;">
-    <div class="page-header mb-3 d-flex align-items-end justify-content-between flex-wrap gap-3">
-      <div>
-        <h1 class="h3 mb-1">Add User</h1>
-        <div class="text-muted">Create an account and assign role and department</div>
-      </div>
-      <a href="{{ route('admin.userManagement') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to User Management</a>
+    <div class="page-header mb-3">
+      <h1 class="h3 mb-1">Add {{ ucfirst($type) }}</h1>
+      <a href="{{ route('admin.userManagement') }}" class="btn btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left"></i> Back to User Management
+      </a>
     </div>
-
     <div class="card-surface p-4">
-      @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-      @endif
-
-      <form method="POST" action="{{ route('admin.userManagement.add') }}">
+      <form method="POST" action="{{ route('admin.userManagement.add', ['type' => $type]) }}">
         @csrf
+        <input type="hidden" name="roleID" value="{{ \App\Models\Role::where('roleName', ucfirst($type))->value('roleID') }}">
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label fw-semibold" for="username">Username</label>
@@ -42,37 +35,18 @@
             <input type="text" id="lastName" name="lastName" class="form-control" required>
           </div>
           <div class="col-md-6">
-            <label class="form-label fw-semibold" for="roleID">Role</label>
-            <select id="roleID" name="roleID" class="form-select" required>
-              <option value="">Select Role</option>
-              <option value="1">Admin</option>
-              <option value="2">DocumentOwner</option>
-              <option value="3">Staff</option>
-              <option value="4">Auditor</option>
-            </select>
-          </div>
-          <div class="col-md-6">
             <label class="form-label fw-semibold" for="departmentID">Department</label>
             <select id="departmentID" name="departmentID" class="form-select" required>
               <option value="">Select Department</option>
-              <option value="1">Admin</option>
-              <option value="2">Office of the Chancellor</option>
-              <option value="3">Campus Student Body Organization</option>
-              <option value="4">Student Affairs and Services</option>
-              <option value="5">COT - College of Technology</option>
-              <option value="6">CIT - College of Information Technology</option>
-              <option value="7">COM - College of Management</option>
-              <option value="8">COE - College of Engineering</option>
-              <option value="9">CE - College of Education</option>
-              <option value="10">ICJE - Institute of Criminal Justice Education</option>
-              <option value="11">CAS - College of Arts and Sciences</option>
+              @foreach($departments as $dep)
+                <option value="{{ $dep->depID }}">{{ $dep->depName }}</option>
+              @endforeach
             </select>
           </div>
           <div class="col-md-6">
             <label class="form-label fw-semibold" for="phoneNo">Phone Number</label>
             <input type="text" id="phoneNo" name="phoneNo" class="form-control">
           </div>
-          <div class="col-md-6"></div>
           <div class="col-md-6">
             <label class="form-label fw-semibold" for="password">Password</label>
             <input type="password" id="password" name="password" class="form-control" required>
@@ -83,7 +57,7 @@
           </div>
         </div>
         <div class="mt-3">
-          <button type="submit" class="btn btn-brand"><i class="bi bi-person-plus"></i> Add User</button>
+          <button type="submit" class="btn btn-brand"><i class="bi bi-person-plus"></i> Add {{ ucfirst($type) }}</button>
         </div>
       </form>
     </div>

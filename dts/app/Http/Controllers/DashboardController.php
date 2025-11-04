@@ -20,7 +20,9 @@ class DashboardController extends Controller
                 $departments = \App\Models\Department::all();
                 return view('staff.staff', compact('documents', 'departments'));
             case 'Auditor':
-                $documents = \App\Models\Document::all();
+                $documents = \App\Models\Document::with(['owner', 'status', 'department'])
+                    ->where('currentStatus', '!=', 1) // Exclude "Pending"
+                    ->paginate(10);
                 $departments = \App\Models\Department::all();
                 return view('auditor.auditor', compact('documents', 'departments'));
             default:

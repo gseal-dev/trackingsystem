@@ -3,11 +3,18 @@
 @section('title', 'Login')
 
 @section('content')
-<div class="page-container">
+<div class="page-container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
   <div class="container" style="max-width: 520px;">
     <div class="card-surface p-4">
       <h2 class="h4 text-center mb-1">Welcome Back 👋</h2>
       <p class="text-muted text-center mb-4">Login to continue tracking your documents.</p>
+      @if($errors->any())
+        <div class="alert alert-danger">
+          @foreach($errors->all() as $error)
+            <div>{{ $error }}</div>
+          @endforeach
+        </div>
+      @endif
 
       <form method="POST" action="{{ route('login') }}">
         @csrf

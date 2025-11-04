@@ -3,7 +3,7 @@
 @section('title', 'Register')
 
 @section('content')
-<div class="page-container">
+<div class="page-container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
   <div class="container" style="max-width: 640px;">
     <div class="card-surface p-4">
       <h2 class="h4 text-center mb-1">Register as Document Owner 🗂️</h2>

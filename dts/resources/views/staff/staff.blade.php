@@ -8,10 +8,6 @@
         <h1 class="h3 mb-1">Staff Dashboard</h1>
         <div class="text-muted">Process, upload, and route assigned documents</div>
       </div>
-      <form method="POST" action="{{ route('logout') }}" class="ms-auto">
-        @csrf
-        <button type="submit" class="logout-btn"><i class="bi bi-box-arrow-right"></i> Logout</button>
-      </form>
     </div>
 
     @if(session('success'))

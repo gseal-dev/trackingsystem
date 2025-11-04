@@ -51,14 +51,29 @@ class DocumentRoutingController extends Controller
         return redirect()->route('admin.sendDocumentList')->with('success', 'Document sent!');
     }
 
-    public function processedDocuments()
+    public function processedDocuments(Request $request)
     {
-        // Only show documents currently in Admin that have history where prevDepartmentID != 1
-        $documents = \App\Models\Document::where('currentDepartmentID', 1)
+        $search = $request->input('search');
+
+        $documentsQuery = \App\Models\Document::where('currentDepartmentID', 1)
             ->whereHas('histories', function($q) {
                 $q->where('prevDepartmentID', '!=', 1);
             })
-            ->get();
+            ->with(['owner', 'status', 'department']);
+
+        if ($search) {
+            $documentsQuery->where(function ($q) use ($search) {
+                $q->where('title', 'LIKE', "%$search%")
+                ->orWhere('documentNo', 'LIKE', "%$search%")
+                ->orWhereHas('owner', function ($oq) use ($search) {
+                    $oq->where('username', 'LIKE', "%$search%")
+                        ->orWhere('firstName', 'LIKE', "%$search%")
+                        ->orWhere('lastName', 'LIKE', "%$search%");
+                });
+            });
+        }
+
+        $documents = $documentsQuery->paginate(10);
 
         return view('admin.DocumentRouting.processedDocument', compact('documents'));
     }

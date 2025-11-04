@@ -13,6 +13,11 @@
       <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
     </div>
 
+    <form method="GET" action="{{ route('admin.processedDocuments') }}" class="mb-3 d-flex gap-2">
+      <input type="text" name="search" class="form-control" placeholder="Search by Owner, Title, or Document No" value="{{ request('search') }}">
+      <button type="submit" class="btn btn-brand"><i class="bi bi-search"></i> Search</button>
+    </form>
+
     <div class="card-surface p-3">
       @if($documents->isEmpty())
         <div class="alert alert-info mb-0">No processed documents found.</div>
@@ -54,6 +59,9 @@
             @endforeach
             </tbody>
           </table>
+        </div>
+        <div class="mt-3">
+          {{ $documents->links('pagination::bootstrap-5') }}
         </div>
       @endif
     </div>

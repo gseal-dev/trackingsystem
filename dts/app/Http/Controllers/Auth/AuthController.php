@@ -22,15 +22,26 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt(['username' => $credentials['login'], 'password' => $credentials['password']]) ||
-            Auth::attempt(['email' => $credentials['login'], 'password' => $credentials['password']])) {
-            $request->session()->regenerate();
-            return redirect()->route('dashboard');
+        // Try to find user by username or email
+        $user = User::where('username', $credentials['login'])
+            ->orWhere('email', $credentials['login'])
+            ->first();
+
+        if (!$user) {
+            return back()->withErrors([
+                'login' => 'No account found for this username or email.',
+            ]);
         }
 
-        return back()->withErrors([
-            'login' => 'Invalid credentials.',
-        ]);
+        if (!Hash::check($credentials['password'], $user->password)) {
+            return back()->withErrors([
+                'password' => 'Incorrect password.',
+            ])->withInput(['login' => $credentials['login']]);
+        }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+        return redirect()->route('dashboard');
     }
 
     public function showRegistrationForm()
@@ -49,6 +60,7 @@ class AuthController extends Controller
             'middleName' => 'nullable|string|max:255',
             'lastName' => 'required|string|max:255',
             'departmentID' => 'required|integer|in:5,6,7,8,9,10,11',
+            'phoneNo' => 'nullable|string|max:255|unique:users,phoneNo',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -68,9 +80,10 @@ class AuthController extends Controller
 
         return redirect()->route('dashboard');
     }
-    public function logout(\Illuminate\Http\Request $request)
+
+    public function logout(Request $request)
     {
-        \Auth::logout();
+        Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect()->route('login');
