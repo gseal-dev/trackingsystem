@@ -28,7 +28,9 @@ class DocumentProcessedNotification extends Notification
         return (new MailMessage)
             ->subject('Your Document Has Been ' . $status)
             ->greeting('Hello ' . $notifiable->firstName . '!')
-            ->line("Your document '{$this->document->title}' has been {$status}.")
+            ->line("Your document '{$this->document->title}'")
+            ->line("STATUS: {$status}.")
+            ->line("Current Office: {$office}")
             ->action('View Document', url('/dashboard'))
             ->line('Thank you for using the Document Tracking System!');
     }
