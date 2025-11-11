@@ -10,6 +10,11 @@ use App\Http\Controllers\Staff\StaffDocumentController;
 use App\Http\Controllers\DocumentOwner\DocumentOwnerController;
 use App\Http\Controllers\Auditor\AuditorController;
 
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
+
 // Auth & Dashboard
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
