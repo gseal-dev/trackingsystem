@@ -57,10 +57,7 @@ class AuthController extends Controller
             'username' => 'required|string|max:255|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'firstName' => 'required|string|max:255',
-            'middleName' => 'nullable|string|max:255',
             'lastName' => 'required|string|max:255',
-            'departmentID' => 'required|integer|in:5,6,7,8,9,10,11',
-            'phoneNo' => 'nullable|string|max:255|unique:users,phoneNo',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -68,12 +65,12 @@ class AuthController extends Controller
             'username' => $request->username,
             'email' => $request->email,
             'firstName' => $request->firstName,
-            'middleName' => $request->middleName,
+            'middleName' => null,
             'lastName' => $request->lastName,
             'password' => Hash::make($request->password),
             'roleID' => $role->roleID,
-            'departmentID' => $request->departmentID,
-            'phoneNo' => $request->phoneNo ?? null,
+            'departmentID' => 5,
+            'phoneNo' => null,
         ]);
 
         Auth::login($user);

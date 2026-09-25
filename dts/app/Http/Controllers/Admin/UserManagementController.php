@@ -13,8 +13,20 @@ class UserManagementController extends Controller
     public function index() {
         return view('admin.UserManagement.userManagement');
     }
-    public function admins() {
+    public function admins(Request $request) {
         $users = User::whereHas('role', fn($q) => $q->where('roleName', 'Admin'))->get();
+        $search = trim($request->query('search', ''));
+        $users = User::whereHas('role', fn($q) => $q->where('roleName', 'Admin'))
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('username', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('firstName', 'like', "%{$search}%")
+                        ->orWhere('lastName', 'like', "%{$search}%");
+                });
+            })
+            ->with('role')
+            ->get();
         return view('admin.UserManagement.admins', compact('users'));
     }
     public function owners() {
@@ -31,71 +43,69 @@ class UserManagementController extends Controller
     }
 
     public function addForm($type) {
+        abort_unless($type === 'admins', 404);
+
         $departments = Department::all();
-        return view('admin.UserManagement.addUser', compact('type', 'departments'));
+        $roles = Role::whereIn('roleName', ['Admin', 'Staff'])->orderBy('roleName')->get();
+        return view('admin.UserManagement.addUser', compact('type', 'departments', 'roles'));
     }
 
     public function add(Request $request, $type) {
-        // Map plural type to singular roleName
-        $roleMap = [
-            'admins' => 'Admin',
-            'owners' => 'DocumentOwner',
-            'staffs' => 'Staff',
-            'auditors' => 'Auditor',
-        ];
-        $roleName = $roleMap[$type] ?? ucfirst($type);
-        $roleID = Role::where('roleName', $roleName)->value('roleID');
+        abort_unless($type === 'admins', 404);
 
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email|ends_with:@gmail.com|unique:users,email',
             'firstName' => 'required|string|max:255',
-            'middleName' => 'nullable|string|max:255',
             'lastName' => 'required|string|max:255',
-            'departmentID' => 'required|integer',
+            'roleID' => 'nullable|exists:roles,roleID',
             'password' => 'required|string|min:8|confirmed',
         ]);
+        $roleID = $request->input('roleID') ?: Role::where('roleName', 'Admin')->value('roleID');
         User::create([
             'username' => $request->username,
             'email' => $request->email,
             'firstName' => $request->firstName,
-            'middleName' => $request->middleName,
             'lastName' => $request->lastName,
             'roleID' => $roleID,
-            'departmentID' => $request->departmentID,
             'password' => \Hash::make($request->password),
-            'phoneNo' => $request->phoneNo ?? null,
         ]);
-        return redirect()->route("admin.userManagement.$type")->with('success', 'User added!');
+        return redirect()->route($type === 'admins' ? 'dashboard' : "admin.userManagement.$type")
+            ->with('success', 'User added!');
     }
 
     public function editForm($type, User $user) {
-        $departments = Department::all();
-        return view('admin.UserManagement.editUser', compact('user', 'type', 'departments'));
+        $roles = Role::whereNotIn('roleName', ['Auditor', 'DocumentOwner'])
+            ->orderBy('roleName')
+            ->get();
+        return view('admin.UserManagement.editUser', compact('user', 'type', 'roles'));
     }
 
     public function edit(Request $request, $type, User $user) {
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username,' . $user->userID . ',userID',
-            'email' => 'required|email|unique:users,email,' . $user->userID . ',userID',
+            'email' => 'required|email|ends_with:@gmail.com|unique:users,email,' . $user->userID . ',userID',
             'firstName' => 'required|string|max:255',
-            'middleName' => 'nullable|string|max:255',
             'lastName' => 'required|string|max:255',
-            'departmentID' => 'required|integer',
-            'phoneNo' => 'nullable|string|max:255',
+            'roleID' => 'required|exists:roles,roleID',
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
         $user->update($request->only([
-            'username', 'email', 'firstName', 'middleName', 'lastName', 'departmentID', 'phoneNo'
+            'username', 'email', 'firstName', 'lastName', 'roleID'
         ]));
         if ($request->filled('password')) {
             $user->update(['password' => \Hash::make($request->password)]);
         }
-        return redirect()->route("admin.userManagement.$type")->with('success', 'User updated!');
+        $redirectType = $type === 'documentowners' ? 'dashboard' : $type;
+        return redirect()->route($redirectType === 'admins' || $redirectType === 'dashboard' ? 'dashboard' : "admin.userManagement.$redirectType")
+            ->with('success', 'User updated!');
     }
 
     public function delete($type, User $user) {
         $user->delete();
-        return redirect()->route("admin.userManagement.$type")->with('success', 'User deleted!');
+        $redirectType = $type === 'documentowners' ? 'dashboard' : $type;
+        return redirect()->route($redirectType === 'admins' || $redirectType === 'staffs' || $redirectType === 'dashboard' ? 'dashboard' : "admin.userManagement.$redirectType")
+            ->with('success', 'User deleted!');
     }
 
     public function searchUser(Request $request)

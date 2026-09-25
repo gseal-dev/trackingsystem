@@ -11,7 +11,7 @@ class Document extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'documentId', 'documentNo', 'title', 'description', 'documentType',
+        'documentId', 'documentNo', 'title', 'description', 'documentType', 'documentDate',
         'ownerID', 'currentStatus', 'currentDepartmentID', 'filePath'
     ];
 

@@ -24,7 +24,7 @@ class DocumentRegistrationController extends Controller
             'description' => 'nullable|string',
             'documentType' => 'required|string|max:255',
             'ownerID' => 'required|exists:users,userID',
-            'file' => 'required|file|mimes:pdf,doc,docx,jpg,png|max:10240', // 10MB max
+            'file' => 'required|file|mimes:pdf|max:10240', // 10MB max
         ]);
 
         // Handle file upload

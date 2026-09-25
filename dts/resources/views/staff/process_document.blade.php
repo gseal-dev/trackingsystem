@@ -8,7 +8,7 @@
         <h1 class="h3 mb-1">Process Document</h1>
         <div class="text-muted">{{ $document->title }}</div>
       </div>
-      <a href="{{ route('staff.documents') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Documents</a>
+      <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
     </div>
 
     <div class="card-surface p-4">

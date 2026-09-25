@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Document Registration')
+@section('title', 'Add Document')
 @section('content')
 <style>
   .custom-card {
@@ -77,97 +77,101 @@
 </style>
 
 <div class="container py-4">
-  <!-- Back Button Link -->
-  <div class="mb-3 text-center" style="max-width: 520px; margin: 0 auto;">
-    <a href="{{ route('dashboard') }}" class="text-decoration-none text-muted small">
+  <div class="mb-3" style="max-width: 520px; margin: 0 auto;">
+    <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm">
       <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
     </a>
   </div>
 
   <div class="custom-card">
-    <!-- Header Section -->
     <div class="text-center mb-4">
-      <h2 class="fw-bold text-dark mb-1">Document Registration</h2>
-      <p class="text-secondary small mb-0">Register new incoming documents to continue</p>
+      <h2 class="fw-bold text-dark mb-1">Add Document</h2>
+      <p class="text-secondary small mb-0">Add new incoming documents to continue</p>
     </div>
 
-    @if(session('success'))
-      <div class="alert alert-success text-center border-0 rounded-4 mb-4" style="background-color: #e6f4ea; color: #137333;">
-        {{ session('success') }}
-      </div>
+    @if($errors->any())
+        <div class="alert alert-danger rounded-4">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.documentRegistration.submit') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('staff.document.store') }}" enctype="multipart/form-data">
       @csrf
 
       <div class="d-flex flex-column gap-3">
-        <!-- Document No -->
+        <!-- Reference Number -->
         <div class="d-flex align-items-center gap-3">
           <div class="field-icon">
             <i class="bi bi-hash"></i>
           </div>
           <div class="flex-grow-1">
-            <input type="text" id="documentNo" name="documentNo" class="form-control custom-input" placeholder="document number" required>
+            <input type="text" id="documentNo" name="documentNo" class="form-control custom-input text-uppercase" placeholder="REFERENCE NUMBER" value="{{ old('documentNo') }}" required>
           </div>
         </div>
 
-        <!-- Document Type -->
+        <!-- From Office -->
+        <div class="d-flex align-items-center gap-3">
+          <div class="field-icon">
+            <i class="bi bi-building"></i>
+          </div>
+          <div class="flex-grow-1">
+            <select id="departmentID" name="departmentID" class="form-control custom-input text-uppercase" required>
+              <option value="">SELECT FROM OFFICE</option>
+              @foreach($departments ?? [] as $dep)
+                <option value="{{ $dep->depID }}" @selected(old('departmentID') == $dep->depID)>{{ strtoupper($dep->depName) }}</option>
+              @endforeach
+            </select>
+          </div>
+        </div>
+
+        <!-- Type -->
         <div class="d-flex align-items-center gap-3">
           <div class="field-icon">
             <i class="bi bi-file-earmark-text"></i>
           </div>
           <div class="flex-grow-1">
-            <input type="text" id="documentType" name="documentType" class="form-control custom-input" placeholder="document type" required>
+            <input type="text" id="documentType" name="documentType" class="form-control custom-input text-uppercase" placeholder="TYPE" value="{{ old('documentType') }}" required>
           </div>
         </div>
 
-        <!-- Title -->
+        <!-- Subject -->
         <div class="d-flex align-items-center gap-3">
           <div class="field-icon">
             <i class="bi bi-card-heading"></i>
           </div>
           <div class="flex-grow-1">
-            <input type="text" id="title" name="title" class="form-control custom-input" placeholder="title" required>
+            <input type="text" id="title" name="title" class="form-control custom-input text-uppercase" placeholder="SUBJECT" value="{{ old('title') }}" required>
           </div>
         </div>
 
-        <!-- Owner Username -->
-        <div class="d-flex align-items-center gap-3 position-relative">
+        <!-- Date -->
+        <div class="d-flex align-items-center gap-3">
           <div class="field-icon">
-            <i class="bi bi-person"></i>
-          </div>
-          <div class="flex-grow-1 position-relative">
-            <input type="text" id="ownerInput" name="ownerInput" class="form-control custom-input" placeholder="owner (username)" autocomplete="off" required>
-            <input type="hidden" id="ownerID" name="ownerID" required>
-            <div id="ownerSuggestions" class="suggestion-box" style="display:none;"></div>
-          </div>
-        </div>
-
-        <!-- Description -->
-        <div class="d-flex align-items-start gap-3 mt-1">
-          <div class="field-icon pt-2">
-            <i class="bi bi-card-text"></i>
+            <i class="bi bi-calendar-event"></i>
           </div>
           <div class="flex-grow-1">
-            <textarea id="description" name="description" class="form-control custom-textarea" rows="3" placeholder="description"></textarea>
+            <input type="date" id="documentDate" name="documentDate" class="form-control custom-input" value="{{ old('documentDate', date('Y-m-d')) }}" required>
           </div>
         </div>
 
-        <!-- Upload File -->
+        <!-- Upload PDF File -->
         <div class="d-flex align-items-center gap-3">
           <div class="field-icon">
             <i class="bi bi-paperclip"></i>
           </div>
           <div class="flex-grow-1">
-            <input type="file" id="file" name="file" class="form-control custom-input" required>
+            <input type="file" id="file" name="file" class="form-control custom-input" accept=".pdf" required>
           </div>
         </div>
       </div>
 
-      <!-- Submit Button -->
       <div class="text-center mt-4 pt-2">
-        <button type="submit" class="btn btn-custom-dark w-100">
-          Register Document
+        <button type="submit" class="btn btn-custom-dark w-100 text-uppercase fw-bold" style="letter-spacing: 0.05em;">
+          ADD DOCUMENT
         </button>
       </div>
     </form>
@@ -186,7 +190,7 @@ document.addEventListener('DOMContentLoaded', function() {
             suggestions.style.display = 'none';
             return;
         }
-        fetch('/admin/user-search?q=' + encodeURIComponent(q))
+        fetch('{{ route("staff.userSearch") }}?q=' + encodeURIComponent(q))
             .then(res => res.json())
             .then(data => {
                 suggestions.innerHTML = '';

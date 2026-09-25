@@ -10,8 +10,8 @@
       </div>
       <a href="{{ route('admin.userManagement.addForm', ['type' => 'auditors']) }}" class="btn btn-brand"><i class="bi bi-person-plus"></i> Add Auditor</a>
     </div>
-    <a href="{{ route('admin.userManagement') }}" class="btn btn-outline-secondary mb-3">
-      <i class="bi bi-arrow-left"></i> Back to User Management
+    <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary mb-3">
+      <i class="bi bi-arrow-left"></i> Back to Dashboard
     </a>
     @if(session('success'))
       <div class="alert alert-success card-surface border-0">{{ session('success') }}</div>

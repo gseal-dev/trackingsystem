@@ -12,11 +12,20 @@ class DashboardController extends Controller
 
         switch ($role) {
             case 'Admin':
-                return view('admin.admin');
+                $users = \App\Models\User::with('role')
+                    ->get();
+                $roles = \App\Models\Role::whereIn('roleName', ['Admin', 'Staff'])
+                    ->orderBy('roleName')
+                    ->get();
+                return view('admin.admin', compact('users', 'roles'));
             case 'DocumentOwner':
                 return view('documentOwner.document_owner');
             case 'Staff':
-                $documents = \App\Models\Document::where('currentDepartmentID', $user->departmentID)->get();
+                $documents = \App\Models\Document::with('department')
+                    ->when($user->departmentID, function($q) use ($user) {
+                        return $q->where('currentDepartmentID', $user->departmentID);
+                    })
+                    ->get();
                 $departments = \App\Models\Department::all();
                 return view('staff.staff', compact('documents', 'departments'));
             case 'Auditor':

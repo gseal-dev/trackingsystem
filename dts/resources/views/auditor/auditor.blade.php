@@ -1,29 +1,26 @@
 @extends('layouts.app')
 @section('title', 'Auditor Dashboard')
 @section('content')
-<div class="page-container">
-  <div class="container" style="max-width: 1100px;">
-    <div class="page-header mb-3 d-flex align-items-end justify-content-between flex-wrap gap-3">
+<div class="dashboard-shell">
+  <div class="dashboard-container wide">
+    <div class="dashboard-header">
       <div>
-        <h1 class="h3 mb-1">Auditor Dashboard</h1>
-        <div class="text-muted">Review and validate processed documents</div>
+        <h1 class="dashboard-title">Auditor Dashboard</h1>
+        <p class="dashboard-subtitle">Review and validate processed documents</p>
       </div>
     </div>
 
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <form method="GET" action="{{ route('auditor.documentTransactions') }}" class="d-flex gap-2">
+    <div class="dashboard-toolbar auditor-toolbar">
+      <form method="GET" action="{{ route('auditor.documentTransactions') }}" class="audit-search">
         <input type="text" name="search" class="form-control" placeholder="Search by document title or owner" value="{{ request('search') }}">
         <button type="submit" class="btn btn-brand"><i class="bi bi-search"></i> Search</button>
       </form>
-      <a href="{{ route('auditor.documentTransactions.export', ['search' => request('search')]) }}" class="btn btn-success">
+      <a href="{{ route('auditor.documentTransactions.export', ['search' => request('search')]) }}" class="btn btn-brand export-btn">
         <i class="bi bi-file-earmark-arrow-down"></i> Export to CSV
       </a>
     </div>
 
-    <div class="card-surface p-3">
-  
-
+    <div class="dashboard-panel p-3">
       @if($documents->isEmpty())
         <div class="alert alert-info mb-0">No document transactions found.</div>
       @else
