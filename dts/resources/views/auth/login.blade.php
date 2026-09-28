@@ -64,10 +64,6 @@
       <button type="submit" class="btn-login-submit">Log in</button>
     </div>
   </form>
-
-  <div class="footer-text">
-    Don’t have account? <a href="{{ route('register') }}" class="footer-link">Register</a>
-  </div>
 </div>
 @endsection
 

@@ -12,14 +12,40 @@ use App\Notifications\DocumentProcessedNotification;
 class StaffDocumentController extends Controller
 {
     // Show documents for staff's department
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
-        $documents = \App\Models\Document::with('department')
+        $query = \App\Models\Document::with('department')
             ->when($user->departmentID, function($q) use ($user) {
                 return $q->where('currentDepartmentID', $user->departmentID);
-            })
-            ->get();
+            });
+
+        if ($request->filled('year')) {
+            $query->where(function($q) use ($request) {
+                $q->whereYear('documentDate', $request->year)
+                  ->orWhere(function($sub) use ($request) {
+                      $sub->whereNull('documentDate')->whereYear('created_at', $request->year);
+                  });
+            });
+        }
+        if ($request->filled('month')) {
+            $query->where(function($q) use ($request) {
+                $q->whereMonth('documentDate', $request->month)
+                  ->orWhere(function($sub) use ($request) {
+                      $sub->whereNull('documentDate')->whereMonth('created_at', $request->month);
+                  });
+            });
+        }
+        if ($request->filled('day')) {
+            $query->where(function($q) use ($request) {
+                $q->whereDay('documentDate', $request->day)
+                  ->orWhere(function($sub) use ($request) {
+                      $sub->whereNull('documentDate')->whereDay('created_at', $request->day);
+                  });
+            });
+        }
+
+        $documents = $query->get();
         $departments = \App\Models\Department::all();
         return view('staff.staff', compact('documents', 'departments'));
     }
@@ -118,6 +144,16 @@ class StaffDocumentController extends Controller
                         ->orWhere('lastName', 'LIKE', "%$search%");
                 });
             });
+        }
+
+        if ($request->filled('year')) {
+            $historiesQuery->whereYear('created_at', $request->year);
+        }
+        if ($request->filled('month')) {
+            $historiesQuery->whereMonth('created_at', $request->month);
+        }
+        if ($request->filled('day')) {
+            $historiesQuery->whereDay('created_at', $request->day);
         }
 
         $histories = $historiesQuery->orderByDesc('created_at')->get();

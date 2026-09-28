@@ -15,7 +15,7 @@ class AuditorController extends Controller
             ->where('currentStatus', '!=', 1); // Exclude "Pending" status
 
         // Apply search filters
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'LIKE', "%$search%")
@@ -25,8 +25,33 @@ class AuditorController extends Controller
             });
         }
 
+        if ($request->filled('year')) {
+            $query->where(function($q) use ($request) {
+                $q->whereYear('documentDate', $request->year)
+                  ->orWhere(function($sub) use ($request) {
+                      $sub->whereNull('documentDate')->whereYear('created_at', $request->year);
+                  });
+            });
+        }
+        if ($request->filled('month')) {
+            $query->where(function($q) use ($request) {
+                $q->whereMonth('documentDate', $request->month)
+                  ->orWhere(function($sub) use ($request) {
+                      $sub->whereNull('documentDate')->whereMonth('created_at', $request->month);
+                  });
+            });
+        }
+        if ($request->filled('day')) {
+            $query->where(function($q) use ($request) {
+                $q->whereDay('documentDate', $request->day)
+                  ->orWhere(function($sub) use ($request) {
+                      $sub->whereNull('documentDate')->whereDay('created_at', $request->day);
+                  });
+            });
+        }
+
         // Paginate the results
-        $documents = $query->paginate(10);
+        $documents = $query->paginate(10)->withQueryString();
 
         return view('auditor.document_transactions', compact('documents'));
     }
@@ -37,12 +62,37 @@ class AuditorController extends Controller
             ->where('currentStatus', '!=', 1); // Exclude "Pending" status
 
         // Apply search filters
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'LIKE', "%$search%")
                   ->orWhereHas('owner', function ($ownerQuery) use ($search) {
                       $ownerQuery->where('username', 'LIKE', "%$search%");
+                  });
+            });
+        }
+
+        if ($request->filled('year')) {
+            $query->where(function($q) use ($request) {
+                $q->whereYear('documentDate', $request->year)
+                  ->orWhere(function($sub) use ($request) {
+                      $sub->whereNull('documentDate')->whereYear('created_at', $request->year);
+                  });
+            });
+        }
+        if ($request->filled('month')) {
+            $query->where(function($q) use ($request) {
+                $q->whereMonth('documentDate', $request->month)
+                  ->orWhere(function($sub) use ($request) {
+                      $sub->whereNull('documentDate')->whereMonth('created_at', $request->month);
+                  });
+            });
+        }
+        if ($request->filled('day')) {
+            $query->where(function($q) use ($request) {
+                $q->whereDay('documentDate', $request->day)
+                  ->orWhere(function($sub) use ($request) {
+                      $sub->whereNull('documentDate')->whereDay('created_at', $request->day);
                   });
             });
         }

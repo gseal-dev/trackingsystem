@@ -5,10 +5,18 @@
 @section('content')
 <div class="dashboard-shell">
     <div class="dashboard-container">
-        <div class="dashboard-header">
+        <div class="dashboard-header d-flex align-items-center justify-content-between">
             <div>
                 <h1 class="dashboard-title">Welcome, Document Owner</h1>
                 <p class="dashboard-subtitle">Track your documents through the workflow</p>
+            </div>
+            <div>
+                <form method="POST" action="{{ route('logout') }}" class="m-0">
+                    @csrf
+                    <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;">
+                        <i class="bi bi-box-arrow-right me-1"></i> Logout
+                    </button>
+                </form>
             </div>
         </div>
 

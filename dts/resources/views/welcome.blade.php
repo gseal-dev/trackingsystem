@@ -15,7 +15,6 @@
       <p class="text-muted mb-4">Log in to your account to continue</p>
       <div class="d-flex gap-3 justify-content-center flex-wrap">
         <a href="{{ route('login') }}" class="btn btn-brand px-4">Login</a>
-        <a href="{{ route('register') }}" class="btn btn-outline-success px-4">Register</a>
       </div>
     </div>
   </div>

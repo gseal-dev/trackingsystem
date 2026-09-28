@@ -223,11 +223,11 @@
               <i class="bi bi-plus-lg"></i>
               <span>Add Document</span>
             </a>
-            <form method="POST" action="{{ route('logout') }}" class="d-inline">
-              @csrf
-              <button type="submit" class="btn btn-outline-secondary d-flex align-items-center gap-2 px-3 py-2 rounded-3 text-uppercase fw-bold" style="font-size: 0.82rem; letter-spacing: 0.04em; height: 42px;">
-                <i class="bi bi-box-arrow-right"></i> Logout
-              </button>
+            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                @csrf
+                <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;">
+                    <i class="bi bi-box-arrow-right me-1"></i> Logout
+                </button>
             </form>
           </div>
         </div>
@@ -240,10 +240,36 @@
         @endif
 
         <div class="table-toolbar">
-          <div class="search-box">
-            <i class="bi bi-search"></i>
-            <input type="text" id="staff-record-search" class="form-control" placeholder="Search records...">
-          </div>
+          <form method="GET" action="{{ route('dashboard') }}" class="d-flex gap-2 flex-wrap align-items-center w-100">
+            <div class="search-box flex-grow-1" style="max-width: 250px;">
+              <i class="bi bi-search"></i>
+              <input type="text" id="staff-record-search" class="form-control" placeholder="Search records...">
+            </div>
+            <select name="year" class="form-select" style="width: 120px;">
+              <option value="">All Years</option>
+              @for($y = 2024; $y <= 2028; $y++)
+                <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
+              @endfor
+            </select>
+            <select name="month" class="form-select" style="width: 140px;">
+              <option value="">All Months</option>
+              @for($m = 1; $m <= 12; $m++)
+                <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
+              @endfor
+            </select>
+            <select name="day" class="form-select" style="width: 110px;">
+              <option value="">All Days</option>
+              @for($d = 1; $d <= 31; $d++)
+                <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>Day {{ $d }}</option>
+              @endfor
+            </select>
+            <button type="submit" class="btn btn-dark px-3 py-2" style="background: #111827; color: #fff; border-radius: 50px;">
+              <i class="bi bi-filter"></i> Filter
+            </button>
+            @if(request('year') || request('month') || request('day'))
+              <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 50px;">Reset</a>
+            @endif
+          </form>
         </div>
 
         <div class="table-responsive">
