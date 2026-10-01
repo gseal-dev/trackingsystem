@@ -25,8 +25,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 
 // User Management - Per Role
+Route::get('/admin/user-management/admins', [UserManagementController::class, 'admins'])->name('admin.userManagement.admins');
 Route::get('/admin/user-management/staffs', [UserManagementController::class, 'staffs'])->name('admin.userManagement.staffs');
 Route::get('/admin/user-management/auditors', [UserManagementController::class, 'auditors'])->name('admin.userManagement.auditors');
+Route::get('/admin/user-management/owners', [UserManagementController::class, 'owners'])->name('admin.userManagement.owners');
 // Add/Edit/Delete per role
 Route::get('/admin/user-management/{type}/add', [UserManagementController::class, 'addForm'])
     ->where('type', 'admins')
@@ -42,6 +44,7 @@ Route::post('/admin/user-management/{type}/delete/{user}', [UserManagementContro
 Route::get('/admin/document-registration', [DocumentRegistrationController::class, 'showForm'])->name('admin.documentRegistration');
 Route::post('/admin/document-registration', [DocumentRegistrationController::class, 'register'])->name('admin.documentRegistration.submit');
 Route::get('/admin/user-search', [UserManagementController::class, 'searchUser'])->name('admin.userSearch');
+Route::get('/admin/documents', [DocumentRoutingController::class, 'index'])->name('admin.documents');
 Route::get('/admin/send-document', [DocumentRoutingController::class, 'listDocuments'])->name('admin.sendDocumentList');
 Route::get('/admin/send-document/{document}', [DocumentRoutingController::class, 'showSendForm'])->name('admin.sendDocumentForm');
 Route::post('/admin/send-document/{document}', [DocumentRoutingController::class, 'send'])->name('admin.sendDocument');
@@ -58,6 +61,7 @@ Route::post('/staff/documents/{document}/process', [StaffDocumentController::cla
 Route::post('/staff/documents/{document}/route', [StaffDocumentController::class, 'routeDocument'])->name('staff.routeDocument');
 Route::post('/staff/documents/{document}/process-route', [StaffDocumentController::class, 'processAndRouteDocument'])->name('staff.processAndRouteDocument');
 Route::delete('/staff/documents/{document}', [StaffDocumentController::class, 'delete'])->name('staff.document.delete');
+Route::post('/staff/documents/{id}/undo', [StaffDocumentController::class, 'undoDelete'])->name('staff.document.undo');
 Route::get('/staff/user-search', [UserManagementController::class, 'searchUser'])->name('staff.userSearch');
 
 // Document Owner

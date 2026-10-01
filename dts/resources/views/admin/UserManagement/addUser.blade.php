@@ -128,8 +128,9 @@
         <div class="add-user-field">
           <label for="roleID">Role</label>
           <select id="roleID" name="roleID" class="form-control" required>
+            <option value="" disabled {{ old('roleID') ? '' : 'selected' }}>Select Role</option>
             @foreach($roles as $role)
-              <option value="{{ $role->roleID }}" @selected(old('roleID', 1) == $role->roleID)>{{ $role->roleName }}</option>
+              <option value="{{ $role->roleID }}" @selected(old('roleID') == $role->roleID)>{{ $role->roleName }}</option>
             @endforeach
           </select>
         </div>

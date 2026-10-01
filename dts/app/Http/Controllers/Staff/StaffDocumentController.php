@@ -125,6 +125,21 @@ class StaffDocumentController extends Controller
         $user = auth()->user();
         $search = $request->input('search');
 
+        foreach (\App\Models\Document::all() as $doc) {
+            \DB::table('document_histories')->updateOrInsert(
+                ['documentId' => $doc->documentId],
+                [
+                    'prevDepartmentID' => $doc->currentDepartmentID,
+                    'currentDepartmentID' => $doc->currentDepartmentID,
+                    'statusID' => $doc->currentStatus ?? 1,
+                    'userID' => $doc->ownerID ?? $user->userID,
+                    'action' => 'Document added / registered',
+                    'created_at' => $doc->created_at,
+                    'updated_at' => $doc->updated_at ?? $doc->created_at,
+                ]
+            );
+        }
+
         $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.status', 'document.department'])
             ->when($user->departmentID, function($q) use ($user) {
                 return $q->where(function($sub) use ($user) {
@@ -169,8 +184,7 @@ class StaffDocumentController extends Controller
 
     public function create()
     {
-        $departments = \App\Models\Department::all();
-        return view('staff.create_document', compact('departments'));
+        return view('staff.create_document');
     }
 
     public function store(Request $request)
@@ -179,16 +193,25 @@ class StaffDocumentController extends Controller
             'documentNo' => 'required|unique:documents,documentNo',
             'title' => 'required|string|max:255',
             'documentType' => 'required|string|max:255',
-            'departmentID' => 'required|exists:departments,depID',
+            'fromOffice' => 'required|string|max:255',
             'documentDate' => 'nullable|date',
             'file' => 'required|file|mimes:pdf|max:10240',
         ]);
+
+        $officeName = trim($request->fromOffice);
+        $department = Department::where('depName', 'LIKE', $officeName)->first();
+        if (!$department) {
+            $department = Department::create([
+                'depName' => $officeName,
+                'description' => $officeName,
+            ]);
+        }
 
         $file = $request->file('file');
         $fileName = Str::uuid() . '_' . $file->getClientOriginalName();
         $filePath = $file->storeAs('documents', $fileName, 'public');
 
-        Document::create([
+        $newDoc = Document::create([
             'documentId' => (string) Str::uuid(),
             'documentNo' => $request->documentNo,
             'title' => $request->title,
@@ -197,8 +220,19 @@ class StaffDocumentController extends Controller
             'documentDate' => $request->documentDate ?? now()->toDateString(),
             'ownerID' => auth()->user()->userID,
             'currentStatus' => 1, // Pending
-            'currentDepartmentID' => $request->departmentID,
+            'currentDepartmentID' => $department->depID,
             'filePath' => $filePath,
+        ]);
+
+        \DB::table('document_histories')->insert([
+            'documentId' => $newDoc->documentId,
+            'prevDepartmentID' => $department->depID,
+            'currentDepartmentID' => $department->depID,
+            'statusID' => 1,
+            'userID' => auth()->user()->userID,
+            'action' => 'Document added / registered',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Document added successfully!');
@@ -212,25 +246,65 @@ class StaffDocumentController extends Controller
     public function update(Request $request, Document $document)
     {
         $request->validate([
+            'documentNo' => 'required|unique:documents,documentNo,' . $document->documentId . ',documentId',
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
             'documentType' => 'required|string|max:255',
+            'fromOffice' => 'required|string|max:255',
+            'documentDate' => 'nullable|date',
+            'file' => 'nullable|file|mimes:pdf|max:10240',
         ]);
 
-        $document->update($request->only(['title', 'description', 'documentType']));
+        $officeName = trim($request->fromOffice);
+        $department = Department::where('depName', 'LIKE', $officeName)->first();
+        if (!$department) {
+            $department = Department::create([
+                'depName' => $officeName,
+                'description' => $officeName,
+            ]);
+        }
+
+        $updateData = [
+            'documentNo' => $request->documentNo,
+            'title' => $request->title,
+            'description' => $request->title,
+            'documentType' => $request->documentType,
+            'documentDate' => $request->documentDate ?? $document->documentDate,
+            'currentDepartmentID' => $department->depID,
+        ];
+
+        if ($request->hasFile('file')) {
+            if ($document->filePath && \Storage::disk('public')->exists($document->filePath)) {
+                \Storage::disk('public')->delete($document->filePath);
+            }
+            $file = $request->file('file');
+            $fileName = \Illuminate\Support\Str::uuid() . '_' . $file->getClientOriginalName();
+            $updateData['filePath'] = $file->storeAs('documents', $fileName, 'public');
+        }
+
+        $document->update($updateData);
 
         return redirect()->route('dashboard')->with('success', 'Document updated successfully!');
     }
 
     public function delete(Document $document)
     {
-        // Delete file if exists
-        if ($document->filePath && \Storage::disk('public')->exists($document->filePath)) {
-            \Storage::disk('public')->delete($document->filePath);
-        }
+        $documentId = $document->documentId;
+        $documentTitle = $document->title;
 
         $document->delete();
 
-        return back()->with('success', 'Document deleted successfully.');
+        return back()->with([
+            'success' => 'Document deleted successfully.',
+            'undo_delete_id' => $documentId,
+            'undo_delete_title' => $documentTitle,
+        ]);
+    }
+
+    public function undoDelete($id)
+    {
+        $document = Document::withTrashed()->where('documentId', $id)->firstOrFail();
+        $document->restore();
+
+        return back()->with('success', 'Document retrieved successfully!');
     }
 }

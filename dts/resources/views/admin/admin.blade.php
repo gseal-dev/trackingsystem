@@ -248,22 +248,41 @@
 @section('content')
 <div class="dashboard-shell">
     <div class="dashboard-container">
-        <div class="dashboard-layout">
-            <div class="dashboard-main">
-        <div class="dashboard-header d-flex align-items-center justify-content-between">
-            <div>
-                <h1 class="dashboard-title">Admin Dashboard</h1>
-                <p class="dashboard-subtitle">Quick access to management and document workflows</p>
-            </div>
-            <div>
-                <form method="POST" action="{{ route('logout') }}" class="m-0">
-                    @csrf
-                    <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;">
-                        <i class="bi bi-box-arrow-right me-1"></i> Logout
-                    </button>
-                </form>
-            </div>
-        </div>
+        <div class="staff-layout" style="display: grid; grid-template-columns: 240px 1fr; gap: 2rem; align-items: start;">
+            <aside class="staff-sidebar" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 20px; padding: 1.5rem; position: sticky; top: 2rem;">
+                <nav class="staff-nav">
+                    <ul class="staff-nav-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <li>
+                            <a href="{{ route('admin.documents') }}" class="staff-nav-link" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 12px; color: #4b5563; text-decoration: none; font-weight: 600;">
+                                <i class="bi bi-folder2-open"></i>
+                                <span>Documents List</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.userManagement.admins') }}" class="staff-nav-link" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 12px; color: #4b5563; text-decoration: none; font-weight: 600;">
+                                <i class="bi bi-people-fill"></i>
+                                <span>Users List</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <main class="staff-main-content" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 24px; padding: 2rem; min-height: 600px; width: 100%;">
+                <div class="dashboard-header d-flex align-items-center justify-content-between">
+                    <div>
+                        <h1 class="dashboard-title">Documents List</h1>
+                        <p class="dashboard-subtitle">Manage and track all registered documents</p>
+                    </div>
+                    <div>
+                        <form method="POST" action="{{ route('logout') }}" class="m-0">
+                            @csrf
+                            <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;">
+                                <i class="bi bi-box-arrow-right me-1"></i> Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
 
         <div class="dashboard-toolbar">
             <div class="toolbar-item">
@@ -287,37 +306,12 @@
                 </div>
             </div>
 
-            <div class="row g-3 dashboard-users-toolbar">
-                <div class="col-12 col-lg-5 dashboard-users-field dashboard-users-search-wrap">
-                    <label for="dashboard-user-search">Search</label>
-                    <input id="dashboard-user-search" class="dashboard-users-search" type="search" placeholder="Search by name or email">
-                    <button type="button" aria-label="Search"><i class="bi bi-search"></i></button>
-                </div>
-                <div class="col-12 col-lg-4 dashboard-users-field">
-                    <label>Status</label>
-                    <div class="dashboard-users-status">
-                        <button type="button" class="active" data-dashboard-status="all">All</button>
-                        <button type="button" data-dashboard-status="active">Active</button>
-                        <button type="button" data-dashboard-status="inactive">Inactive</button>
-                    </div>
-                </div>
-                <div class="col-12 col-lg-3 dashboard-users-field">
-                    <label for="dashboard-user-role">Role</label>
-                    <select id="dashboard-user-role" class="dashboard-users-select">
-                        <option value="all">All</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Staff">Staff</option>
-                    </select>
-                </div>
-            </div>
-
             <div class="table-responsive card-surface dashboard-users-table">
                 <table class="table table-clean align-middle mb-0">
                     <thead>
                         <tr>
                             <th>Name</th>
                             <th>Email</th>
-                            <th>Status</th>
                             <th>Role</th>
                             <th>Password</th>
                             <th>Action</th>
@@ -325,10 +319,9 @@
                     </thead>
                     <tbody>
                         @forelse($users as $user)
-                            <tr data-dashboard-status="active" data-dashboard-role="{{ $user->role->roleName ?? 'Admin' }}" data-dashboard-search="{{ strtolower($user->firstName . ' ' . $user->lastName . ' ' . $user->email) }}">
-                                <td>{{ $user->firstName }} {{ $user->lastName }}</td>
+                            <tr data-dashboard-role="{{ $user->role->roleName ?? 'Admin' }}" data-dashboard-search="{{ strtolower($user->firstName . ' ' . $user->lastName . ' ' . $user->email) }}">
+                                <td style="text-transform: uppercase;">{{ $user->firstName }} {{ $user->lastName }}</td>
                                 <td>{{ $user->email }}</td>
-                                <td><span class="dashboard-user-status">Active</span></td>
                                 <td>{{ $user->role->roleName ?? 'Admin' }}</td>
                                 <td><span class="dashboard-users-password">********</span></td>
                                 <td>
@@ -345,7 +338,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted">No admin users found.</td>
+                                <td colspan="5" class="text-center text-muted">No admin users found.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -431,39 +424,10 @@
         @endif
         @push('scripts')
             <script>
-                (function () {
-                    const search = document.getElementById('dashboard-user-search');
-                    const role = document.getElementById('dashboard-user-role');
-                    const statusButtons = document.querySelectorAll('button[data-dashboard-status]');
-                    const rows = document.querySelectorAll('tbody tr[data-dashboard-role]');
-                    let selectedStatus = 'all';
-
-                    function filterUsers() {
-                        const searchTerm = search.value.trim().toLowerCase();
-                        rows.forEach(function (row) {
-                            const matchesSearch = row.dataset.dashboardSearch.includes(searchTerm);
-                            const matchesStatus = selectedStatus === 'all' || row.dataset.dashboardStatus === selectedStatus;
-                            const matchesRole = role.value === 'all' || row.dataset.dashboardRole === role.value;
-                            row.hidden = !(matchesSearch && matchesStatus && matchesRole);
-                        });
-                    }
-
-                    search.addEventListener('input', filterUsers);
-                    role.addEventListener('change', filterUsers);
-                    statusButtons.forEach(function (button) {
-                        button.addEventListener('click', function () {
-                            selectedStatus = button.dataset.dashboardStatus;
-                            statusButtons.forEach(function (item) { item.classList.remove('active'); });
-                            button.classList.add('active');
-                            filterUsers();
-                        });
-                    });
-                })();
-
                 document.getElementById('dashboard-export-users').addEventListener('click', function () {
-                    const rows = [['Name', 'Email', 'Status', 'Role', 'Password']];
+                    const rows = [['Name', 'Email', 'Role', 'Password']];
                     document.querySelectorAll('tbody tr[data-dashboard-role]:not([hidden])').forEach(function (row) {
-                        rows.push(Array.from(row.children).slice(0, 5).map(function (cell) {
+                        rows.push(Array.from(row.children).slice(0, 4).map(function (cell) {
                             return cell.innerText.trim();
                         }));
                     });
@@ -490,6 +454,7 @@
                 });
             </script>
         @endpush
+                </main>
             </div>
         </div>
     </div>

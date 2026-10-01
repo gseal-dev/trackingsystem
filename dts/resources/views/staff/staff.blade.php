@@ -215,14 +215,14 @@
       <main class="staff-main-content">
         <div class="section-header">
           <div>
-            <h1 class="section-title">Staff Records</h1>
-            <p class="text-muted">Manage and track your assigned documents</p>
+            <h1 class="section-title">Documents List</h1>
+            <p class="text-muted">Manage and track all registered documents</p>
           </div>
           <div class="d-flex gap-2 align-items-center flex-wrap">
-            <a href="{{ route('staff.document.create') }}" class="btn-create">
+            <button type="button" class="btn-create border-0 cursor-pointer" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
               <i class="bi bi-plus-lg"></i>
               <span>Add Document</span>
-            </a>
+            </button>
             <form method="POST" action="{{ route('logout') }}" class="m-0">
                 @csrf
                 <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;">
@@ -231,6 +231,18 @@
             </form>
           </div>
         </div>
+
+        @if(session('undo_delete_id'))
+          <div class="alert alert-info alert-dismissible fade show border-0 mb-4 d-flex justify-content-between align-items-center" role="alert" style="background: #eff6ff; color: #1e40af; border-radius: 12px;">
+            <span>Document "{{ session('undo_delete_title') }}" deleted.</span>
+            <form action="{{ route('staff.document.undo', session('undo_delete_id')) }}" method="POST" class="m-0">
+              @csrf
+              <button type="submit" class="btn btn-sm btn-dark fw-bold px-3 py-1" style="border-radius: 50px;">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Undo / Retrieve
+              </button>
+            </form>
+          </div>
+        @endif
 
         @if(session('success'))
           <div class="alert alert-success alert-dismissible fade show border-0 mb-4" role="alert" style="background: #ecfdf5; color: #065f46; border-radius: 12px;">
@@ -245,27 +257,24 @@
               <i class="bi bi-search"></i>
               <input type="text" id="staff-record-search" class="form-control" placeholder="Search records...">
             </div>
-            <select name="year" class="form-select" style="width: 120px;">
+            <select name="year" class="form-select" style="width: 120px;" onchange="this.form.submit()">
               <option value="">All Years</option>
-              @for($y = 2024; $y <= 2028; $y++)
+              @for($y = 2017; $y <= 2026; $y++)
                 <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
               @endfor
             </select>
-            <select name="month" class="form-select" style="width: 140px;">
+            <select name="month" class="form-select" style="width: 140px;" onchange="this.form.submit()">
               <option value="">All Months</option>
               @for($m = 1; $m <= 12; $m++)
                 <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
               @endfor
             </select>
-            <select name="day" class="form-select" style="width: 110px;">
+            <select name="day" class="form-select" style="width: 110px;" onchange="this.form.submit()">
               <option value="">All Days</option>
               @for($d = 1; $d <= 31; $d++)
                 <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>Day {{ $d }}</option>
               @endfor
             </select>
-            <button type="submit" class="btn btn-dark px-3 py-2" style="background: #111827; color: #fff; border-radius: 50px;">
-              <i class="bi bi-filter"></i> Filter
-            </button>
             @if(request('year') || request('month') || request('day'))
               <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 50px;">Reset</a>
             @endif
@@ -289,7 +298,7 @@
                 <tr data-record-search="{{ strtolower($document->documentNo . ' ' . ($document->department->depName ?? '') . ' ' . $document->documentType . ' ' . $document->title) }}">
                   <td class="fw-bold">{{ $document->documentNo }}</td>
                   <td>{{ $document->department->depName ?? '-' }}</td>
-                  <td><span class="badge bg-light text-dark border">{{ $document->documentType }}</span></td>
+                  <td style="text-transform: uppercase;">{{ $document->documentType }}</td>
                   <td>{{ $document->title }}</td>
                   <td class="text-muted">{{ $document->documentDate ? \Carbon\Carbon::parse($document->documentDate)->format('F d, Y') : $document->created_at?->format('F d, Y') }}</td>
                   <td>
@@ -299,13 +308,10 @@
                         <i class="bi bi-eye"></i>
                       </a>
                       @endif
-                      <a href="{{ route('staff.document.edit', $document->documentId) }}" class="btn-action" title="Edit Details">
+                      <button type="button" class="btn-action border-0 bg-transparent" data-bs-toggle="modal" data-bs-target="#editDocumentModal-{{ $document->documentId }}" title="Edit Details">
                         <i class="bi bi-pencil"></i>
-                      </a>
-                      <a href="{{ route('staff.processDocumentForm', $document->documentId) }}" class="btn-action" title="Process/Route">
-                        <i class="bi bi-gear"></i>
-                      </a>
-                      <form action="{{ route('staff.document.delete', $document->documentId) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this document?')">
+                      </button>
+                      <form action="{{ route('staff.document.delete', $document->documentId) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this file?')">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn-action btn-delete" title="Delete">
@@ -340,5 +346,189 @@
     });
   });
 </script>
+@if($errors->any())
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var myModal = new bootstrap.Modal(document.getElementById('addDocumentModal'));
+    myModal.show();
+  });
+</script>
+@endif
 @endpush
+
+<!-- Add Document Modal -->
+<div class="modal fade" id="addDocumentModal" tabindex="-1" aria-labelledby="addDocumentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4 p-3" style="background-color: #f5f5f5;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold text-dark" id="addDocumentModalLabel">Add Document</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="{{ route('staff.document.store') }}" enctype="multipart/form-data">
+        @csrf
+        <div class="modal-body">
+          @if($errors->any())
+            <div class="alert alert-danger rounded-4">
+              <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                  <li>{{ $error }}</li>
+                @endforeach
+              </ul>
+            </div>
+          @endif
+
+          <div class="d-flex flex-column gap-3">
+            <!-- Reference Number -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-hash"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="text" id="documentNo" name="documentNo" class="form-control rounded-pill text-uppercase" placeholder="REFERENCE NUMBER" value="{{ old('documentNo') }}" required>
+              </div>
+            </div>
+
+            <!-- From Office -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-building"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="text" id="fromOffice" name="fromOffice" class="form-control rounded-pill text-uppercase" placeholder="FROM OFFICE" value="{{ old('fromOffice') }}" required>
+              </div>
+            </div>
+
+            <!-- Type -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-file-earmark-text"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="text" id="documentType" name="documentType" class="form-control rounded-pill text-uppercase" placeholder="TYPE" value="{{ old('documentType') }}" required>
+              </div>
+            </div>
+
+            <!-- Subject -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-card-heading"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="text" id="title" name="title" class="form-control rounded-pill text-uppercase" placeholder="SUBJECT" value="{{ old('title') }}" required>
+              </div>
+            </div>
+
+            <!-- Date -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-calendar-event"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="date" id="documentDate" name="documentDate" class="form-control rounded-pill" value="{{ old('documentDate', date('Y-m-d')) }}" required>
+              </div>
+            </div>
+
+            <!-- Upload PDF File -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-paperclip"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="file" id="file" name="file" class="form-control rounded-pill" accept=".pdf" required>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-dark rounded-pill px-4 text-uppercase fw-bold" style="background-color: #000; color: #fff;">Add Document</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+@foreach($documents as $document)
+<!-- Edit Document Modal -->
+<div class="modal fade" id="editDocumentModal-{{ $document->documentId }}" tabindex="-1" aria-labelledby="editDocumentModalLabel-{{ $document->documentId }}" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4 p-3" style="background-color: #f5f5f5;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold text-dark" id="editDocumentModalLabel-{{ $document->documentId }}">Edit Document</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="{{ route('staff.document.update', $document->documentId) }}" enctype="multipart/form-data">
+        @csrf
+        <div class="modal-body">
+          <div class="d-flex flex-column gap-3">
+            <!-- Reference Number -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-hash"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="text" name="documentNo" class="form-control rounded-pill text-uppercase" placeholder="REFERENCE NUMBER" value="{{ $document->documentNo }}" required>
+              </div>
+            </div>
+
+            <!-- From Office -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-building"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="text" name="fromOffice" class="form-control rounded-pill text-uppercase" placeholder="FROM OFFICE" value="{{ $document->department->depName ?? '' }}" required>
+              </div>
+            </div>
+
+            <!-- Type -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-file-earmark-text"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="text" name="documentType" class="form-control rounded-pill text-uppercase" placeholder="TYPE" value="{{ $document->documentType }}" required>
+              </div>
+            </div>
+
+            <!-- Subject -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-card-heading"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="text" name="title" class="form-control rounded-pill text-uppercase" placeholder="SUBJECT" value="{{ $document->title }}" required>
+              </div>
+            </div>
+
+            <!-- Date -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-calendar-event"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="date" name="documentDate" class="form-control rounded-pill" value="{{ $document->documentDate ?? date('Y-m-d') }}" required>
+              </div>
+            </div>
+
+            <!-- Upload PDF File -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-paperclip"></i>
+              </div>
+              <div class="flex-grow-1">
+                <input type="file" name="file" class="form-control rounded-pill" accept=".pdf">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-dark rounded-pill px-4 text-uppercase fw-bold" style="background-color: #000; color: #fff;">Update Document</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+@endforeach
 @endsection

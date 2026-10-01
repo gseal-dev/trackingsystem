@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Staff\StaffDocumentController;
 
 class DashboardController extends Controller
 {
@@ -12,22 +13,13 @@ class DashboardController extends Controller
 
         switch ($role) {
             case 'Admin':
-                $users = \App\Models\User::with('role')
-                    ->get();
-                $roles = \App\Models\Role::whereIn('roleName', ['Admin', 'Staff'])
-                    ->orderBy('roleName')
-                    ->get();
-                return view('admin.admin', compact('users', 'roles'));
+                $users = \App\Models\User::with('role')->get();
+                $roles = \App\Models\Role::whereIn('roleName', ['Admin', 'Staff'])->orderBy('roleName')->get();
+                return view('admin.UserManagement.admins', compact('users', 'roles'));
             case 'DocumentOwner':
                 return view('documentOwner.document_owner');
             case 'Staff':
-                $documents = \App\Models\Document::with('department')
-                    ->when($user->departmentID, function($q) use ($user) {
-                        return $q->where('currentDepartmentID', $user->departmentID);
-                    })
-                    ->get();
-                $departments = \App\Models\Department::all();
-                return view('staff.staff', compact('documents', 'departments'));
+                return app(StaffDocumentController::class)->index(request());
             case 'Auditor':
                 $documents = \App\Models\Document::with(['owner', 'status', 'department'])
                     ->where('currentStatus', '!=', 1) // Exclude "Pending"

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Staff History')
+@section('title', 'Admin Documents')
 
 @push('head')
 <style>
@@ -170,15 +170,15 @@
         <nav class="staff-nav">
           <ul class="staff-nav-list">
             <li>
-              <a href="{{ route('dashboard') }}" class="staff-nav-link">
-                <i class="bi bi-grid-fill"></i>
-                <span>Dashboard</span>
+              <a href="{{ route('admin.documents') }}" class="staff-nav-link active">
+                <i class="bi bi-folder2-open"></i>
+                <span>Documents List</span>
               </a>
             </li>
             <li>
-              <a href="{{ route('staff.history') }}" class="staff-nav-link active">
-                <i class="bi bi-clock-history"></i>
-                <span>History</span>
+              <a href="{{ route('admin.userManagement.admins') }}" class="staff-nav-link">
+                <i class="bi bi-people-fill"></i>
+                <span>Users List</span>
               </a>
             </li>
           </ul>
@@ -188,8 +188,8 @@
       <main class="staff-main-content">
         <div class="section-header">
           <div>
-            <h1 class="section-title">Document History</h1>
-            <p class="text-muted">Track processed and routed document transactions</p>
+            <h1 class="section-title">Documents List</h1>
+            <p class="text-muted">Manage and track all registered documents</p>
           </div>
           <div>
             <form method="POST" action="{{ route('logout') }}" class="m-0">
@@ -202,10 +202,10 @@
         </div>
 
         <div class="table-toolbar">
-          <form method="GET" action="{{ route('staff.history') }}" class="d-flex gap-2 flex-wrap align-items-center w-100">
+          <form method="GET" action="{{ route('admin.documents') }}" class="d-flex gap-2 flex-wrap align-items-center w-100">
             <div class="search-box flex-grow-1" style="max-width: 250px;">
               <i class="bi bi-search"></i>
-              <input type="text" name="search" class="form-control" placeholder="Search history..." value="{{ request('search') }}">
+              <input type="text" id="admin-doc-search" class="form-control" placeholder="Search documents...">
             </div>
             <select name="year" class="form-select" style="width: 120px;" onchange="this.form.submit()">
               <option value="">All Years</option>
@@ -225,8 +225,8 @@
                 <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>Day {{ $d }}</option>
               @endfor
             </select>
-            @if(request('search') || request('year') || request('month') || request('day'))
-              <a href="{{ route('staff.history') }}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 50px;">Reset</a>
+            @if(request('year') || request('month') || request('day'))
+              <a href="{{ route('admin.documents') }}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 50px;">Reset</a>
             @endif
           </form>
         </div>
@@ -236,26 +236,41 @@
             <thead class="bg-light">
               <tr>
                 <th class="border-0">Reference Number</th>
-                <th class="border-0">From Office</th>
+                <th class="border-0">Office</th>
                 <th class="border-0">Type</th>
                 <th class="border-0">Subject</th>
+                <th class="border-0">Uploaded By</th>
                 <th class="border-0">Date</th>
+                <th class="border-0 text-end">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              @forelse($histories as $history)
-                <tr>
-                  <td class="fw-bold">{{ $history->document->documentNo ?? '-' }}</td>
-                  <td>{{ $history->document->department->depName ?? '-' }}</td>
-                  <td><span class="badge bg-light text-dark border">{{ $history->document->documentType ?? '-' }}</span></td>
-                  <td>{{ $history->document->title ?? '-' }}</td>
-                  <td class="text-muted">{{ $history->document?->documentDate ? \Carbon\Carbon::parse($history->document->documentDate)->format('F d, Y') : $history->created_at?->format('F d, Y') }}</td>
+            <tbody id="admin-docs-body">
+              @forelse($documents as $doc)
+                @php
+                  $uploaderName = $doc->owner ? ($doc->owner->username ?: trim(($doc->owner->firstName ?? '') . ' ' . ($doc->owner->lastName ?? ''))) : 'Unknown';
+                @endphp
+                <tr data-doc-search="{{ strtolower($doc->documentNo . ' ' . ($doc->department->depName ?? '') . ' ' . $doc->documentType . ' ' . $doc->title . ' ' . $uploaderName) }}">
+                  <td class="fw-bold">{{ $doc->documentNo }}</td>
+                  <td>{{ $doc->department->depName ?? '-' }}</td>
+                  <td style="text-transform: uppercase;">{{ $doc->documentType }}</td>
+                  <td>{{ $doc->title }}</td>
+                  <td>{{ $uploaderName }}</td>
+                  <td class="text-muted">{{ $doc->documentDate ? \Carbon\Carbon::parse($doc->documentDate)->format('F d, Y') : $doc->created_at?->format('F d, Y') }}</td>
+                  <td>
+                    <div class="actions-cell justify-content-end">
+                      @if($doc->filePath)
+                      <a href="{{ asset('storage/' . $doc->filePath) }}" class="btn-action" target="_blank" title="View PDF">
+                        <i class="bi bi-eye"></i>
+                      </a>
+                      @endif
+                    </div>
+                  </td>
                 </tr>
               @empty
                 <tr>
-                  <td colspan="5" class="text-center py-5 text-muted">
+                  <td colspan="7" class="text-center py-5 text-muted">
                     <i class="bi bi-folder-x display-4 mb-3 d-block"></i>
-                    No history records found.
+                    No documents found.
                   </td>
                 </tr>
               @endforelse
@@ -266,4 +281,15 @@
     </div>
   </div>
 </div>
+
+@push('scripts')
+<script>
+  document.getElementById('admin-doc-search').addEventListener('input', function () {
+    const search = this.value.trim().toLowerCase();
+    document.querySelectorAll('#admin-docs-body tr[data-doc-search]').forEach(function (row) {
+      row.hidden = !row.dataset.docSearch.includes(search);
+    });
+  });
+</script>
+@endpush
 @endsection

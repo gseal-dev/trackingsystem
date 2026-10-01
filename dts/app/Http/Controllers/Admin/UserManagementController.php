@@ -14,20 +14,9 @@ class UserManagementController extends Controller
         return view('admin.UserManagement.userManagement');
     }
     public function admins(Request $request) {
-        $users = User::whereHas('role', fn($q) => $q->where('roleName', 'Admin'))->get();
-        $search = trim($request->query('search', ''));
-        $users = User::whereHas('role', fn($q) => $q->where('roleName', 'Admin'))
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($query) use ($search) {
-                    $query->where('username', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('firstName', 'like', "%{$search}%")
-                        ->orWhere('lastName', 'like', "%{$search}%");
-                });
-            })
-            ->with('role')
-            ->get();
-        return view('admin.UserManagement.admins', compact('users'));
+        $users = User::with('role')->get();
+        $roles = Role::whereIn('roleName', ['Admin', 'Staff'])->orderBy('roleName')->get();
+        return view('admin.UserManagement.admins', compact('users', 'roles'));
     }
     public function owners() {
         $users = User::whereHas('role', fn($q) => $q->where('roleName', 'DocumentOwner'))->get();
@@ -55,13 +44,13 @@ class UserManagementController extends Controller
 
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
-            'email' => 'required|email|ends_with:@gmail.com|unique:users,email',
+            'email' => 'required|email|unique:users,email',
             'firstName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
-            'roleID' => 'nullable|exists:roles,roleID',
+            'roleID' => 'required|exists:roles,roleID',
             'password' => 'required|string|min:8|confirmed',
         ]);
-        $roleID = $request->input('roleID') ?: Role::where('roleName', 'Admin')->value('roleID');
+        $roleID = $request->input('roleID');
         User::create([
             'username' => $request->username,
             'email' => $request->email,

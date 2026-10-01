@@ -29,7 +29,7 @@
                 <th>Document No</th>
                 <th>Title</th>
                 <th>Document Owner</th>
-                <th>From Department</th>
+                <th>From Office</th>
                 <th>Status</th>
                 <th class="text-end">Download</th>
               </tr>

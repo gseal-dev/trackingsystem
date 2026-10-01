@@ -9,6 +9,40 @@ use App\Models\Department;
 
 class DocumentRoutingController extends Controller
 {
+    // List all documents for admin documents page
+    public function index(Request $request)
+    {
+        $query = Document::with(['department', 'owner', 'status']);
+
+        if ($request->filled('year')) {
+            $query->where(function($q) use ($request) {
+                $q->whereYear('documentDate', $request->year)
+                  ->orWhere(function($sub) use ($request) {
+                      $sub->whereNull('documentDate')->whereYear('created_at', $request->year);
+                  });
+            });
+        }
+        if ($request->filled('month')) {
+            $query->where(function($q) use ($request) {
+                $q->whereMonth('documentDate', $request->month)
+                  ->orWhere(function($sub) use ($request) {
+                      $sub->whereNull('documentDate')->whereMonth('created_at', $request->month);
+                  });
+            });
+        }
+        if ($request->filled('day')) {
+            $query->where(function($q) use ($request) {
+                $q->whereDay('documentDate', $request->day)
+                  ->orWhere(function($sub) use ($request) {
+                      $sub->whereNull('documentDate')->whereDay('created_at', $request->day);
+                  });
+            });
+        }
+
+        $documents = $query->get();
+        return view('admin.documents', compact('documents'));
+    }
+
     // List all documents for sending
     public function listDocuments()
     {

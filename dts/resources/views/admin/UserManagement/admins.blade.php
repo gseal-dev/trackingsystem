@@ -1,260 +1,360 @@
 @extends('layouts.app')
+
 @section('title', 'Users List')
-@section('content')
+
 @push('head')
 <style>
-  .users-page {
-    align-self: flex-start;
-    width: min(1200px, 100%);
-    padding: 1.4rem 0 3rem;
-  }
-
-  .users-heading,
-  .users-toolbar,
-  .users-table-header,
-  .user-row {
-    display: grid;
-    grid-template-columns: 1.25fr 1.35fr 0.9fr 0.9fr 0.9fr 0.6fr;
-    align-items: center;
-  }
-
-  .users-heading {
-    grid-template-columns: 1fr auto;
-    margin-bottom: 2.35rem;
-  }
-
-  .users-heading h1 {
-    margin: 0;
-    font-size: 1.75rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-  }
-
-  .users-actions {
-    display: flex;
-    gap: 0.55rem;
-  }
-
-  .users-export,
-  .users-add {
-    min-height: 38px;
-    border: 1px solid #d9dce3;
-    border-radius: 7px;
-    background: #fff;
-    color: #20232b;
-    font-weight: 600;
-  }
-
-  .users-add {
-    border-color: #16a34a;
-    color: #15803d;
-    font-size: 1.2rem;
-    line-height: 1;
-  }
-
-  .users-toolbar {
-    grid-template-columns: minmax(240px, 1.1fr) 1fr 0.85fr;
-    gap: 2.5rem;
-    margin-bottom: 1.55rem;
-  }
-
-  .users-field label {
-    display: block;
-    margin-bottom: 0.45rem;
-    color: #525762;
-    font-size: 0.82rem;
-  }
-
-  .users-search {
-    position: relative;
-  }
-
-  .users-search input,
-  .users-select {
+  .dashboard-shell {
     width: 100%;
-    height: 38px;
-    border: 1px solid #d9dce3;
-    border-radius: 6px;
+    min-height: calc(100vh - 100px);
+    padding: clamp(1rem, 2vw, 2rem);
+  }
+
+  .dashboard-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .staff-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .staff-sidebar {
     background: #fff;
-    color: #20232b;
-    padding: 0.45rem 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    padding: 1.5rem;
+    position: sticky;
+    top: 2rem;
   }
 
-  .users-search input {
-    padding-right: 2.25rem;
-  }
-
-  .users-search button {
-    position: absolute;
-    right: 0.45rem;
-    bottom: 0.35rem;
-    border: 0;
-    background: transparent;
-    color: #111827;
-    font-size: 1.05rem;
-  }
-
-  .users-status {
+  .staff-nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
     display: flex;
-    height: 38px;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
-  .users-status button {
-    flex: 1;
-    border: 1px solid #d9dce3;
-    background: #fff;
-    color: #20232b;
+  .staff-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    color: #4b5563;
+    text-decoration: none;
     font-weight: 600;
+    transition: all 0.2s;
   }
 
-  .users-status button:first-child { border-radius: 6px 0 0 6px; }
-  .users-status button:last-child { border-radius: 0 6px 6px 0; }
-  .users-status button + button { border-left: 0; }
-  .users-status button.active { background: #202532; color: #fff; }
+  .staff-nav-link:hover {
+    background: #f3f4f6;
+    color: #111827;
+  }
 
-  .users-table {
-    overflow: hidden;
-    border: 1px solid #dfe1e7;
-    border-radius: 9px;
+  .staff-nav-link.active {
+    background: #111827;
+    color: #fff;
+  }
+
+  .staff-main-content {
     background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    padding: 2rem;
+    min-height: 600px;
   }
 
-  .users-table-header {
-    min-height: 58px;
-    padding: 0 1rem;
-    background: #e9e9ef;
-    color: #646771;
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .section-title {
+    font-size: 1.875rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    margin: 0;
+  }
+
+  .table-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    position: relative;
+    max-width: 320px;
+    width: 100%;
+  }
+
+  .search-box input {
+    padding-left: 2.5rem;
+    height: 44px;
+  }
+
+  .search-box i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+  }
+
+  .actions-cell {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn-action {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #4b5563;
+    transition: all 0.2s;
+  }
+
+  .btn-action:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    color: #111827;
+  }
+
+  .table th {
+    text-transform: uppercase;
     font-size: 0.78rem;
     font-weight: 800;
-    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #646771;
   }
 
-  .user-row {
-    min-height: 72px;
-    padding: 0 1rem;
-    border-top: 1px solid #edf0f2;
-    color: #20232b;
-  }
-
-  .user-name { font-weight: 600; }
-  .user-email { color: #20232b; }
-
-  .user-status,
-  .user-role {
-    display: inline-flex;
-    width: fit-content;
-    padding: 0.35rem 0.7rem;
-    border-radius: 999px;
-    font-size: 0.86rem;
-    font-weight: 600;
-  }
-
-  .user-status { background: #c9f7e2; color: #159568; }
-  .user-role { border: 1px solid #d9dce3; border-radius: 4px; background: #f5f5f7; }
-  .user-password { color: #6b7280; letter-spacing: 0.12em; }
-
-  .user-edit {
-    width: 32px;
-    height: 32px;
-    border: 0;
-    background: transparent;
-    color: #111827;
-    font-size: 1.15rem;
-  }
-
-  .users-empty { padding: 2rem 1rem; color: #6b7280; text-align: center; }
-
-  @media (max-width: 760px) {
-    .users-heading { align-items: start; gap: 1rem; }
-    .users-toolbar { grid-template-columns: 1fr; gap: 1rem; }
-    .users-table { overflow-x: auto; }
-    .users-table-header,
-    .user-row { min-width: 760px; }
+  @media (max-width: 1024px) {
+    .staff-layout {
+      grid-template-columns: 1fr;
+    }
+    .staff-sidebar {
+      position: static;
+    }
+    .staff-nav-list {
+      flex-direction: row;
+      overflow-x: auto;
+    }
   }
 </style>
 @endpush
-<div class="users-page">
-  <div class="users-heading">
-    <h1>Users List</h1>
-    <div class="users-actions">
-      <button type="button" class="users-export" id="export-users"><i class="bi bi-download"></i> Export Excel</button>
-      <a href="{{ route('admin.userManagement.addForm', ['type' => 'admins']) }}" class="users-add btn" aria-label="Add admin" title="Add admin"><i class="bi bi-plus-lg"></i></a>
-    </div>
-  </div>
 
-  <form class="users-toolbar" method="GET" action="{{ route('admin.userManagement.admins') }}">
-    <div class="users-field users-search">
-      <label for="search">Search</label>
-      <input id="search" name="search" type="search" value="{{ request('search') }}" placeholder="Search by name or email">
-      <button type="submit" aria-label="Search"><i class="bi bi-search"></i></button>
-    </div>
-    <div class="users-field">
-      <label>Status</label>
-      <div class="users-status" role="group" aria-label="Filter by status">
-        <button type="button" class="active" data-status="all">All</button>
-        <button type="button" data-status="active">Active</button>
-        <button type="button" data-status="inactive">Inactive</button>
-      </div>
-    </div>
-    <div class="users-field">
-      <label for="role">Role</label>
-      <select id="role" class="users-select">
-        <option value="all">All</option>
-        <option value="admin">Admin</option>
-      </select>
-    </div>
-  </form>
+@section('content')
+<div class="dashboard-shell">
+  <div class="dashboard-container">
+    <div class="staff-layout">
+      <aside class="staff-sidebar">
+        <nav class="staff-nav">
+          <ul class="staff-nav-list">
+            <li>
+              <a href="{{ route('admin.documents') }}" class="staff-nav-link">
+                <i class="bi bi-folder2-open"></i>
+                <span>Documents List</span>
+              </a>
+            </li>
+            <li>
+              <a href="{{ route('admin.userManagement.admins') }}" class="staff-nav-link active">
+                <i class="bi bi-people-fill"></i>
+                <span>Users List</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
 
-  @if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-  @endif
-
-  <div class="users-table">
-    <div class="users-table-header">
-      <div>Name</div><div>Email</div><div>Status</div><div>Role</div><div>Password</div><div>Action</div>
-    </div>
-    @forelse($users as $user)
-      <div class="user-row" data-status="active" data-role="admin">
-        <div class="user-name">{{ $user->firstName }} {{ $user->lastName }}</div>
-        <div class="user-email">{{ $user->email }}</div>
-        <div><span class="user-status">Active</span></div>
-        <div><span class="user-role">{{ $user->role->roleName ?? 'Admin' }}</span></div>
-        <div><span class="user-password" aria-label="Password hidden">********</span></div>
-        <div class="d-flex align-items-center gap-2">
-          <a class="user-edit" href="{{ route('admin.userManagement.editForm', ['type' => 'admins', 'user' => $user]) }}" aria-label="Edit {{ $user->firstName }} {{ $user->lastName }}" title="Edit user"><i class="bi bi-pencil"></i></a>
-          <form action="{{ route('admin.userManagement.delete', ['type' => 'admins', 'user' => $user]) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
-            @csrf
-            <button type="submit" class="user-edit text-danger border-0 bg-transparent" aria-label="Delete {{ $user->firstName }} {{ $user->lastName }}" title="Delete user"><i class="bi bi-trash"></i></button>
-          </form>
+      <main class="staff-main-content">
+        <div class="section-header">
+          <div>
+            <h1 class="section-title">Users List</h1>
+            <p class="text-muted">Manage and track all system users</p>
+          </div>
+          <div>
+            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                @csrf
+                <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;">
+                    <i class="bi bi-box-arrow-right me-1"></i> Logout
+                </button>
+            </form>
+          </div>
         </div>
-      </div>
-    @empty
-      <div class="users-empty">No admin users found.</div>
-    @endforelse
+
+        @if(session('success'))
+          <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+
+        <div class="table-toolbar">
+          <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" id="admin-user-search" class="form-control" placeholder="Search users...">
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary px-3 py-2" id="export-users" style="border-radius: 50px;"><i class="bi bi-download me-1"></i> Export Excel</button>
+            <button type="button" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#addUserModal" title="Add user"><i class="bi bi-person-plus me-1"></i> Add User</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="bg-light">
+              <tr>
+                <th class="border-0">Name</th>
+                <th class="border-0">Email</th>
+                <th class="border-0">Role</th>
+                <th class="border-0">Password</th>
+                <th class="border-0 text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-body">
+              @forelse($users as $user)
+                <tr data-user-search="{{ strtolower(($user->firstName ?? '') . ' ' . ($user->lastName ?? '') . ' ' . $user->email . ' ' . ($user->role->roleName ?? 'Admin')) }}">
+                  <td class="fw-bold">{{ $user->firstName }} {{ $user->lastName }}</td>
+                  <td>{{ $user->email }}</td>
+                  <td><span class="badge bg-light text-dark border">{{ $user->role->roleName ?? 'Admin' }}</span></td>
+                  <td><span class="text-muted" style="letter-spacing: 0.12em;">********</span></td>
+                  <td>
+                    <div class="actions-cell justify-content-end">
+                      <a class="btn-action" href="{{ route('admin.userManagement.editForm', ['type' => 'admins', 'user' => $user]) }}" title="Edit user"><i class="bi bi-pencil"></i></a>
+                      <form action="{{ route('admin.userManagement.delete', ['type' => 'admins', 'user' => $user]) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                        @csrf
+                        <button type="submit" class="btn-action text-danger border-0 bg-transparent" title="Delete user"><i class="bi bi-trash"></i></button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="5" class="text-center py-5 text-muted">
+                    <i class="bi bi-people display-4 mb-3 d-block"></i>
+                    No users found.
+                  </td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
   </div>
 </div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+      <div class="modal-header border-0 pb-0 px-4 pt-4">
+        <h5 class="modal-title fw-bold" id="addUserModalLabel">Add New User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="POST" action="{{ route('admin.userManagement.add', ['type' => 'admins']) }}">
+        @csrf
+        <div class="modal-body px-4 py-3">
+          @if($errors->any())
+            <div class="alert alert-danger mb-3">
+              @foreach($errors->all() as $error)
+                <div>{{ $error }}</div>
+              @endforeach
+            </div>
+          @endif
+          <div class="mb-3">
+            <label for="username" class="form-label fw-bold small text-muted">Username <span class="text-danger">*</span></label>
+            <input type="text" id="username" name="username" class="form-control" value="{{ old('username') }}" required>
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label fw-bold small text-muted">Email <span class="text-danger">*</span></label>
+            <input type="email" id="email" name="email" class="form-control" value="{{ old('email') }}" required>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="firstName" class="form-label fw-bold small text-muted">First Name <span class="text-danger">*</span></label>
+              <input type="text" id="firstName" name="firstName" class="form-control" value="{{ old('firstName') }}" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="lastName" class="form-label fw-bold small text-muted">Last Name <span class="text-danger">*</span></label>
+              <input type="text" id="lastName" name="lastName" class="form-control" value="{{ old('lastName') }}" required>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="roleID" class="form-label fw-bold small text-muted">Role <span class="text-danger">*</span></label>
+            <select id="roleID" name="roleID" class="form-select" required>
+              <option value="" disabled {{ old('roleID') ? '' : 'selected' }}>Select Role</option>
+              @foreach($roles ?? [] as $role)
+                <option value="{{ $role->roleID }}" @selected(old('roleID') == $role->roleID)>{{ $role->roleName }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label fw-bold small text-muted">Password <span class="text-danger">*</span></label>
+            <input type="password" id="password" name="password" class="form-control" required minlength="8">
+          </div>
+          <div class="mb-3">
+            <label for="password_confirmation" class="form-label fw-bold small text-muted">Confirm Password <span class="text-danger">*</span></label>
+            <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required minlength="8">
+          </div>
+        </div>
+        <div class="modal-footer border-0 px-4 pb-4">
+          <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal" style="border-radius: 50px;">Cancel</button>
+          <button type="submit" class="btn btn-dark px-4" style="background-color: #000; color: #fff; border-radius: 50px;">Add User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+@if($errors->any())
+<script>
+  function showAddUserModalOnError() {
+    var modalEl = document.getElementById('addUserModal');
+    if (modalEl) {
+      var addUserModal = new bootstrap.Modal(modalEl);
+      addUserModal.show();
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', showAddUserModalOnError);
+  } else {
+    showAddUserModalOnError();
+  }
+</script>
+@endif
+
 @push('scripts')
 <script>
-  document.querySelectorAll('[data-status]').forEach(function (button) {
-    button.addEventListener('click', function () {
-      document.querySelectorAll('.users-status button').forEach(function (item) { item.classList.remove('active'); });
-      button.classList.add('active');
-      document.querySelectorAll('.user-row').forEach(function (row) {
-        row.hidden = button.dataset.status !== 'all' && row.dataset.status !== button.dataset.status;
-      });
+  document.getElementById('admin-user-search').addEventListener('input', function () {
+    const search = this.value.trim().toLowerCase();
+    document.querySelectorAll('#admin-users-body tr[data-user-search]').forEach(function (row) {
+      row.hidden = !row.dataset.userSearch.includes(search);
     });
   });
 
-  document.getElementById('role').addEventListener('change', function () {
-    document.querySelectorAll('.user-row').forEach(function (row) {
-      row.hidden = this.value !== 'all' && row.dataset.role !== this.value;
-    }, this);
-  });
-
   document.getElementById('export-users').addEventListener('click', function () {
-    const rows = [['Name', 'Email', 'Status', 'Role']];
-    document.querySelectorAll('.user-row:not([hidden])').forEach(function (row) {
-      rows.push(Array.from(row.children).slice(0, 4).map(function (cell) { return cell.innerText.trim(); }));
+    const rows = [['Name', 'Email', 'Role']];
+    document.querySelectorAll('#admin-users-body tr').forEach(function (row) {
+      if (!row.hidden && row.querySelectorAll('td').length >= 3) {
+        rows.push(Array.from(row.querySelectorAll('td')).slice(0, 3).map(function (cell) { return cell.innerText.trim(); }));
+      }
     });
     const csv = rows.map(function (row) { return row.map(function (cell) { return '"' + cell.replaceAll('"', '""') + '"'; }).join(','); }).join('\n');
     const link = document.createElement('a');

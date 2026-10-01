@@ -14,6 +14,18 @@
       </div>
     </div>
 
+    @if(session('undo_delete_id'))
+      <div class="alert alert-info border-0 mb-4 d-flex justify-content-between align-items-center" style="background: #eff6ff; color: #1e40af; border-radius: 12px;">
+        <span>Document "{{ session('undo_delete_title') }}" deleted.</span>
+        <form action="{{ route('staff.document.undo', session('undo_delete_id')) }}" method="POST" class="m-0">
+          @csrf
+          <button type="submit" class="btn btn-sm btn-dark fw-bold px-3 py-1" style="border-radius: 50px;">
+            <i class="bi bi-arrow-counterclockwise me-1"></i> Undo / Retrieve
+          </button>
+        </form>
+      </div>
+    @endif
+
     @if(session('success'))
       <div class="alert alert-success card-surface border-0">{{ session('success') }}</div>
     @endif
@@ -47,7 +59,7 @@
               <a href="{{ route('staff.document.edit', $doc->documentId) }}" class="btn btn-outline-secondary btn-sm" title="Edit Document">
                   <i class="bi bi-pencil"></i> Edit
               </a>
-              <form action="{{ route('staff.document.delete', $doc->documentId) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this document?');">
+              <form action="{{ route('staff.document.delete', $doc->documentId) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this file?');">
                   @csrf
                   @method('DELETE')
                   <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete Document">

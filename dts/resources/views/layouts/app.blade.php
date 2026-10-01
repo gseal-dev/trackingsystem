@@ -26,6 +26,11 @@
         display: flex;
         flex-direction: column;
         margin: 0;
+        padding-top: 58px;
+      }
+
+      .table th {
+        text-transform: uppercase;
       }
 
       /* Centered Layout Wrapper */
@@ -58,12 +63,15 @@
       }
 
       .app-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        width: 100%;
         min-height: 58px;
-        margin: 0 auto;
         padding: 0.7rem max(1rem, calc((100% - 1200px) / 2));
         background: #ffffff;
         border-bottom: 1px solid #e5e7eb;

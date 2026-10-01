@@ -76,14 +76,14 @@
   }
 </style>
 
-<div class="container py-4">
-  <div class="mb-3" style="max-width: 520px; margin: 0 auto;">
-    <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+<div class="container py-4" style="max-width: 520px;">
+  <div class="mb-3 text-start">
+    <a href="{{ route('dashboard') }}" class="btn btn-dark d-inline-flex align-items-center gap-2 px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600; font-size: 0.9rem;">
+      <i class="bi bi-arrow-left"></i> Back to Dashboard
     </a>
   </div>
 
-  <div class="custom-card">
+  <div class="custom-card" style="max-width: 100%;">
     <div class="text-center mb-4">
       <h2 class="fw-bold text-dark mb-1">Add Document</h2>
       <p class="text-secondary small mb-0">Add new incoming documents to continue</p>
@@ -119,12 +119,7 @@
             <i class="bi bi-building"></i>
           </div>
           <div class="flex-grow-1">
-            <select id="departmentID" name="departmentID" class="form-control custom-input text-uppercase" required>
-              <option value="">SELECT FROM OFFICE</option>
-              @foreach($departments ?? [] as $dep)
-                <option value="{{ $dep->depID }}" @selected(old('departmentID') == $dep->depID)>{{ strtoupper($dep->depName) }}</option>
-              @endforeach
-            </select>
+            <input type="text" id="fromOffice" name="fromOffice" class="form-control custom-input text-uppercase" placeholder="FROM OFFICE" value="{{ old('fromOffice') }}" required>
           </div>
         </div>
 
