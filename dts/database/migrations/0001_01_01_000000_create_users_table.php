@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('middleName')->nullable();
             $table->string('lastName');
             $table->unsignedBigInteger('roleID');
-            $table->unsignedBigInteger('departmentID');
+            $table->unsignedBigInteger('departmentID')->nullable();
             $table->string('phoneNo')->nullable();
             $table->timestamp('createdAt')->useCurrent();
             $table->timestamps();
