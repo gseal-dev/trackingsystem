@@ -210,8 +210,8 @@
         gap: 0.9rem;
         padding: 1.5rem;
         border-radius: 24px;
-        border: 1px solid var(--border-color);
         background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
         box-shadow: 0 10px 24px rgba(0, 0, 0, 0.03);
         color: var(--brand-dark);
         text-decoration: none;
@@ -430,7 +430,6 @@
         z-index: 10;
       }
     </style>
-    @livewireStyles
     @stack('head')
   </head>
   <body>
@@ -455,7 +454,6 @@
         applyTheme(saved ? saved : (prefersDark ? 'dark' : 'light'));
       })();
     </script>
-    @livewireScripts
     @stack('scripts')
   </body>
 </html>
