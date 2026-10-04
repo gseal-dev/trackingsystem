@@ -9,7 +9,9 @@ use App\Http\Controllers\Admin\DocumentRoutingController;
 use App\Http\Controllers\Staff\StaffDocumentController;
 use App\Http\Controllers\DocumentOwner\DocumentOwnerController;
 use App\Http\Controllers\Auditor\AuditorController;
+use Livewire\Livewire;
 
+// Auth & Dashboard
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
@@ -18,7 +20,6 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
-// Auth & Dashboard
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -63,6 +64,9 @@ Route::post('/staff/documents/{document}/process-route', [StaffDocumentControlle
 Route::delete('/staff/documents/{document}', [StaffDocumentController::class, 'delete'])->name('staff.document.delete');
 Route::post('/staff/documents/{id}/undo', [StaffDocumentController::class, 'undoDelete'])->name('staff.document.undo');
 Route::get('/staff/user-search', [UserManagementController::class, 'searchUser'])->name('staff.userSearch');
+
+// Livewire Document List (real-time updates)
+Route::livewire('/staff/documents', 'document-list')->name('staff.documents')->middleware('auth');
 
 // Document Owner
 Route::get('/document-owner/submitted-documents', [DocumentOwnerController::class, 'submittedDocuments'])->name('documentOwner.submittedDocuments');
