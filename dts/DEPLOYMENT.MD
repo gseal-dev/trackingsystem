@@ -29,7 +29,7 @@ nano .env
 APP_NAME=TrackingSystem
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=[http://192.168.100.204:8081](http://192.168.100.204:8081)
+APP_URL=<serverURL>
 
 LOG_LEVEL=info
 
@@ -38,7 +38,7 @@ DB_HOST=lemp_mariadb
 DB_PORT=3306
 DB_DATABASE=tracking_system
 DB_USERNAME=tracker
-DB_PASSWORD=StrongPassword123!
+DB_PASSWORD=<strongpassword>
 
 QUEUE_CONNECTION=sync
 CACHE_STORE=file
