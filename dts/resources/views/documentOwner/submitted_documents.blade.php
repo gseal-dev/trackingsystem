@@ -28,7 +28,7 @@
                 <th class="text-end">Action</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="owner-submitted-body" data-live-refresh>
             @foreach($documents as $doc)
               <tr>
                 <td>{{ $doc->documentNo }}</td>

@@ -293,7 +293,7 @@
                 <th class="border-0 text-end">Actions</th>
               </tr>
             </thead>
-            <tbody id="staff-records-body">
+            <tbody id="staff-records-body" data-live-refresh>
               @forelse($documents as $document)
                 <tr data-record-search="{{ strtolower($document->documentNo . ' ' . ($document->department->depName ?? '') . ' ' . $document->documentType . ' ' . $document->title) }}">
                   <td class="fw-bold">{{ $document->documentNo }}</td>
@@ -339,12 +339,14 @@
 
 @push('scripts')
 <script>
-  document.getElementById('staff-record-search').addEventListener('input', function () {
-    const search = this.value.trim().toLowerCase();
+  function applyStaffSearch() {
+    const search = document.getElementById('staff-record-search').value.trim().toLowerCase();
     document.querySelectorAll('#staff-records-body tr[data-record-search]').forEach(function (row) {
       row.hidden = !row.dataset.recordSearch.includes(search);
     });
-  });
+  }
+  document.getElementById('staff-record-search').addEventListener('input', applyStaffSearch);
+  document.addEventListener('live-refreshed', applyStaffSearch);
 </script>
 @if($errors->any())
 <script>
@@ -448,6 +450,7 @@
   </div>
 </div>
 
+<div id="staff-edit-modals" data-live-refresh>
 @foreach($documents as $document)
 <!-- Edit Document Modal -->
 <div class="modal fade" id="editDocumentModal-{{ $document->documentId }}" tabindex="-1" aria-labelledby="editDocumentModalLabel-{{ $document->documentId }}" aria-hidden="true">
@@ -531,4 +534,5 @@
   </div>
 </div>
 @endforeach
+</div>
 @endsection

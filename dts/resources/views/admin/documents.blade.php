@@ -244,7 +244,7 @@
                 <th class="border-0 text-end">Actions</th>
               </tr>
             </thead>
-            <tbody id="admin-docs-body">
+            <tbody id="admin-docs-body" data-live-refresh>
               @forelse($documents as $doc)
                 @php
                   $uploaderName = $doc->owner ? ($doc->owner->username ?: trim(($doc->owner->firstName ?? '') . ' ' . ($doc->owner->lastName ?? ''))) : 'Unknown';
@@ -284,12 +284,14 @@
 
 @push('scripts')
 <script>
-  document.getElementById('admin-doc-search').addEventListener('input', function () {
-    const search = this.value.trim().toLowerCase();
+  function applyAdminSearch() {
+    const search = document.getElementById('admin-doc-search').value.trim().toLowerCase();
     document.querySelectorAll('#admin-docs-body tr[data-doc-search]').forEach(function (row) {
       row.hidden = !row.dataset.docSearch.includes(search);
     });
-  });
+  }
+  document.getElementById('admin-doc-search').addEventListener('input', applyAdminSearch);
+  document.addEventListener('live-refreshed', applyAdminSearch);
 </script>
 @endpush
 @endsection

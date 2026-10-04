@@ -454,6 +454,67 @@
         applyTheme(saved ? saved : (prefersDark ? 'dark' : 'light'));
       })();
     </script>
+    <script>
+      // Live list refresh: every few seconds, re-fetch the current page and swap
+      // in any element marked with data-live-refresh (it must also have an id).
+      (function () {
+        const INTERVAL_MS = 5000;
+        const targets = () => document.querySelectorAll('[data-live-refresh][id]');
+        if (!targets().length) return;
+
+        let timer = null, busy = false, lastHtml = {};
+
+        // Don't swap content out from under the user
+        function userIsBusy() {
+          if (document.querySelector('.modal.show')) return true;
+          const el = document.activeElement;
+          return !!(el && el.closest && el.closest('[data-live-refresh]') &&
+                    /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+        }
+
+        async function refresh() {
+          if (busy || document.hidden || userIsBusy()) return;
+          busy = true;
+          try {
+            const res = await fetch(window.location.href, {
+              headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
+              credentials: 'same-origin',
+              cache: 'no-store'
+            });
+            // Session expired -> redirected to login; stop polling
+            if (!res.ok || res.redirected && new URL(res.url).pathname.startsWith('/login')) {
+              if (res.status === 401 || res.status === 419 || res.redirected) window.location.reload();
+              return;
+            }
+            const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+            let changed = false;
+            targets().forEach(function (el) {
+              const fresh = doc.getElementById(el.id);
+              if (!fresh) return;
+              const html = fresh.innerHTML;
+              if (lastHtml[el.id] === undefined) lastHtml[el.id] = el.innerHTML;
+              if (html !== lastHtml[el.id]) {
+                el.innerHTML = html;
+                lastHtml[el.id] = html;
+                changed = true;
+              }
+            });
+            if (changed) document.dispatchEvent(new CustomEvent('live-refreshed'));
+          } catch (e) {
+            /* network hiccup: try again next tick */
+          } finally {
+            busy = false;
+          }
+        }
+
+        function start() { if (!timer) timer = setInterval(refresh, INTERVAL_MS); }
+        function stop() { clearInterval(timer); timer = null; }
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) { stop(); } else { refresh(); start(); }
+        });
+        start();
+      })();
+    </script>
     @stack('scripts')
   </body>
 </html>

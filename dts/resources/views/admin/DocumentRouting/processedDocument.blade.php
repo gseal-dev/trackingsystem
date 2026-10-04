@@ -34,7 +34,7 @@
                 <th class="text-end">Download</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="processed-docs-body" data-live-refresh>
             @foreach($documents as $doc)
               @php
                 $lastHistory = $doc->histories()->where('currentDepartmentID', 1)->orderByDesc('created_at')->first();
