@@ -41,7 +41,7 @@
     width: 32px;
   }
   .btn-custom-dark {
-    background-color: #000;
+    background-color: #001253;
     color: #fff;
     border-radius: 50px;
     padding: 0.65rem 2rem;
@@ -50,7 +50,7 @@
     transition: all 0.2s ease;
   }
   .btn-custom-dark:hover {
-    background-color: #222;
+    background-color: #000a33;
     color: #fff;
   }
 </style>

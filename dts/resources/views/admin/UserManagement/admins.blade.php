@@ -3,6 +3,7 @@
 @section('title', 'Users List')
 
 @push('head')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   .dashboard-shell {
     width: 100%;
@@ -59,7 +60,7 @@
   }
 
   .staff-nav-link.active {
-    background: #111827;
+    background: #001253;
     color: #fff;
   }
 
@@ -164,40 +165,12 @@
 
 @section('content')
 <div class="dashboard-shell">
-  <div class="dashboard-container">
-    <div class="staff-layout">
-      <aside class="staff-sidebar">
-        <nav class="staff-nav">
-          <ul class="staff-nav-list">
-            <li>
-              <a href="{{ route('admin.documents') }}" class="staff-nav-link">
-                <i class="bi bi-folder2-open"></i>
-                <span>Documents List</span>
-              </a>
-            </li>
-            <li>
-              <a href="{{ route('admin.userManagement.admins') }}" class="staff-nav-link active">
-                <i class="bi bi-people-fill"></i>
-                <span>Users List</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-
-      <main class="staff-main-content">
+  <div class="dashboard-container wide">
+      <main class="staff-main-content bg-white p-4 p-md-5 rounded-4 border">
         <div class="section-header">
           <div>
             <h1 class="section-title">Users List</h1>
             <p class="text-muted">Manage and track all system users</p>
-          </div>
-          <div>
-            <form method="POST" action="{{ route('logout') }}" class="m-0">
-                @csrf
-                <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;">
-                    <i class="bi bi-box-arrow-right me-1"></i> Logout
-                </button>
-            </form>
           </div>
         </div>
 
@@ -212,12 +185,12 @@
           </div>
           <div class="d-flex gap-2">
             <button type="button" class="btn btn-outline-secondary px-3 py-2" id="export-users" style="border-radius: 50px;"><i class="bi bi-download me-1"></i> Export Excel</button>
-            <button type="button" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#addUserModal" title="Add user"><i class="bi bi-person-plus me-1"></i> Add User</button>
+            <button type="button" class="btn btn-dark px-4 py-2" style="background-color: #ea3a14; color: #ffffff; border-radius: 50px; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#addUserModal" title="Add user"><i class="bi bi-person-plus me-1"></i> Add User</button>
           </div>
         </div>
 
         <div class="table-responsive">
-          <table class="table table-hover align-middle">
+          <table class="table table-hover table-sm align-middle">
             <thead class="bg-light">
               <tr>
                 <th class="border-0">Name</th>

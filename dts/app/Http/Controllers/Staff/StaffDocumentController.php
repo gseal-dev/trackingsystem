@@ -47,7 +47,16 @@ class StaffDocumentController extends Controller
 
         $documents = $query->get();
         $departments = \App\Models\Department::all();
-        return view('staff.staff', compact('documents', 'departments'));
+
+        $statusCounts = $documents->groupBy(function($doc) {
+            return $doc->status->statusName ?? 'Pending';
+        })->map->count();
+
+        $monthlyCounts = $documents->groupBy(function($doc) {
+            return $doc->documentDate ? date('Y-m', strtotime($doc->documentDate)) : date('Y-m', strtotime($doc->created_at));
+        })->map->count();
+
+        return view('staff.staff', compact('documents', 'departments', 'statusCounts', 'monthlyCounts'));
     }
 
     // Staff processes document (reupload and update status)

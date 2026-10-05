@@ -14,8 +14,23 @@ class DashboardController extends Controller
         switch ($role) {
             case 'Admin':
                 $users = \App\Models\User::with('role')->get();
-                $roles = \App\Models\Role::whereIn('roleName', ['Admin', 'Staff'])->orderBy('roleName')->get();
-                return view('admin.UserManagement.admins', compact('users', 'roles'));
+                $totalDocuments = \App\Models\Document::count();
+                $totalUsers = $users->count();
+                $documentsByStatus = \App\Models\Document::with('status')
+                    ->get()
+                    ->groupBy(function($doc) {
+                        return $doc->status->statusName ?? 'Unknown';
+                    })->map->count();
+                $documentsByDept = \App\Models\Document::with('department')
+                    ->get()
+                    ->groupBy(function($doc) {
+                        return $doc->department->depName ?? 'Unassigned';
+                    })->map->count();
+                $usersByRole = $users->groupBy(function($u) {
+                    return $u->role->roleName ?? 'Unassigned';
+                })->map->count();
+
+                return view('admin.dashboard', compact('totalDocuments', 'totalUsers', 'documentsByStatus', 'documentsByDept', 'usersByRole'));
             case 'DocumentOwner':
                 return view('documentOwner.document_owner');
             case 'Staff':

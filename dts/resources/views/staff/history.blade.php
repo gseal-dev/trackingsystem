@@ -59,7 +59,7 @@
   }
 
   .staff-nav-link.active {
-    background: #111827;
+    background: #001253;
     color: #fff;
   }
 
@@ -164,40 +164,12 @@
 
 @section('content')
 <div class="dashboard-shell">
-  <div class="dashboard-container">
-    <div class="staff-layout">
-      <aside class="staff-sidebar">
-        <nav class="staff-nav">
-          <ul class="staff-nav-list">
-            <li>
-              <a href="{{ route('dashboard') }}" class="staff-nav-link">
-                <i class="bi bi-grid-fill"></i>
-                <span>Dashboard</span>
-              </a>
-            </li>
-            <li>
-              <a href="{{ route('staff.history') }}" class="staff-nav-link active">
-                <i class="bi bi-clock-history"></i>
-                <span>History</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-
-      <main class="staff-main-content">
+  <div class="dashboard-container wide">
+      <main class="staff-main-content bg-white p-4 p-md-5 rounded-4 border">
         <div class="section-header">
           <div>
             <h1 class="section-title">Document History</h1>
             <p class="text-muted">Track processed and routed document transactions</p>
-          </div>
-          <div>
-            <form method="POST" action="{{ route('logout') }}" class="m-0">
-                @csrf
-                <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;">
-                    <i class="bi bi-box-arrow-right me-1"></i> Logout
-                </button>
-            </form>
           </div>
         </div>
 
@@ -232,7 +204,7 @@
         </div>
 
         <div class="table-responsive">
-          <table class="table table-hover align-middle">
+          <table class="table table-hover table-sm align-middle">
             <thead class="bg-light">
               <tr>
                 <th class="border-0">Reference Number</th>

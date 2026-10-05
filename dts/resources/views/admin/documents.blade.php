@@ -59,7 +59,7 @@
   }
 
   .staff-nav-link.active {
-    background: #111827;
+    background: #001253;
     color: #fff;
   }
 
@@ -164,63 +164,35 @@
 
 @section('content')
 <div class="dashboard-shell">
-  <div class="dashboard-container">
-    <div class="staff-layout">
-      <aside class="staff-sidebar">
-        <nav class="staff-nav">
-          <ul class="staff-nav-list">
-            <li>
-              <a href="{{ route('admin.documents') }}" class="staff-nav-link active">
-                <i class="bi bi-folder2-open"></i>
-                <span>Documents List</span>
-              </a>
-            </li>
-            <li>
-              <a href="{{ route('admin.userManagement.admins') }}" class="staff-nav-link">
-                <i class="bi bi-people-fill"></i>
-                <span>Users List</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-
-      <main class="staff-main-content">
+  <div class="dashboard-container wide">
+      <main class="staff-main-content bg-white p-4 p-md-5 rounded-4 border">
         <div class="section-header">
           <div>
             <h1 class="section-title">Documents List</h1>
             <p class="text-muted">Manage and track all registered documents</p>
           </div>
-          <div>
-            <form method="POST" action="{{ route('logout') }}" class="m-0">
-                @csrf
-                <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;">
-                    <i class="bi bi-box-arrow-right me-1"></i> Logout
-                </button>
-            </form>
-          </div>
         </div>
 
         <div class="table-toolbar">
           <form method="GET" action="{{ route('admin.documents') }}" class="d-flex gap-2 flex-wrap align-items-center w-100">
-            <div class="search-box flex-grow-1" style="max-width: 250px;">
+            <div class="search-box flex-grow-1" style="max-width: 320px;">
               <i class="bi bi-search"></i>
-              <input type="text" id="admin-doc-search" class="form-control" placeholder="Search documents...">
+              <input type="text" id="admin-doc-search" class="form-control" placeholder="Search by contract name, location, or contractor...">
             </div>
-            <select name="year" class="form-select" style="width: 120px;" onchange="this.form.submit()">
-              <option value="">All Years</option>
+            <select name="year" class="form-select" style="width: 130px;" onchange="this.form.submit()">
+              <option value="">Year: All</option>
               @for($y = 2017; $y <= 2026; $y++)
                 <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
               @endfor
             </select>
             <select name="month" class="form-select" style="width: 140px;" onchange="this.form.submit()">
-              <option value="">All Months</option>
+              <option value="">Month: All</option>
               @for($m = 1; $m <= 12; $m++)
                 <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
               @endfor
             </select>
-            <select name="day" class="form-select" style="width: 110px;" onchange="this.form.submit()">
-              <option value="">All Days</option>
+            <select name="day" class="form-select" style="width: 120px;" onchange="this.form.submit()">
+              <option value="">Day: All</option>
               @for($d = 1; $d <= 31; $d++)
                 <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>Day {{ $d }}</option>
               @endfor
@@ -231,8 +203,16 @@
           </form>
         </div>
 
+        <p class="text-muted small fst-italic mb-3">*Project information, documents, and records are continuously being tracked. Thank you for your patience.*</p>
+
+        <div class="mb-3">
+          <div class="d-inline-flex align-items-center px-4 py-2 text-white fw-bold shadow-sm" style="background-color: #ea3a14; border-radius: 50px; font-size: 0.9rem;">
+            <i class="bi bi-file-earmark-text-fill me-2"></i> {{ count($documents) }} Documents Found
+          </div>
+        </div>
+
         <div class="table-responsive">
-          <table class="table table-hover align-middle">
+          <table class="table table-hover table-sm align-middle">
             <thead class="bg-light">
               <tr>
                 <th class="border-0">Reference Number</th>

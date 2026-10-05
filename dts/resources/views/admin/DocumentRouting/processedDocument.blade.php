@@ -23,7 +23,7 @@
         <div class="alert alert-info mb-0">No processed documents found.</div>
       @else
         <div class="table-responsive">
-          <table class="table table-clean align-middle mb-0">
+          <table class="table table-clean table-sm align-middle mb-0">
             <thead>
               <tr>
                 <th>Document No</th>

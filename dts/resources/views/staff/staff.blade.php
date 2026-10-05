@@ -3,6 +3,7 @@
 @section('title', 'Staff Dashboard')
 
 @push('head')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   .dashboard-shell {
     width: 100%;
@@ -59,7 +60,7 @@
   }
 
   .staff-nav-link.active {
-    background: #111827;
+    background: #001253;
     color: #fff;
   }
 
@@ -146,7 +147,7 @@
   }
 
   .btn-create {
-    background: #111827;
+    background: #ea3a14;
     color: #fff;
     padding: 0.625rem 1.25rem;
     border-radius: 12px;
@@ -191,28 +192,8 @@
 
 @section('content')
 <div class="dashboard-shell">
-  <div class="dashboard-container">
-    <div class="staff-layout">
-      <aside class="staff-sidebar">
-        <nav class="staff-nav">
-          <ul class="staff-nav-list">
-            <li>
-              <a href="{{ route('dashboard') }}" class="staff-nav-link active">
-                <i class="bi bi-grid-fill"></i>
-                <span>Dashboard</span>
-              </a>
-            </li>
-            <li>
-              <a href="{{ route('staff.history') }}" class="staff-nav-link">
-                <i class="bi bi-clock-history"></i>
-                <span>History</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-
-      <main class="staff-main-content">
+  <div class="dashboard-container wide">
+      <main class="staff-main-content bg-white p-4 p-md-5 rounded-4 border">
         <div class="section-header">
           <div>
             <h1 class="section-title">Documents List</h1>
@@ -223,12 +204,6 @@
               <i class="bi bi-plus-lg"></i>
               <span>Add Document</span>
             </button>
-            <form method="POST" action="{{ route('logout') }}" class="m-0">
-                @csrf
-                <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;">
-                    <i class="bi bi-box-arrow-right me-1"></i> Logout
-                </button>
-            </form>
           </div>
         </div>
 
@@ -251,26 +226,46 @@
           </div>
         @endif
 
+        <!-- Staff Analytics Dashboard Graphs Section -->
+        <div class="row g-4 mb-4">
+          <div class="col-md-6">
+            <div class="p-4 border rounded-4 bg-light shadow-sm">
+              <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-pie-chart-fill me-2 text-primary"></i> Department Document Status</h5>
+              <div style="height: 220px; position: relative;">
+                <canvas id="staffStatusChart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-4 border rounded-4 bg-light shadow-sm">
+              <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-graph-up me-2 text-success"></i> Monthly Document Trend</h5>
+              <div style="height: 220px; position: relative;">
+                <canvas id="staffMonthlyChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="table-toolbar">
           <form method="GET" action="{{ route('dashboard') }}" class="d-flex gap-2 flex-wrap align-items-center w-100">
-            <div class="search-box flex-grow-1" style="max-width: 250px;">
+            <div class="search-box flex-grow-1" style="max-width: 320px;">
               <i class="bi bi-search"></i>
-              <input type="text" id="staff-record-search" class="form-control" placeholder="Search records...">
+              <input type="text" id="staff-record-search" class="form-control" placeholder="Search by contract name, location, or contractor...">
             </div>
-            <select name="year" class="form-select" style="width: 120px;" onchange="this.form.submit()">
-              <option value="">All Years</option>
+            <select name="year" class="form-select" style="width: 130px;" onchange="this.form.submit()">
+              <option value="">Year: All</option>
               @for($y = 2017; $y <= 2026; $y++)
                 <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
               @endfor
             </select>
             <select name="month" class="form-select" style="width: 140px;" onchange="this.form.submit()">
-              <option value="">All Months</option>
+              <option value="">Month: All</option>
               @for($m = 1; $m <= 12; $m++)
                 <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
               @endfor
             </select>
-            <select name="day" class="form-select" style="width: 110px;" onchange="this.form.submit()">
-              <option value="">All Days</option>
+            <select name="day" class="form-select" style="width: 120px;" onchange="this.form.submit()">
+              <option value="">Day: All</option>
               @for($d = 1; $d <= 31; $d++)
                 <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>Day {{ $d }}</option>
               @endfor
@@ -281,8 +276,16 @@
           </form>
         </div>
 
+        <p class="text-muted small fst-italic mb-3">*Project information, documents, and records are continuously being tracked. Thank you for your patience.*</p>
+
+        <div class="mb-3">
+          <div class="d-inline-flex align-items-center px-4 py-2 text-white fw-bold shadow-sm" style="background-color: #ea3a14; border-radius: 50px; font-size: 0.9rem;">
+            <i class="bi bi-file-earmark-text-fill me-2"></i> {{ count($documents) }} Documents Found
+          </div>
+        </div>
+
         <div class="table-responsive">
-          <table class="table table-hover align-middle">
+          <table class="table table-hover table-sm align-middle">
             <thead class="bg-light">
               <tr>
                 <th class="border-0">Reference Number</th>
@@ -535,4 +538,37 @@
 </div>
 @endforeach
 </div>
+
+@push('scripts')
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const staffStatusCtx = document.getElementById('staffStatusChart').getContext('2d');
+    new Chart(staffStatusCtx, {
+      type: 'doughnut',
+      data: {
+        labels: {!! json_encode(isset($statusCounts) ? $statusCounts->keys() : []) !!},
+        datasets: [{
+          data: {!! json_encode(isset($statusCounts) ? $statusCounts->values() : []) !!},
+          backgroundColor: ['#001253', '#ea3a14', '#16a34a', '#eab308', '#64748b']
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    const staffMonthlyCtx = document.getElementById('staffMonthlyChart').getContext('2d');
+    new Chart(staffMonthlyCtx, {
+      type: 'bar',
+      data: {
+        labels: {!! json_encode(isset($monthlyCounts) ? $monthlyCounts->keys() : []) !!},
+        datasets: [{
+          label: 'Documents Count',
+          data: {!! json_encode(isset($monthlyCounts) ? $monthlyCounts->values() : []) !!},
+          backgroundColor: '#ea3a14'
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+    });
+  });
+</script>
+@endpush
 @endsection

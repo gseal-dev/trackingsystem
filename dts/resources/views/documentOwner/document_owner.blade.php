@@ -13,7 +13,7 @@
             <div>
                 <form method="POST" action="{{ route('logout') }}" class="m-0">
                     @csrf
-                    <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;">
+                    <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #001253; color: #ffffff; border-radius: 50px; font-weight: 600;">
                         <i class="bi bi-box-arrow-right me-1"></i> Logout
                     </button>
                 </form>

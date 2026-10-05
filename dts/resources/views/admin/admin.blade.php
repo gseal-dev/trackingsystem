@@ -80,8 +80,8 @@
     }
 
     .dashboard-users-actions a {
-        border-color: #16a34a;
-        color: #15803d;
+        border-color: #ea3a14;
+        color: #ea3a14;
         font-size: 1.15rem;
     }
 
@@ -253,6 +253,12 @@
                 <nav class="staff-nav">
                     <ul class="staff-nav-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
                         <li>
+                            <a href="{{ route('dashboard') }}" class="staff-nav-link" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 12px; color: #4b5563; text-decoration: none; font-weight: 600;">
+                                <i class="bi bi-grid-fill"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('admin.documents') }}" class="staff-nav-link" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 12px; color: #4b5563; text-decoration: none; font-weight: 600;">
                                 <i class="bi bi-folder2-open"></i>
                                 <span>Documents List</span>
@@ -269,18 +275,10 @@
             </aside>
 
             <main class="staff-main-content" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 24px; padding: 2rem; min-height: 600px; width: 100%;">
-                <div class="dashboard-header d-flex align-items-center justify-content-between">
+                <div class="dashboard-header">
                     <div>
                         <h1 class="dashboard-title">Documents List</h1>
                         <p class="dashboard-subtitle">Manage and track all registered documents</p>
-                    </div>
-                    <div>
-                        <form method="POST" action="{{ route('logout') }}" class="m-0">
-                            @csrf
-                            <button type="submit" class="btn btn-dark px-4 py-2" style="background-color: #000000; color: #ffffff; border-radius: 50px; font-weight: 600;">
-                                <i class="bi bi-box-arrow-right me-1"></i> Logout
-                            </button>
-                        </form>
                     </div>
                 </div>
 
@@ -307,7 +305,7 @@
             </div>
 
             <div class="table-responsive card-surface dashboard-users-table">
-                <table class="table table-clean align-middle mb-0">
+                <table class="table table-clean table-sm align-middle mb-0">
                     <thead>
                         <tr>
                             <th>Name</th>

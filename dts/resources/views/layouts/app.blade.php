@@ -6,27 +6,184 @@
     <title>@yield('title', 'Document Tracking System')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       :root {
-        --brand-dark: #111111;
-        --brand-muted: #666666;
-        --bg-main: #ffffff;
-        --card-bg: #f5f5f5;
+        --brand-dark: #001253;
+        --brand-muted: #64748b;
+        --bg-main: #f1f5f9;
+        --card-bg: #ffffff;
         --input-bg: #ffffff;
-        --border-color: #e2e8f0;
-        --btn-dark: #000000;
-        --btn-dark-hover: #222222;
+        --border-color: #cbd5e1;
+        --btn-dark: #001253;
+        --btn-dark-hover: #000a33;
+        --accent-orange: #ea3a14;
       }
 
       body {
         min-height: 100vh;
-        background-color: var(--bg-main);
+        background: 
+          radial-gradient(circle at 10% 15%, rgba(0, 18, 83, 0.10) 0%, transparent 45%),
+          radial-gradient(circle at 90% 85%, rgba(234, 58, 20, 0.08) 0%, transparent 45%),
+          radial-gradient(circle at 50% 50%, rgba(100, 116, 139, 0.06) 0%, transparent 65%),
+          linear-gradient(135deg, #f4f7fb 0%, #e5ecf6 100%);
         color: var(--brand-dark);
-        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
         display: flex;
         flex-direction: column;
         margin: 0;
-        padding-top: 58px;
+        padding-top: 150px;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body.login-page {
+        background: #001253 !important;
+        padding-top: 0 !important;
+        overflow: hidden !important;
+        height: 100vh !important;
+      }
+
+      body.login-page::after {
+        display: none !important;
+      }
+
+      body.login-page main.main-content {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        display: flex !important;
+        align-items: stretch !important;
+        justify-content: flex-end !important;
+      }
+
+      body.login-page .login-card {
+        margin: auto !important;
+        box-shadow: none !important;
+      }
+
+      /* Official DPWH Header Styles */
+      .official-dpwh-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: #ffffff;
+        border-bottom: 1px solid #e2e8f0;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        z-index: 1100;
+      }
+
+      .header-inner {
+        max-width: 1350px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.9rem 2rem;
+      }
+
+      .header-dept-name {
+        font-size: clamp(1.2rem, 2.1vw, 1.7rem);
+        font-weight: 900;
+        color: #001253;
+        letter-spacing: -0.02em;
+        text-transform: uppercase;
+        line-height: 1.15;
+      }
+
+      .header-slogan {
+        font-size: 0.85rem;
+        font-style: italic;
+        color: #64748b;
+        margin-top: 0.2rem;
+        letter-spacing: 0.03em;
+        font-weight: 600;
+      }
+
+      .header-banner-stripe {
+        height: 6px;
+        background: linear-gradient(90deg, #001253 0%, #ea3a14 50%, #001253 100%);
+        width: 100%;
+      }
+
+      /* Horizontal Navbar Below Header */
+      .app-horizontal-navbar {
+        position: fixed;
+        top: 105px;
+        left: 0;
+        width: 100%;
+        background: #001253;
+        color: #ffffff;
+        z-index: 1090;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      .nav-inner {
+        max-width: 1350px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.55rem 2rem;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+      }
+
+      .nav-links a {
+        color: #cbd5e1;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 50px;
+        transition: all 0.2s ease;
+      }
+
+      .nav-links a:hover,
+      .nav-links a.active {
+        background-color: #ea3a14;
+        color: #ffffff;
+      }
+
+      .nav-user-area {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: #e2e8f0;
+      }
+
+      body::after {
+        content: '';
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: min(650px, 85vw);
+        height: min(650px, 85vw);
+        background: url('{{ asset("images/dpwh-logo.png") }}') no-repeat center center;
+        background-size: contain;
+        opacity: 0.04;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .table, .table th, .table td {
+        padding: 0.45rem 0.75rem !important;
+        font-size: 0.86rem;
+        border: none !important;
+        border-top: none !important;
+        border-bottom: none !important;
+        border-left: none !important;
+        border-right: none !important;
       }
 
       .table th {
@@ -40,6 +197,8 @@
         align-items: center;
         justify-content: center;
         padding: 2rem 1rem;
+        position: relative;
+        z-index: 1;
       }
 
       /* Card Styling */
@@ -48,11 +207,13 @@
         border: none;
         border-radius: 28px;
         padding: 3.5rem 2.5rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
         width: 100%;
         max-width: 420px;
         margin: auto;
         text-align: center;
+        position: relative;
+        z-index: 1;
       }
 
       .dashboard-shell {
@@ -60,6 +221,8 @@
         display: flex;
         justify-content: center;
         padding: 1rem 0 2rem;
+        position: relative;
+        z-index: 1;
       }
 
       .app-header {
@@ -89,7 +252,7 @@
       }
 
       .app-brand-mark {
-        color: #16a34a;
+        color: var(--accent-orange);
         font-size: 1.6rem;
         line-height: 1;
       }
@@ -110,7 +273,7 @@
 
       .app-nav a.active,
       .app-nav a:hover {
-        color: #16a34a;
+        color: var(--accent-orange);
       }
 
       .app-user {
@@ -432,7 +595,58 @@
     </style>
     @stack('head')
   </head>
-  <body>
+  <body class="{{ request()->routeIs('login') ? 'login-page' : '' }}">
+
+    @if(!request()->routeIs('login'))
+    <header class="official-dpwh-header">
+      <div class="header-inner">
+        <div class="header-logo-left">
+          <img src="{{ asset('images/dpwh-logo.png') }}" alt="DPWH Seal" style="height: 64px; width: 64px; object-fit: contain; mix-blend-mode: multiply;">
+        </div>
+        <div class="header-titles text-center">
+          <div class="header-dept-name">RECORDS MANAGEMENT</div>
+          <div class="header-slogan">We love others as we love ourselves</div>
+        </div>
+        <div class="header-logo-right">
+          <img src="{{ asset('images/bagong-pilipinas.webp') }}" alt="Bagong Pilipinas" style="height: 64px; width: 64px; object-fit: contain; mix-blend-mode: multiply;">
+        </div>
+      </div>
+      <div class="header-banner-stripe"></div>
+    </header>
+
+    @auth
+    <nav class="app-horizontal-navbar">
+      <div class="nav-inner">
+        <div class="nav-links">
+          @php $role = auth()->user()->role?->roleName; @endphp
+          @if($role === 'Admin')
+            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-grid-fill me-1"></i> Dashboard</a>
+            <a href="{{ route('admin.documents') }}" class="{{ request()->routeIs('admin.documents') ? 'active' : '' }}"><i class="bi bi-folder2-open me-1"></i> Documents List</a>
+            <a href="{{ route('admin.userManagement.admins') }}" class="{{ request()->routeIs('admin.userManagement.*') ? 'active' : '' }}"><i class="bi bi-people-fill me-1"></i> Users List</a>
+          @elseif($role === 'Staff')
+            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-grid-fill me-1"></i> Dashboard</a>
+            <a href="{{ route('staff.history') }}" class="{{ request()->routeIs('staff.history') ? 'active' : '' }}"><i class="bi bi-clock-history me-1"></i> History</a>
+          @elseif($role === 'Auditor')
+            <a href="{{ route('auditor.documentTransactions') }}" class="{{ request()->routeIs('auditor.*') ? 'active' : '' }}"><i class="bi bi-journal-text me-1"></i> Transactions</a>
+          @elseif($role === 'DocumentOwner')
+            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-box-seam me-1"></i> Submitted</a>
+            <a href="{{ route('documentOwner.pendingDocuments') }}" class="{{ request()->routeIs('documentOwner.pendingDocuments') ? 'active' : '' }}"><i class="bi bi-hourglass-split me-1"></i> Pending</a>
+            <a href="{{ route('documentOwner.completedDocuments') }}" class="{{ request()->routeIs('documentOwner.completedDocuments') ? 'active' : '' }}"><i class="bi bi-check-circle me-1"></i> Completed</a>
+          @endif
+        </div>
+        <div class="nav-user-area">
+          <span class="text-muted small me-2" style="color: #cbd5e1 !important;"><i class="bi bi-person-circle me-1"></i> {{ auth()->user()->username ?? auth()->user()->firstName }}</span>
+          <form method="POST" action="{{ route('logout') }}" class="m-0 d-inline">
+            @csrf
+            <button type="submit" class="btn btn-sm px-3 py-1 text-white fw-bold" style="background-color: #ea3a14; border-radius: 50px; font-size: 0.8rem;">
+              <i class="bi bi-box-arrow-right me-1"></i> Logout
+            </button>
+          </form>
+        </div>
+      </div>
+    </nav>
+    @endauth
+    @endif
 
     <main class="main-content">
       @yield('content')
