@@ -217,6 +217,7 @@ class StaffDocumentController extends Controller
             'documentType' => 'required|string|max:255',
             'fromOffice' => 'required|string|max:255',
             'documentDate' => 'nullable|date',
+            'currentStatus' => 'nullable|exists:document_statuses,statusID',
             'file' => 'required|file|mimes:pdf|max:10240',
         ]);
 
@@ -233,6 +234,7 @@ class StaffDocumentController extends Controller
         $fileName = Str::uuid() . '_' . $file->getClientOriginalName();
         $filePath = $file->storeAs('documents', $fileName, 'public');
 
+        $statusID = $request->input('currentStatus', 1);
         $newDoc = Document::create([
             'documentId' => (string) Str::uuid(),
             'documentNo' => $request->documentNo,
@@ -241,7 +243,7 @@ class StaffDocumentController extends Controller
             'documentType' => $request->documentType,
             'documentDate' => $request->documentDate ?? now()->toDateString(),
             'ownerID' => auth()->user()->userID,
-            'currentStatus' => 1, // Pending
+            'currentStatus' => $statusID,
             'currentDepartmentID' => $department->depID,
             'filePath' => $filePath,
         ]);
@@ -250,7 +252,7 @@ class StaffDocumentController extends Controller
             'documentId' => $newDoc->documentId,
             'prevDepartmentID' => $department->depID,
             'currentDepartmentID' => $department->depID,
-            'statusID' => 1,
+            'statusID' => $statusID,
             'userID' => auth()->user()->userID,
             'action' => 'Document added / registered',
             'created_at' => now(),
@@ -273,6 +275,7 @@ class StaffDocumentController extends Controller
             'documentType' => 'required|string|max:255',
             'fromOffice' => 'required|string|max:255',
             'documentDate' => 'nullable|date',
+            'currentStatus' => 'nullable|exists:document_statuses,statusID',
             'file' => 'nullable|file|mimes:pdf|max:10240',
         ]);
 
@@ -291,6 +294,7 @@ class StaffDocumentController extends Controller
             'description' => $request->title,
             'documentType' => $request->documentType,
             'documentDate' => $request->documentDate ?? $document->documentDate,
+            'currentStatus' => $request->input('currentStatus', $document->currentStatus),
             'currentDepartmentID' => $department->depID,
         ];
 
@@ -328,5 +332,89 @@ class StaffDocumentController extends Controller
         $document->restore();
 
         return back()->with('success', 'Document retrieved successfully!');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'import_file' => 'required|file|mimes:csv,txt,xlsx|max:10240',
+        ]);
+
+        $file = $request->file('import_file');
+        $path = $file->getRealPath();
+        
+        $handle = fopen($path, 'r');
+        if ($handle === false) {
+            return back()->withErrors(['import_file' => 'Could not read uploaded file.']);
+        }
+
+        $header = fgetcsv($handle); // skip header
+        $importedCount = 0;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            if (count($row) < 5) continue;
+            [$documentNo, $fromOffice, $documentType, $title, $documentDate] = array_pad($row, 5, '');
+
+            $documentNo = trim($documentNo);
+            if (empty($documentNo)) continue;
+
+            if (Document::where('documentNo', $documentNo)->exists()) {
+                continue;
+            }
+
+            $officeName = trim($fromOffice) ?: 'General Office';
+            $department = Department::where('depName', 'LIKE', $officeName)->first();
+            if (!$department) {
+                $department = Department::create([
+                    'depName' => $officeName,
+                    'description' => $officeName,
+                ]);
+            }
+
+            $newDoc = Document::create([
+                'documentId' => (string) Str::uuid(),
+                'documentNo' => $documentNo,
+                'title' => trim($title) ?: 'Untitled Document',
+                'description' => trim($title) ?: 'Untitled Document',
+                'documentType' => trim($documentType) ?: 'Memo',
+                'documentDate' => !empty($documentDate) ? date('Y-m-d', strtotime($documentDate)) : now()->toDateString(),
+                'ownerID' => auth()->user()->userID,
+                'currentStatus' => 1,
+                'currentDepartmentID' => $department->depID,
+            ]);
+
+            \DB::table('document_histories')->insert([
+                'documentId' => $newDoc->documentId,
+                'prevDepartmentID' => $department->depID,
+                'currentDepartmentID' => $department->depID,
+                'statusID' => 1,
+                'userID' => auth()->user()->userID,
+                'action' => 'Imported via CSV/Excel',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $importedCount++;
+        }
+        fclose($handle);
+
+        return back()->with('success', "Successfully imported {$importedCount} documents!");
+    }
+
+    public function downloadTemplate()
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="document_import_template.csv"',
+        ];
+        
+        $callback = function() {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Reference Number', 'From Office', 'Type', 'Subject', 'Date']);
+            fputcsv($handle, ['DOC-2026-001', 'Engineering Division', 'Memo', 'Bridge Inspection Report', '2026-10-07']);
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

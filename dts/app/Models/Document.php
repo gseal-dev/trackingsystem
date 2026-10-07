@@ -13,6 +13,11 @@ class Document extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
+    public function getRouteKeyName()
+    {
+        return 'documentId';
+    }
+
     protected $fillable = [
         'documentId', 'documentNo', 'title', 'description', 'documentType', 'documentDate',
         'ownerID', 'currentStatus', 'currentDepartmentID', 'filePath'

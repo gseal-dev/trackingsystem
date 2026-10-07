@@ -89,25 +89,75 @@
     margin: 0;
   }
 
-  .stat-card {
-    background: #f8fafc;
+  .metric-card {
+    background: #ffffff;
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
+    border-radius: 20px;
     padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
-  .stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
+  .metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .metric-card::after {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 90px;
+    height: 90px;
+    background: radial-gradient(circle, rgba(0, 18, 83, 0.04) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  .metric-card-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .metric-icon-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1.5rem;
-    background: #001253;
-    color: #fff;
+    margin-bottom: 1.25rem;
+  }
+
+  .metric-value {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 0.25rem;
+  }
+
+  .metric-sub {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+  }
+
+  .metric-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.15rem;
+  }
+
+  .metric-desc {
+    font-size: 0.82rem;
+    color: #64748b;
   }
 
   @media (max-width: 1024px) {
@@ -142,24 +192,64 @@
 
         <!-- Summary Metric Cards -->
         <div class="row g-4 mb-4">
-          <div class="col-md-6">
-            <div class="stat-card">
-              <div class="stat-icon"><i class="bi bi-folder-fill"></i></div>
-              <div>
-                <div class="text-muted small fw-bold text-uppercase">Total Documents</div>
-                <div class="fs-3 fw-800 text-dark">{{ $totalDocuments ?? 0 }}</div>
+          <div class="col-md-4 col-lg-3">
+            <div class="metric-card">
+              <div class="metric-card-content">
+                <div class="metric-icon-box" style="background: #f3e8ff; color: #9333ea;">
+                  <i class="bi bi-folder-fill"></i>
+                </div>
+                <div class="metric-value" style="color: #9333ea;">{{ number_format($totalDocuments ?? 0) }}</div>
+                <div class="metric-sub">(100%)</div>
+                <div class="metric-title">Total Documents</div>
+                <div class="metric-desc">All Registered Records</div>
               </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="stat-card">
-              <div class="stat-icon" style="background-color: #ea3a14;"><i class="bi bi-people-fill"></i></div>
-              <div>
-                <div class="text-muted small fw-bold text-uppercase">Total Users</div>
-                <div class="fs-3 fw-800 text-dark">{{ $totalUsers ?? 0 }}</div>
+          <div class="col-md-4 col-lg-3">
+            <div class="metric-card">
+              <div class="metric-card-content">
+                <div class="metric-icon-box" style="background: #e0f2fe; color: #0284c7;">
+                  <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="metric-value" style="color: #0284c7;">{{ number_format($totalUsers ?? 0) }}</div>
+                <div class="metric-sub">(Accounts)</div>
+                <div class="metric-title">Total Users</div>
+                <div class="metric-desc">System Personnel</div>
               </div>
             </div>
           </div>
+
+          @if(isset($documentsByStatus))
+            @php
+              $colors = [
+                ['bg' => '#ffedd5', 'color' => '#ea580c', 'icon' => 'bi-clock-history'],
+                ['bg' => '#dcfce7', 'color' => '#16a34a', 'icon' => 'bi-check-circle-fill'],
+                ['bg' => '#fee2e2', 'color' => '#dc2626', 'icon' => 'bi-exclamation-triangle-fill'],
+                ['bg' => '#e0e7ff', 'color' => '#4f46e5', 'icon' => 'bi-arrow-repeat'],
+              ];
+              $i = 0;
+            @endphp
+            @foreach($documentsByStatus as $statusName => $count)
+              @php
+                $theme = $colors[$i % count($colors)];
+                $pct = ($totalDocuments ?? 0) > 0 ? round(($count / $totalDocuments) * 100, 1) : 0;
+                $i++;
+              @endphp
+              <div class="col-md-4 col-lg-3">
+                <div class="metric-card">
+                  <div class="metric-card-content">
+                    <div class="metric-icon-box" style="background: {{ $theme['bg'] }}; color: {{ $theme['color'] }};">
+                      <i class="bi {{ $theme['icon'] }}"></i>
+                    </div>
+                    <div class="metric-value" style="color: {{ $theme['color'] }};">{{ number_format($count) }}</div>
+                    <div class="metric-sub">({{ $pct }}%)</div>
+                    <div class="metric-title">{{ $statusName }}</div>
+                    <div class="metric-desc">Document Status</div>
+                  </div>
+                </div>
+              </div>
+            @endforeach
+          @endif
         </div>
 
         <!-- Analytics Graphs Section -->

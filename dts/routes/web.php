@@ -25,20 +25,21 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 
 // User Management - Per Role
-Route::get('/admin/user-management/admins', [UserManagementController::class, 'admins'])->name('admin.userManagement.admins');
-Route::get('/admin/user-management/staffs', [UserManagementController::class, 'staffs'])->name('admin.userManagement.staffs');
-Route::get('/admin/user-management/auditors', [UserManagementController::class, 'auditors'])->name('admin.userManagement.auditors');
-Route::get('/admin/user-management/owners', [UserManagementController::class, 'owners'])->name('admin.userManagement.owners');
-// Add/Edit/Delete per role
-Route::get('/admin/user-management/{type}/add', [UserManagementController::class, 'addForm'])
-    ->where('type', 'admins')
-    ->name('admin.userManagement.addForm');
-Route::post('/admin/user-management/{type}/add', [UserManagementController::class, 'add'])
-    ->where('type', 'admins')
-    ->name('admin.userManagement.add');
-Route::get('/admin/user-management/{type}/edit/{user}', [UserManagementController::class, 'editForm'])->name('admin.userManagement.editForm');
-Route::post('/admin/user-management/{type}/edit/{user}', [UserManagementController::class, 'edit'])->name('admin.userManagement.edit');
-Route::post('/admin/user-management/{type}/delete/{user}', [UserManagementController::class, 'delete'])->name('admin.userManagement.delete');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/user-management/admins', [UserManagementController::class, 'admins'])->name('admin.userManagement.admins');
+    Route::get('/admin/user-management/staffs', [UserManagementController::class, 'staffs'])->name('admin.userManagement.staffs');
+    Route::get('/admin/user-management/auditors', [UserManagementController::class, 'auditors'])->name('admin.userManagement.auditors');
+    Route::get('/admin/user-management/owners', [UserManagementController::class, 'owners'])->name('admin.userManagement.owners');
+    Route::get('/admin/user-management/{type}/add', [UserManagementController::class, 'addForm'])
+        ->where('type', 'admins')
+        ->name('admin.userManagement.addForm');
+    Route::post('/admin/user-management/{type}/add', [UserManagementController::class, 'add'])
+        ->where('type', 'admins')
+        ->name('admin.userManagement.add');
+    Route::get('/admin/user-management/{type}/edit/{user}', [UserManagementController::class, 'editForm'])->name('admin.userManagement.editForm');
+    Route::post('/admin/user-management/{type}/edit/{user}', [UserManagementController::class, 'edit'])->name('admin.userManagement.edit');
+    Route::post('/admin/user-management/{type}/delete/{user}', [UserManagementController::class, 'delete'])->name('admin.userManagement.delete');
+});
 
 // Document Registration & Routing
 Route::get('/admin/document-registration', [DocumentRegistrationController::class, 'showForm'])->name('admin.documentRegistration');
@@ -63,6 +64,8 @@ Route::post('/staff/documents/{document}/route', [StaffDocumentController::class
 Route::post('/staff/documents/{document}/process-route', [StaffDocumentController::class, 'processAndRouteDocument'])->name('staff.processAndRouteDocument');
 Route::delete('/staff/documents/{document}', [StaffDocumentController::class, 'delete'])->name('staff.document.delete');
 Route::post('/staff/documents/{id}/undo', [StaffDocumentController::class, 'undoDelete'])->name('staff.document.undo');
+Route::post('/staff/documents/import', [StaffDocumentController::class, 'import'])->name('staff.document.import');
+Route::get('/staff/documents/template', [StaffDocumentController::class, 'downloadTemplate'])->name('staff.document.template');
 Route::get('/staff/user-search', [UserManagementController::class, 'searchUser'])->name('staff.userSearch');
 
 // Document Owner

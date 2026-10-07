@@ -157,6 +157,10 @@
             <p class="text-muted">Manage and track all registered documents</p>
           </div>
           <div class="d-flex gap-2 align-items-center flex-wrap">
+            <button type="button" class="btn btn-outline-success fw-bold px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;">
+              <i class="bi bi-file-earmark-spreadsheet"></i>
+              <span>Export Excel</span>
+            </button>
             <button type="button" class="btn-create border-0 cursor-pointer" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
               <i class="bi bi-plus-lg"></i>
               <span>Add Document</span>
@@ -233,6 +237,7 @@
                   <th>Type</th>
                   <th>Subject</th>
                   <th>Date</th>
+                  <th>Status</th>
                   <th class="text-end">Actions</th>
                 </tr>
               </thead>
@@ -244,6 +249,7 @@
                   <td style="text-transform: uppercase;">{{ $document->documentType }}</td>
                   <td>{{ $document->title }}</td>
                   <td class="text-muted">{{ $document->documentDate ? \Carbon\Carbon::parse($document->documentDate)->format('F d, Y') : $document->created_at?->format('F d, Y') }}</td>
+                  <td><span class="badge bg-light text-dark border">{{ $document->status->statusName ?? 'Pending' }}</span></td>
                   <td>
                     <div class="actions-cell justify-content-end">
                       @if($document->filePath)
@@ -284,10 +290,49 @@
   </div>
 </div>
 
+@push('scripts')
+<script>
+  document.getElementById('staff-record-search').addEventListener('input', function () {
+    const search = this.value.trim().toLowerCase();
+    document.querySelectorAll('#staff-records-body tr[data-record-search]').forEach(function (row) {
+      row.hidden = !row.dataset.recordSearch.includes(search);
+    });
+  });
+
+  document.getElementById('export-documents-btn').addEventListener('click', function () {
+    const rows = [
+      ['Reference Number', 'From Office', 'Type', 'Subject', 'Date']
+    ];
+    document.querySelectorAll('#staff-records-body tr[data-record-search]').forEach(function (row) {
+      if (!row.hidden) {
+        const cols = row.querySelectorAll('td');
+        if (cols.length >= 5) {
+          rows.push([
+            cols[0].innerText.trim(),
+            cols[1].innerText.trim(),
+            cols[2].innerText.trim(),
+            cols[3].innerText.trim(),
+            cols[4].innerText.trim()
+          ]);
+        }
+      }
+    });
+    const csv = rows.map(function (row) { 
+      return row.map(function (cell) { return '"' + cell.replace(/"/g, '""') + '"'; }).join(','); 
+    }).join('\n');
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'documents_export.csv';
+    link.click();
+  });
+</script>
+
 <!-- Add Document Modal -->
-<div class="modal fade" id="addDocumentModal" tabindex="-1" aria-labelledby="addDocumentModalLabel" aria-hidden="true">
+<div class="modal fade" id="addDocumentModal" tabindex="-1" aria-labelledby="addDocumentModalLabel" aria-hidden="true" data-bs-backdrop="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 rounded-4 p-3" style="background-color: #f5f5f5;">
+    <div class="modal-content border-0 rounded-4 p-3 shadow-lg" style="background-color: #ffffff !important; color: #1e293b !important;">
       <div class="modal-header border-0 pb-0">
         <h5 class="modal-title fw-bold text-dark" id="addDocumentModalLabel">Add Document</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -296,7 +341,7 @@
         @csrf
         <div class="modal-body">
           @if($errors->any())
-            <div class="alert alert-danger rounded-4">
+            <div class="alert alert-danger rounded-4 mb-3">
               <ul class="mb-0">
                 @foreach($errors->all() as $error)
                   <li>{{ $error }}</li>
@@ -311,7 +356,7 @@
                 <i class="bi bi-hash"></i>
               </div>
               <div class="flex-grow-1">
-                <input type="text" id="documentNo" name="documentNo" class="form-control rounded-pill text-uppercase" placeholder="REFERENCE NUMBER" value="{{ old('documentNo') }}" required>
+                <input type="text" id="documentNo" name="documentNo" class="form-control rounded-pill text-uppercase bg-white" placeholder="REFERENCE NUMBER" value="{{ old('documentNo') }}" required>
               </div>
             </div>
 
@@ -320,7 +365,7 @@
                 <i class="bi bi-building"></i>
               </div>
               <div class="flex-grow-1">
-                <input type="text" id="fromOffice" name="fromOffice" class="form-control rounded-pill text-uppercase" placeholder="FROM OFFICE" value="{{ old('fromOffice') }}" required>
+                <input type="text" id="fromOffice" name="fromOffice" class="form-control rounded-pill text-uppercase bg-white" placeholder="FROM OFFICE" value="{{ old('fromOffice') }}" required>
               </div>
             </div>
 
@@ -329,7 +374,7 @@
                 <i class="bi bi-file-earmark-text"></i>
               </div>
               <div class="flex-grow-1">
-                <input type="text" id="documentType" name="documentType" class="form-control rounded-pill text-uppercase" placeholder="TYPE" value="{{ old('documentType') }}" required>
+                <input type="text" id="documentType" name="documentType" class="form-control rounded-pill text-uppercase bg-white" placeholder="TYPE" value="{{ old('documentType') }}" required>
               </div>
             </div>
 
@@ -338,7 +383,7 @@
                 <i class="bi bi-card-heading"></i>
               </div>
               <div class="flex-grow-1">
-                <input type="text" id="title" name="title" class="form-control rounded-pill text-uppercase" placeholder="SUBJECT" value="{{ old('title') }}" required>
+                <input type="text" id="title" name="title" class="form-control rounded-pill text-uppercase bg-white" placeholder="SUBJECT" value="{{ old('title') }}" required>
               </div>
             </div>
 
@@ -347,7 +392,20 @@
                 <i class="bi bi-calendar-event"></i>
               </div>
               <div class="flex-grow-1">
-                <input type="date" id="documentDate" name="documentDate" class="form-control rounded-pill" value="{{ old('documentDate', date('Y-m-d')) }}" required>
+                <input type="date" id="documentDate" name="documentDate" class="form-control rounded-pill bg-white" value="{{ old('documentDate', date('Y-m-d')) }}" required>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
+                <i class="bi bi-tag"></i>
+              </div>
+              <div class="flex-grow-1">
+                <select name="currentStatus" id="currentStatus" class="form-select rounded-pill bg-white" required>
+                  @foreach(\App\Models\DocumentStatus::all() as $status)
+                    <option value="{{ $status->statusID }}" {{ old('currentStatus', 1) == $status->statusID ? 'selected' : '' }}>{{ $status->statusName }}</option>
+                  @endforeach
+                </select>
               </div>
             </div>
 
@@ -356,7 +414,7 @@
                 <i class="bi bi-paperclip"></i>
               </div>
               <div class="flex-grow-1">
-                <input type="file" id="file" name="file" class="form-control rounded-pill" accept=".pdf" required>
+                <input type="file" id="file" name="file" class="form-control rounded-pill bg-white" accept=".pdf" required>
               </div>
             </div>
           </div>
@@ -370,22 +428,15 @@
   </div>
 </div>
 
-@push('scripts')
-<script>
-  document.getElementById('staff-record-search').addEventListener('input', function () {
-    const search = this.value.trim().toLowerCase();
-    document.querySelectorAll('#staff-records-body tr[data-record-search]').forEach(function (row) {
-      row.hidden = !row.dataset.recordSearch.includes(search);
-    });
-  });
-</script>
 @if($errors->any())
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    var myModal = new bootstrap.Modal(document.getElementById('addDocumentModal'));
-    myModal.show();
+    const modalEl = document.getElementById('addDocumentModal');
+    if (modalEl) {
+      const myModal = new bootstrap.Modal(modalEl);
+      myModal.show();
+    }
   });
 </script>
 @endif
-@endpush
 @endsection

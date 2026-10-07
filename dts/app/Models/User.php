@@ -16,6 +16,11 @@ class User extends Authenticatable
     protected $primaryKey = 'userID';
     public $incrementing = true; // or false if not auto-increment
     protected $keyType = 'int'; // or 'string' if your PK is not integer
+
+    public function getRouteKeyName()
+    {
+        return 'userID';
+    }
     /**
      * The attributes that are mass assignable.
      *

@@ -153,6 +153,20 @@
           </div>
         </div>
 
+        <!-- Status -->
+        <div class="d-flex align-items-center gap-3">
+          <div class="field-icon">
+            <i class="bi bi-tag"></i>
+          </div>
+          <div class="flex-grow-1">
+            <select name="currentStatus" id="currentStatus" class="form-select custom-input" required>
+              @foreach(\App\Models\DocumentStatus::all() as $status)
+                <option value="{{ $status->statusID }}" {{ old('currentStatus', 1) == $status->statusID ? 'selected' : '' }}>{{ $status->statusName }}</option>
+              @endforeach
+            </select>
+          </div>
+        </div>
+
         <!-- Upload PDF File -->
         <div class="d-flex align-items-center gap-3">
           <div class="field-icon">

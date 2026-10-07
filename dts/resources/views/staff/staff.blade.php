@@ -41,6 +41,77 @@
     letter-spacing: -0.025em;
     margin: 0;
   }
+
+  .metric-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .metric-card::after {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 90px;
+    height: 90px;
+    background: radial-gradient(circle, rgba(0, 18, 83, 0.04) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  .metric-card-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .metric-icon-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .metric-value {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 0.25rem;
+  }
+
+  .metric-sub {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+  }
+
+  .metric-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.15rem;
+  }
+
+  .metric-desc {
+    font-size: 0.82rem;
+    color: #64748b;
+  }
 </style>
 @endpush
 
@@ -61,6 +132,56 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
         @endif
+
+        <!-- Summary Metric Cards -->
+        @php $totalDeptDocs = isset($statusCounts) ? $statusCounts->sum() : 0; @endphp
+        <div class="row g-4 mb-4">
+          <div class="col-md-4 col-lg-3">
+            <div class="metric-card">
+              <div class="metric-card-content">
+                <div class="metric-icon-box" style="background: #f3e8ff; color: #9333ea;">
+                  <i class="bi bi-folder-fill"></i>
+                </div>
+                <div class="metric-value" style="color: #9333ea;">{{ number_format($totalDeptDocs) }}</div>
+                <div class="metric-sub">(100%)</div>
+                <div class="metric-title">Department Documents</div>
+                <div class="metric-desc">Assigned Records</div>
+              </div>
+            </div>
+          </div>
+
+          @if(isset($statusCounts))
+            @php
+              $colors = [
+                ['bg' => '#ffedd5', 'color' => '#ea580c', 'icon' => 'bi-clock-history'],
+                ['bg' => '#dcfce7', 'color' => '#16a34a', 'icon' => 'bi-check-circle-fill'],
+                ['bg' => '#fee2e2', 'color' => '#dc2626', 'icon' => 'bi-exclamation-triangle-fill'],
+                ['bg' => '#e0e7ff', 'color' => '#4f46e5', 'icon' => 'bi-arrow-repeat'],
+              ];
+              $i = 0;
+            @endphp
+            @foreach($statusCounts as $statusName => $count)
+              @php
+                $theme = $colors[$i % count($colors)];
+                $pct = $totalDeptDocs > 0 ? round(($count / $totalDeptDocs) * 100, 1) : 0;
+                $i++;
+              @endphp
+              <div class="col-md-4 col-lg-3">
+                <div class="metric-card">
+                  <div class="metric-card-content">
+                    <div class="metric-icon-box" style="background: {{ $theme['bg'] }}; color: {{ $theme['color'] }};">
+                      <i class="bi {{ $theme['icon'] }}"></i>
+                    </div>
+                    <div class="metric-value" style="color: {{ $theme['color'] }};">{{ number_format($count) }}</div>
+                    <div class="metric-sub">({{ $pct }}%)</div>
+                    <div class="metric-title">{{ $statusName }}</div>
+                    <div class="metric-desc">Status Breakdown</div>
+                  </div>
+                </div>
+              </div>
+            @endforeach
+          @endif
+        </div>
 
         <!-- Staff Analytics Dashboard Graphs Section -->
         <div class="row g-4 mb-4">

@@ -163,18 +163,29 @@
 
 
 
-      .table, .table th, .table td {
-        padding: 0.45rem 0.75rem !important;
-        font-size: 0.86rem;
-        border: none !important;
-        border-top: none !important;
-        border-bottom: none !important;
-        border-left: none !important;
-        border-right: none !important;
+      .table {
+        margin-bottom: 0;
+        vertical-align: middle;
       }
 
       .table th {
         text-transform: uppercase;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        color: #374151;
+        background-color: #f8fafc !important;
+        padding: 1.15rem 1rem !important;
+        border-bottom: 2px solid #e5e7eb !important;
+        border-top: none !important;
+      }
+
+      .table td {
+        padding: 1.15rem 1rem !important;
+        font-size: 0.88rem;
+        color: #1e293b;
+        border-bottom: 1px solid #f1f5f9 !important;
+        vertical-align: middle;
       }
 
       /* Centered Layout Wrapper */
