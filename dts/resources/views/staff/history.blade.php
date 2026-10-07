@@ -170,7 +170,7 @@
         <div class="section-header">
           <div>
             <h1 class="section-title">Document History</h1>
-            <p class="text-muted">Track processed and routed document transactions</p>
+            <p class="text-muted">View document transaction history</p>
           </div>
         </div>
 

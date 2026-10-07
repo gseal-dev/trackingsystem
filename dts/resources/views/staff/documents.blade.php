@@ -257,9 +257,6 @@
                         <i class="bi bi-eye"></i>
                       </a>
                       @endif
-                      <a href="{{ route('staff.processDocumentForm', $document->documentId) }}" class="btn-action text-success" title="Process Document">
-                        <i class="bi bi-gear"></i>
-                      </a>
                       <a href="{{ route('staff.document.edit', $document->documentId) }}" class="btn-action" title="Edit Details">
                         <i class="bi bi-pencil"></i>
                       </a>

@@ -198,11 +198,6 @@ class StaffDocumentController extends Controller
         return view('staff.history', compact('histories'));
     }
 
-    public function processDocumentForm(Document $document)
-    {
-        $departments = \App\Models\Department::all();
-        return view('staff.process_document', compact('document', 'departments'));
-    }
 
     public function create()
     {

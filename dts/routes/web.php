@@ -48,10 +48,6 @@ Route::get('/staff/documents/create', [StaffDocumentController::class, 'create']
 Route::post('/staff/documents/create', [StaffDocumentController::class, 'store'])->name('staff.document.store');
 Route::get('/staff/documents/{document}/edit', [StaffDocumentController::class, 'edit'])->name('staff.document.edit');
 Route::post('/staff/documents/{document}/edit', [StaffDocumentController::class, 'update'])->name('staff.document.update');
-Route::get('/staff/documents/{document}/process', [StaffDocumentController::class, 'processDocumentForm'])->name('staff.processDocumentForm');
-Route::post('/staff/documents/{document}/process', [StaffDocumentController::class, 'processDocument'])->name('staff.processDocument');
-Route::post('/staff/documents/{document}/route', [StaffDocumentController::class, 'routeDocument'])->name('staff.routeDocument');
-Route::post('/staff/documents/{document}/process-route', [StaffDocumentController::class, 'processAndRouteDocument'])->name('staff.processAndRouteDocument');
 Route::delete('/staff/documents/{document}', [StaffDocumentController::class, 'delete'])->name('staff.document.delete');
 Route::post('/staff/documents/{id}/undo', [StaffDocumentController::class, 'undoDelete'])->name('staff.document.undo');
 Route::post('/staff/documents/import', [StaffDocumentController::class, 'import'])->name('staff.document.import');
