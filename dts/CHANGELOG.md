@@ -74,3 +74,5 @@ All unnecessary routing/status components and extra roles (DocumentOwner, Audito
 - Removal of all related views, routes, and controller methods
 
 Additionally, fixed UI color contrast issues in light mode by changing the primary text and button colors to black for better readability.
+
+Removed Document status Statistics

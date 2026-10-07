@@ -7,7 +7,6 @@
 <style>
   .dashboard-shell {
     width: 100%;
-    min-height: calc(100vh - 100px);
     padding: clamp(1rem, 2vw, 2rem);
   }
 
@@ -98,6 +97,9 @@
     overflow: hidden;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   .metric-card:hover {
@@ -160,6 +162,19 @@
     color: #64748b;
   }
 
+  .chart-card {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chart-container {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    min-height: 160px;
+  }
+
   @media (max-width: 1024px) {
     .staff-layout {
       grid-template-columns: 1fr;
@@ -178,120 +193,69 @@
 @section('content')
 <div class="dashboard-shell">
   <div class="dashboard-container wide">
-      <main class="staff-main-content" style="background: transparent; border: none; border-radius: 0; padding: 0; min-height: 600px; width: 100%;">
-        <div class="section-header">
-          <div>
-            <h1 class="section-title">Admin Dashboard</h1>
-            <p class="text-muted">System analytics and overview</p>
+    <main class="staff-main-content">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Admin Dashboard</h1>
+          <p class="text-muted">System analytics and overview</p>
+        </div>
+      </div>
+
+      @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+      @endif
+
+      <!-- Equal-Height Cards Row -->
+      <div class="row g-4 mb-4 align-items-stretch">
+        <!-- Total Documents Card -->
+        <div class="col-12 col-md-3 d-flex">
+          <div class="metric-card w-100">
+            <div class="metric-card-content">
+              <div class="metric-icon-box" style="background: #f3e8ff; color: #9333ea;">
+                <i class="bi bi-folder-fill"></i>
+              </div>
+              <div class="metric-value" style="color: #9333ea;">{{ number_format($totalDocuments ?? 0) }}</div>
+              <div class="metric-sub">(100%)</div>
+              <div class="metric-title">Total Documents</div>
+              <div class="metric-desc">All Registered Records</div>
+            </div>
           </div>
         </div>
 
-        @if(session('success'))
-          <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
-        <!-- Summary Metric Cards -->
-        <div class="row g-4 mb-4">
-          <div class="col-md-4 col-lg-3">
-            <div class="metric-card">
-              <div class="metric-card-content">
-                <div class="metric-icon-box" style="background: #f3e8ff; color: #9333ea;">
-                  <i class="bi bi-folder-fill"></i>
-                </div>
-                <div class="metric-value" style="color: #9333ea;">{{ number_format($totalDocuments ?? 0) }}</div>
-                <div class="metric-sub">(100%)</div>
-                <div class="metric-title">Total Documents</div>
-                <div class="metric-desc">All Registered Records</div>
+        <!-- Total Users Card -->
+        <div class="col-12 col-md-3 d-flex">
+          <div class="metric-card w-100">
+            <div class="metric-card-content">
+              <div class="metric-icon-box" style="background: #e0f2fe; color: #0284c7;">
+                <i class="bi bi-people-fill"></i>
               </div>
-            </div>
-          </div>
-          <div class="col-md-4 col-lg-3">
-            <div class="metric-card">
-              <div class="metric-card-content">
-                <div class="metric-icon-box" style="background: #e0f2fe; color: #0284c7;">
-                  <i class="bi bi-people-fill"></i>
-                </div>
-                <div class="metric-value" style="color: #0284c7;">{{ number_format($totalUsers ?? 0) }}</div>
-                <div class="metric-sub">(Accounts)</div>
-                <div class="metric-title">Total Users</div>
-                <div class="metric-desc">System Personnel</div>
-              </div>
-            </div>
-          </div>
-
-          @if(isset($documentsByStatus))
-            @php
-              $colors = [
-                ['bg' => '#ffedd5', 'color' => '#ea580c', 'icon' => 'bi-clock-history'],
-                ['bg' => '#dcfce7', 'color' => '#16a34a', 'icon' => 'bi-check-circle-fill'],
-                ['bg' => '#fee2e2', 'color' => '#dc2626', 'icon' => 'bi-exclamation-triangle-fill'],
-                ['bg' => '#e0e7ff', 'color' => '#4f46e5', 'icon' => 'bi-arrow-repeat'],
-              ];
-              $i = 0;
-            @endphp
-            @foreach($documentsByStatus as $statusName => $count)
-              @php
-                $theme = $colors[$i % count($colors)];
-                $pct = ($totalDocuments ?? 0) > 0 ? round(($count / $totalDocuments) * 100, 1) : 0;
-                $i++;
-              @endphp
-              <div class="col-md-4 col-lg-3">
-                <div class="metric-card">
-                  <div class="metric-card-content">
-                    <div class="metric-icon-box" style="background: {{ $theme['bg'] }}; color: {{ $theme['color'] }};">
-                      <i class="bi {{ $theme['icon'] }}"></i>
-                    </div>
-                    <div class="metric-value" style="color: {{ $theme['color'] }};">{{ number_format($count) }}</div>
-                    <div class="metric-sub">({{ $pct }}%)</div>
-                    <div class="metric-title">{{ $statusName }}</div>
-                    <div class="metric-desc">Document Status</div>
-                  </div>
-                </div>
-              </div>
-            @endforeach
-          @endif
-        </div>
-
-        <!-- Analytics Graphs Section -->
-        <div class="row g-4">
-          <div class="col-md-6">
-            <div class="p-4 border rounded-4 bg-light shadow-sm">
-              <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-pie-chart-fill me-2 text-primary"></i> Documents by Status</h5>
-              <div style="height: 250px; position: relative;">
-                <canvas id="adminStatusChart"></canvas>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="p-4 border rounded-4 bg-light shadow-sm">
-              <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-bar-chart-fill me-2 text-success"></i> Documents by Department</h5>
-              <div style="height: 250px; position: relative;">
-                <canvas id="adminDeptChart"></canvas>
-              </div>
+              <div class="metric-value" style="color: #0284c7;">{{ number_format($totalUsers ?? 0) }}</div>
+              <div class="metric-sub">(Accounts)</div>
+              <div class="metric-title">Total Users</div>
+              <div class="metric-desc">System Personnel</div>
             </div>
           </div>
         </div>
-      </main>
-    </div>
+
+        <!-- Documents by Department Chart Card -->
+        <div class="col-12 col-md-6 d-flex">
+          <div class="p-4 border rounded-4 bg-light shadow-sm chart-card w-100">
+            <h5 class="fw-bold mb-3 text-dark">
+              <i class="bi bi-bar-chart-fill me-2 text-success"></i> Documents by Department
+            </h5>
+            <div class="chart-container">
+              <canvas id="adminDeptChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
   </div>
 </div>
 
 @push('scripts')
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    const adminStatusCtx = document.getElementById('adminStatusChart').getContext('2d');
-    new Chart(adminStatusCtx, {
-      type: 'doughnut',
-      data: {
-        labels: {!! json_encode(isset($documentsByStatus) ? $documentsByStatus->keys() : []) !!},
-        datasets: [{
-          data: {!! json_encode(isset($documentsByStatus) ? $documentsByStatus->values() : []) !!},
-          backgroundColor: ['#001253', '#ea3a14', '#16a34a', '#eab308', '#64748b']
-        }]
-      },
-      options: { responsive: true, maintainAspectRatio: false }
-    });
-
     const adminDeptCtx = document.getElementById('adminDeptChart').getContext('2d');
     new Chart(adminDeptCtx, {
       type: 'bar',
@@ -303,7 +267,11 @@
           backgroundColor: '#001253'
         }]
       },
-      options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        scales: { y: { beginAtZero: true } } 
+      }
     });
   });
 </script>
