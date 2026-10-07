@@ -31,16 +31,8 @@ class DashboardController extends Controller
                 })->map->count();
 
                 return view('admin.dashboard', compact('totalDocuments', 'totalUsers', 'documentsByStatus', 'documentsByDept', 'usersByRole'));
-            case 'DocumentOwner':
-                return view('documentOwner.document_owner');
             case 'Staff':
                 return app(StaffDocumentController::class)->index(request());
-            case 'Auditor':
-                $documents = \App\Models\Document::with(['owner', 'status', 'department'])
-                    ->where('currentStatus', '!=', 1) // Exclude "Pending"
-                    ->paginate(10);
-                $departments = \App\Models\Department::all();
-                return view('auditor.auditor', compact('documents', 'departments'));
             default:
                 abort(403, 'Unauthorized or role not set.');
         }

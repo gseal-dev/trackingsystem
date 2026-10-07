@@ -5,10 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\DocumentRegistrationController;
-use App\Http\Controllers\Admin\DocumentRoutingController;
 use App\Http\Controllers\Staff\StaffDocumentController;
-use App\Http\Controllers\DocumentOwner\DocumentOwnerController;
-use App\Http\Controllers\Auditor\AuditorController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -28,8 +25,6 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 Route::middleware(['auth'])->group(function () {
     Route::get('/admin/user-management/admins', [UserManagementController::class, 'admins'])->name('admin.userManagement.admins');
     Route::get('/admin/user-management/staffs', [UserManagementController::class, 'staffs'])->name('admin.userManagement.staffs');
-    Route::get('/admin/user-management/auditors', [UserManagementController::class, 'auditors'])->name('admin.userManagement.auditors');
-    Route::get('/admin/user-management/owners', [UserManagementController::class, 'owners'])->name('admin.userManagement.owners');
     Route::get('/admin/user-management/{type}/add', [UserManagementController::class, 'addForm'])
         ->where('type', 'admins')
         ->name('admin.userManagement.addForm');
@@ -41,15 +36,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/admin/user-management/{type}/delete/{user}', [UserManagementController::class, 'delete'])->name('admin.userManagement.delete');
 });
 
-// Document Registration & Routing
+// Document Registration (Admin only)
 Route::get('/admin/document-registration', [DocumentRegistrationController::class, 'showForm'])->name('admin.documentRegistration');
 Route::post('/admin/document-registration', [DocumentRegistrationController::class, 'register'])->name('admin.documentRegistration.submit');
 Route::get('/admin/user-search', [UserManagementController::class, 'searchUser'])->name('admin.userSearch');
-Route::get('/admin/documents', [DocumentRoutingController::class, 'index'])->name('admin.documents');
-Route::get('/admin/send-document', [DocumentRoutingController::class, 'listDocuments'])->name('admin.sendDocumentList');
-Route::get('/admin/send-document/{document}', [DocumentRoutingController::class, 'showSendForm'])->name('admin.sendDocumentForm');
-Route::post('/admin/send-document/{document}', [DocumentRoutingController::class, 'send'])->name('admin.sendDocument');
-Route::get('/admin/processed-documents', [DocumentRoutingController::class, 'processedDocuments'])->name('admin.processedDocuments');
 
 // Staff
 Route::get('/staff/history', [StaffDocumentController::class, 'history'])->name('staff.history');
@@ -67,12 +57,3 @@ Route::post('/staff/documents/{id}/undo', [StaffDocumentController::class, 'undo
 Route::post('/staff/documents/import', [StaffDocumentController::class, 'import'])->name('staff.document.import');
 Route::get('/staff/documents/template', [StaffDocumentController::class, 'downloadTemplate'])->name('staff.document.template');
 Route::get('/staff/user-search', [UserManagementController::class, 'searchUser'])->name('staff.userSearch');
-
-// Document Owner
-Route::get('/document-owner/submitted-documents', [DocumentOwnerController::class, 'submittedDocuments'])->name('documentOwner.submittedDocuments');
-Route::get('/document-owner/pending-documents', [DocumentOwnerController::class, 'pendingDocuments'])->name('documentOwner.pendingDocuments');
-Route::get('/document-owner/completed-documents', [DocumentOwnerController::class, 'completedDocuments'])->name('documentOwner.completedDocuments');
-
-// Auditor
-Route::get('/auditor/document-transactions', [AuditorController::class, 'documentTransactions'])->name('auditor.documentTransactions');
-Route::get('/auditor/document-transactions/export', [AuditorController::class, 'exportDocumentTransactions'])->name('auditor.documentTransactions.export');

@@ -628,18 +628,11 @@
           @php $role = auth()->user()->role?->roleName; @endphp
           @if($role === 'Admin')
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-grid-fill me-1"></i> Dashboard</a>
-            <a href="{{ route('admin.documents') }}" class="{{ request()->routeIs('admin.documents') ? 'active' : '' }}"><i class="bi bi-folder2-open me-1"></i> Documents List</a>
             <a href="{{ route('admin.userManagement.admins') }}" class="{{ request()->routeIs('admin.userManagement.*') ? 'active' : '' }}"><i class="bi bi-people-fill me-1"></i> Users List</a>
           @elseif($role === 'Staff')
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-grid-fill me-1"></i> Dashboard</a>
             <a href="{{ route('staff.documents') }}" class="{{ request()->routeIs('staff.documents') ? 'active' : '' }}"><i class="bi bi-folder2-open me-1"></i> Documents List</a>
             <a href="{{ route('staff.history') }}" class="{{ request()->routeIs('staff.history') ? 'active' : '' }}"><i class="bi bi-clock-history me-1"></i> History</a>
-          @elseif($role === 'Auditor')
-            <a href="{{ route('auditor.documentTransactions') }}" class="{{ request()->routeIs('auditor.*') ? 'active' : '' }}"><i class="bi bi-journal-text me-1"></i> Transactions</a>
-          @elseif($role === 'DocumentOwner')
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-box-seam me-1"></i> Submitted</a>
-            <a href="{{ route('documentOwner.pendingDocuments') }}" class="{{ request()->routeIs('documentOwner.pendingDocuments') ? 'active' : '' }}"><i class="bi bi-hourglass-split me-1"></i> Pending</a>
-            <a href="{{ route('documentOwner.completedDocuments') }}" class="{{ request()->routeIs('documentOwner.completedDocuments') ? 'active' : '' }}"><i class="bi bi-check-circle me-1"></i> Completed</a>
           @endif
         </div>
         <div class="nav-user-area">
