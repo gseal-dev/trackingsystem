@@ -13,8 +13,9 @@
 
   .dashboard-container {
     width: 100%;
-    max-width: 100%;
+    max-width: 1350px;
     margin: 0 auto;
+    padding: 0 1rem;
   }
 
   .staff-layout {
@@ -65,10 +66,11 @@
   }
 
   .staff-main-content {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 24px;
-    padding: 2rem;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
     min-height: 600px;
   }
 
@@ -166,7 +168,7 @@
 @section('content')
 <div class="dashboard-shell">
   <div class="dashboard-container wide">
-      <main class="staff-main-content bg-white p-4 p-md-5 rounded-4 border">
+      <main class="staff-main-content" style="background: transparent; border: none; border-radius: 0; padding: 0; min-height: 600px; width: 100%;">
         <div class="section-header">
           <div>
             <h1 class="section-title">Users List</h1>

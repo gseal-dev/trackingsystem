@@ -20,6 +20,27 @@ class StaffDocumentController extends Controller
                 return $q->where('currentDepartmentID', $user->departmentID);
             });
 
+        $documents = $query->get();
+
+        $statusCounts = $documents->groupBy(function($doc) {
+            return $doc->status->statusName ?? 'Pending';
+        })->map->count();
+
+        $monthlyCounts = $documents->groupBy(function($doc) {
+            return $doc->documentDate ? date('Y-m', strtotime($doc->documentDate)) : date('Y-m', strtotime($doc->created_at));
+        })->map->count();
+
+        return view('staff.staff', compact('statusCounts', 'monthlyCounts'));
+    }
+
+    public function documents(Request $request)
+    {
+        $user = auth()->user();
+        $query = \App\Models\Document::with('department')
+            ->when($user->departmentID, function($q) use ($user) {
+                return $q->where('currentDepartmentID', $user->departmentID);
+            });
+
         if ($request->filled('year')) {
             $query->where(function($q) use ($request) {
                 $q->whereYear('documentDate', $request->year)
@@ -48,15 +69,7 @@ class StaffDocumentController extends Controller
         $documents = $query->get();
         $departments = \App\Models\Department::all();
 
-        $statusCounts = $documents->groupBy(function($doc) {
-            return $doc->status->statusName ?? 'Pending';
-        })->map->count();
-
-        $monthlyCounts = $documents->groupBy(function($doc) {
-            return $doc->documentDate ? date('Y-m', strtotime($doc->documentDate)) : date('Y-m', strtotime($doc->created_at));
-        })->map->count();
-
-        return view('staff.staff', compact('documents', 'departments', 'statusCounts', 'monthlyCounts'));
+        return view('staff.documents', compact('documents', 'departments'));
     }
 
     // Staff processes document (reupload and update status)

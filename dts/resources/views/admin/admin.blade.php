@@ -274,7 +274,7 @@
                 </nav>
             </aside>
 
-            <main class="staff-main-content" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 24px; padding: 2rem; min-height: 600px; width: 100%;">
+            <main class="staff-main-content" style="background: transparent; border: none; border-radius: 0; padding: 0; min-height: 600px; width: 100%;">
                 <div class="dashboard-header">
                     <div>
                         <h1 class="dashboard-title">Documents List</h1>

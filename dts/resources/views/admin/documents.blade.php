@@ -12,8 +12,9 @@
 
   .dashboard-container {
     width: 100%;
-    max-width: 100%;
+    max-width: 1350px;
     margin: 0 auto;
+    padding: 0 1rem;
   }
 
   .staff-layout {
@@ -64,10 +65,11 @@
   }
 
   .staff-main-content {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 24px;
-    padding: 2rem;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
     min-height: 600px;
   }
 
@@ -98,18 +100,28 @@
 
   .search-box {
     position: relative;
-    max-width: 320px;
+    max-width: 400px;
     width: 100%;
   }
 
+  .search-box input, .form-select {
+    border-radius: 50px !important;
+    border-color: #cbd5e1;
+  }
+
   .search-box input {
-    padding-left: 2.5rem;
-    height: 44px;
+    padding-left: 2.75rem;
+    height: 48px;
+  }
+
+  .form-select {
+    height: 48px;
+    padding-left: 1.25rem;
   }
 
   .search-box i {
     position: absolute;
-    left: 1rem;
+    left: 1.25rem;
     top: 50%;
     transform: translateY(-50%);
     color: #9ca3af;
@@ -141,10 +153,17 @@
 
   .table th {
     text-transform: uppercase;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     font-weight: 800;
     letter-spacing: 0.05em;
-    color: #646771;
+    color: #374151;
+    background-color: #f8fafc !important;
+    padding: 1.15rem 1rem !important;
+    border-bottom: 2px solid #e5e7eb !important;
+  }
+
+  .table td {
+    padding: 1.15rem 1rem !important;
   }
 
   @media (max-width: 1024px) {
@@ -165,7 +184,7 @@
 @section('content')
 <div class="dashboard-shell">
   <div class="dashboard-container wide">
-      <main class="staff-main-content bg-white p-4 p-md-5 rounded-4 border">
+      <main class="staff-main-content" style="background: transparent; border: none; border-radius: 0; padding: 0; min-height: 600px; width: 100%;">
         <div class="section-header">
           <div>
             <h1 class="section-title">Documents List</h1>
@@ -174,32 +193,34 @@
         </div>
 
         <div class="table-toolbar">
-          <form method="GET" action="{{ route('admin.documents') }}" class="d-flex gap-2 flex-wrap align-items-center w-100">
-            <div class="search-box flex-grow-1" style="max-width: 320px;">
+          <form method="GET" action="{{ route('admin.documents') }}" class="w-100">
+            <div class="search-box w-100 mb-3" style="max-width: 100%;">
               <i class="bi bi-search"></i>
-              <input type="text" id="admin-doc-search" class="form-control" placeholder="Search by contract name, location, or contractor...">
+              <input type="text" id="admin-doc-search" class="form-control" placeholder="Search by contract name, location, or contractor..." style="max-width: 100%;">
             </div>
-            <select name="year" class="form-select" style="width: 130px;" onchange="this.form.submit()">
-              <option value="">Year: All</option>
-              @for($y = 2017; $y <= 2026; $y++)
-                <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
-              @endfor
-            </select>
-            <select name="month" class="form-select" style="width: 140px;" onchange="this.form.submit()">
-              <option value="">Month: All</option>
-              @for($m = 1; $m <= 12; $m++)
-                <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
-              @endfor
-            </select>
-            <select name="day" class="form-select" style="width: 120px;" onchange="this.form.submit()">
-              <option value="">Day: All</option>
-              @for($d = 1; $d <= 31; $d++)
-                <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>Day {{ $d }}</option>
-              @endfor
-            </select>
-            @if(request('year') || request('month') || request('day'))
-              <a href="{{ route('admin.documents') }}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 50px;">Reset</a>
-            @endif
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+              <select name="year" class="form-select" style="width: 160px;" onchange="this.form.submit()">
+                <option value="">Year: All</option>
+                @for($y = 2017; $y <= 2026; $y++)
+                  <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                @endfor
+              </select>
+              <select name="month" class="form-select" style="width: 160px;" onchange="this.form.submit()">
+                <option value="">Month: All</option>
+                @for($m = 1; $m <= 12; $m++)
+                  <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
+                @endfor
+              </select>
+              <select name="day" class="form-select" style="width: 140px;" onchange="this.form.submit()">
+                <option value="">Day: All</option>
+                @for($d = 1; $d <= 31; $d++)
+                  <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>Day {{ $d }}</option>
+                @endfor
+              </select>
+              @if(request('year') || request('month') || request('day'))
+                <a href="{{ route('admin.documents') }}" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 50px;">Reset</a>
+              @endif
+            </div>
           </form>
         </div>
 
@@ -211,19 +232,20 @@
           </div>
         </div>
 
-        <div class="table-responsive">
-          <table class="table table-hover table-sm align-middle">
-            <thead class="bg-light">
-              <tr>
-                <th class="border-0">Reference Number</th>
-                <th class="border-0">Office</th>
-                <th class="border-0">Type</th>
-                <th class="border-0">Subject</th>
-                <th class="border-0">Uploaded By</th>
-                <th class="border-0">Date</th>
-                <th class="border-0 text-end">Actions</th>
-              </tr>
-            </thead>
+        <div class="card border rounded-4 bg-white shadow-sm overflow-hidden p-3">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th>Reference Number</th>
+                  <th>Office</th>
+                  <th>Type</th>
+                  <th>Subject</th>
+                  <th>Uploaded By</th>
+                  <th>Date</th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
             <tbody id="admin-docs-body" data-live-refresh>
               @forelse($documents as $doc)
                 @php
@@ -257,6 +279,7 @@
             </tbody>
           </table>
         </div>
+      </div>
       </main>
     </div>
   </div>
