@@ -196,7 +196,7 @@
         justify-content: center;
         padding: 2rem 1rem;
         position: relative;
-        z-index: 1;
+
       }
 
       /* Card Styling */
@@ -220,8 +220,11 @@
         justify-content: center;
         padding: 1rem 0 2rem;
         position: relative;
-        z-index: 1;
       }
+
+      /* Keep modals above the fixed header (1100) and navbar (1090) */
+      .modal-backdrop { z-index: 1190; }
+      .modal { z-index: 1200; }
 
       .app-header {
         position: fixed;
