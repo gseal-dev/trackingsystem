@@ -11,13 +11,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       :root {
-        --brand-dark: #001253;
+        --brand-dark: #000000;
         --brand-muted: #64748b;
         --bg-main: #f1f5f9;
         --card-bg: #ffffff;
         --input-bg: #ffffff;
         --border-color: #cbd5e1;
-        --btn-dark: #001253;
+        --btn-dark: #000000;
         --btn-dark-hover: #000a33;
         --accent-orange: #ea3a14;
       }
@@ -565,17 +565,6 @@
         font-weight: 700;
       }
 
-      /* Dark Mode Overrides */
-      body.theme-dark {
-        --brand-dark: #f3f4f6;
-        --brand-muted: #9ca3af;
-        --bg-main: #0f172a;
-        --card-bg: #1e293b;
-        --input-bg: #0f172a;
-        --border-color: #334155;
-        --btn-dark: #ffffff;
-        --btn-dark-hover: #e2e8f0;
-      }
 
       body.theme-dark .btn-brand,
       body.theme-dark .btn-custom-dark,
