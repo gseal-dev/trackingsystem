@@ -642,7 +642,48 @@
       @yield('content')
     </main>
 
+    {{-- Notification popup: every success/error message is shown here, once, with an OK button --}}
+    @php
+      $flashSuccess = session('success');
+      $flashError = session('error');
+      $flashMessage = $flashSuccess ?: $flashError;
+      $flashIsError = ! $flashSuccess && $flashError;
+    @endphp
+    @if($flashMessage)
+    <div class="modal fade" id="flashModal" tabindex="-1" aria-labelledby="flashModalMessage" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 20px; background-color: #ffffff; color: #1e293b;">
+          <div class="modal-body p-4">
+            <div class="mb-2" style="font-size: 2.75rem; line-height: 1; color: {{ $flashIsError ? '#dc2626' : '#16a34a' }};">
+              <i class="bi {{ $flashIsError ? 'bi-x-circle-fill' : 'bi-check-circle-fill' }}"></i>
+            </div>
+            <p id="flashModalMessage" class="fw-semibold mb-1">{{ $flashMessage }}</p>
+            @if(session('undo_delete_title'))
+              <p class="text-muted small mb-0">{{ session('undo_delete_title') }}</p>
+            @endif
+            <div class="d-flex justify-content-center gap-2 mt-4">
+              @if(session('undo_delete_id') && \Illuminate\Support\Facades\Route::has('staff.document.undo'))
+                <form method="POST" action="{{ route('staff.document.undo', session('undo_delete_id')) }}" class="m-0">
+                  @csrf
+                  <button type="submit" class="btn btn-outline-dark rounded-pill px-4">Undo</button>
+                </form>
+              @endif
+              <button type="button" class="btn rounded-pill px-4 text-white" style="background-color: #001253;" data-bs-dismiss="modal">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    @endif
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @if($flashMessage)
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        new bootstrap.Modal(document.getElementById('flashModal')).show();
+      });
+    </script>
+    @endif
     <script>
       (function(){
         const root = document.body;

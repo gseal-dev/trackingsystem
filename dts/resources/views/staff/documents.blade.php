@@ -168,25 +168,6 @@
           </div>
         </div>
 
-        @if(session('undo_delete_id'))
-          <div class="alert alert-info alert-dismissible fade show border-0 mb-4 d-flex justify-content-between align-items-center" role="alert" style="background: #eff6ff; color: #1e40af; border-radius: 12px;">
-            <span>Document "{{ session('undo_delete_title') }}" deleted.</span>
-            <form action="{{ route('staff.document.undo', session('undo_delete_id')) }}" method="POST" class="m-0">
-              @csrf
-              <button type="submit" class="btn btn-sm btn-dark fw-bold px-3 py-1" style="border-radius: 50px;">
-                <i class="bi bi-arrow-counterclockwise me-1"></i> Undo / Retrieve
-              </button>
-            </form>
-          </div>
-        @endif
-
-        @if(session('success'))
-          <div class="alert alert-success alert-dismissible fade show border-0 mb-4" role="alert" style="background: #ecfdf5; color: #065f46; border-radius: 12px;">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        @endif
-
         <div class="table-toolbar">
           <form method="GET" action="{{ route('staff.documents') }}" class="w-100">
             <div class="search-box w-100 mb-3" style="max-width: 100%;">
@@ -221,7 +202,7 @@
 
         <p class="text-muted small fst-italic mb-3">*Project information, documents, and records are continuously being tracked. Thank you for your patience.*</p>
 
-        <div class="mb-3">
+        <div class="mb-3" id="staff-docs-count" data-live-refresh>
           <div class="d-inline-flex align-items-center px-4 py-2 text-white fw-bold shadow-sm" style="background-color: #ea3a14; border-radius: 50px; font-size: 0.9rem;">
             <i class="bi bi-file-earmark-text-fill me-2"></i> {{ count($documents) }} Documents Found
           </div>
@@ -241,7 +222,7 @@
                   <th class="text-end">Actions</th>
                 </tr>
               </thead>
-            <tbody id="staff-records-body">
+            <tbody id="staff-records-body" data-live-refresh>
               @forelse($documents as $document)
                 <tr data-record-search="{{ strtolower($document->documentNo . ' ' . ($document->department->depName ?? '') . ' ' . $document->documentType . ' ' . $document->title) }}">
                   <td class="fw-bold">{{ $document->documentNo }}</td>
@@ -289,12 +270,14 @@
 
 @push('scripts')
 <script>
-  document.getElementById('staff-record-search').addEventListener('input', function () {
-    const search = this.value.trim().toLowerCase();
+  function applyStaffSearch() {
+    const search = document.getElementById('staff-record-search').value.trim().toLowerCase();
     document.querySelectorAll('#staff-records-body tr[data-record-search]').forEach(function (row) {
       row.hidden = !row.dataset.recordSearch.includes(search);
     });
-  });
+  }
+  document.getElementById('staff-record-search').addEventListener('input', applyStaffSearch);
+  document.addEventListener('live-refreshed', applyStaffSearch);
 
   document.getElementById('export-documents-btn').addEventListener('click', function () {
     const rows = [

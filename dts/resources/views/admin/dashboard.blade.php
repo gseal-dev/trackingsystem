@@ -201,10 +201,6 @@
         </div>
       </div>
 
-      @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-      @endif
-
       <!-- Equal-Height Cards Row -->
       <div class="row g-4 mb-4 align-items-stretch">
         <!-- Total Documents Card -->
@@ -249,6 +245,8 @@
           </div>
         </div>
       </div>
+
+      @include('admin._documents')
     </main>
   </div>
 </div>

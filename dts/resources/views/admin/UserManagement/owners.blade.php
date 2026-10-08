@@ -13,9 +13,6 @@
     <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary mb-3">
       <i class="bi bi-arrow-left"></i> Back to Dashboard
     </a>
-    @if(session('success'))
-      <div class="alert alert-success card-surface border-0">{{ session('success') }}</div>
-    @endif
     <div class="card-surface p-3">
       @forelse($users as $user)
         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
