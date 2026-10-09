@@ -74,9 +74,13 @@ class AdminDashboardDocumentsTest extends TestCase
 
         // the list comes after the stats cards
         $this->assertGreaterThan(strpos($html, 'Total Documents'), strpos($html, 'Reference Number'));
-        // every row has view / edit / delete controls
-        $this->assertSame(2, substr_count($html, 'title="Edit Details"'));
-        $this->assertSame(2, substr_count($html, 'title="Delete"'));
+        // each row has a single View button (no inline edit / delete)
+        $this->assertSame(2, substr_count($html, 'title="View details"'));
+        $this->assertStringNotContainsString('title="Edit Details"', $html);
+        $this->assertStringNotContainsString('title="Delete"', $html);
+        // admins manage documents from inside the popup
+        $this->assertStringContainsString('id="documentEditBtn"', $html);
+        $this->assertStringContainsString('id="documentDeleteForm"', $html);
     }
 
     public function test_admin_sees_documents_from_every_department_and_uploader(): void
@@ -253,6 +257,103 @@ class AdminDashboardDocumentsTest extends TestCase
     {
         $this->actingAs($this->staff)->get('/dashboard')->assertOk()->assertSee('Staff Dashboard');
         $this->actingAs($this->staff)->get('/staff/documents')->assertOk();
+    }
+
+    // ---- "View" popup ------------------------------------------------------------
+
+    private function popupData(string $html, int $index = 0): array
+    {
+        preg_match_all('/data-doc-view="([^"]+)"/', $html, $m);
+
+        return json_decode(html_entity_decode($m[1][$index]), true);
+    }
+
+    public function test_staff_list_has_only_a_view_button_and_a_read_only_popup(): void
+    {
+        $this->makeDocument('D-1', 'Readable');
+
+        $html = $this->actingAs($this->staff)->get('/staff/documents')->assertOk()->getContent();
+
+        $this->assertSame(1, substr_count($html, 'title="View details"'));
+        $this->assertStringNotContainsString('title="Edit Details"', $html);
+        $this->assertStringNotContainsString('title="Delete"', $html);
+        $this->assertStringContainsString('id="documentViewModal"', $html);
+        $this->assertStringContainsString('id="documentViewBtn"', $html);
+        $this->assertStringContainsString('id="documentDownloadBtn"', $html);
+        // staff cannot edit or delete from the popup
+        $this->assertStringNotContainsString('id="documentEditBtn"', $html);
+        $this->assertStringNotContainsString('id="documentDeleteForm"', $html);
+        // layout: info card with labelled rows, and no document ID shown
+        $this->assertStringContainsString('Document Information', $html);
+        foreach (['Filename', 'Uploaded By', 'Upload Date', 'Reference No.', 'From Office', 'Description'] as $label) {
+            $this->assertStringContainsString('>' . $label . '</div>', $html);
+        }
+        $this->assertStringNotContainsString('Document ID', $html);
+    }
+
+    public function test_popup_carries_the_document_metadata(): void
+    {
+        $doc = $this->makeDocument('REF-77', 'Road widening permit', 'Finance', '2026-10-01');
+        $doc->forceFill([
+            'filePath' => 'documents/3f2b8c1e-9a4d-4e7b-8c55-0a1b2c3d4e5f_Road Permit.pdf',
+            'description' => 'Permit for the road widening project',
+        ])->save();
+        // stored in UTC; the popup shows Philippine time (UTC+8)
+        Document::where('documentId', $doc->documentId)->update(['created_at' => '2026-10-01 02:30:00']);
+
+        foreach ([$this->admin, $this->staff] as $user) {
+            $url = $user->is($this->admin) ? '/dashboard' : '/staff/documents';
+            $data = $this->popupData($this->actingAs($user)->get($url)->getContent());
+
+            $this->assertSame($doc->documentId, $data['id']);
+            $this->assertSame('REF-77', $data['referenceNo']);
+            $this->assertSame('Road widening permit', $data['subject']);
+            $this->assertSame('Permit for the road widening project', $data['description']);
+            $this->assertSame('Finance', $data['office']);
+            $this->assertSame('Memo', $data['type']);
+            $this->assertSame('Road Permit.pdf', $data['fileName']);          // uuid prefix removed
+            $this->assertSame('Worker Tester (worker)', $data['uploadedBy']);
+            $this->assertSame('October 01, 2026 at 10:30 AM', $data['uploadedAt']);
+            $this->assertSame(route('document.download', $doc->documentId), $data['downloadUrl']);
+            $this->assertStringContainsString('documents/3f2b8c1e', $data['viewUrl']);
+        }
+    }
+
+    public function test_popup_handles_a_document_without_a_file(): void
+    {
+        $doc = $this->makeDocument('D-1', 'No file');
+        $doc->forceFill(['filePath' => null])->save();
+
+        $data = $this->popupData($this->actingAs($this->admin)->get('/dashboard')->getContent());
+
+        $this->assertNull($data['viewUrl']);
+        $this->assertNull($data['downloadUrl']);
+        $this->assertNull($data['fileName']);
+    }
+
+    // ---- Download -------------------------------------------------------------------
+
+    public function test_document_can_be_downloaded_with_its_original_name(): void
+    {
+        Storage::fake('public');
+        $doc = $this->makeDocument('D-1', 'Downloadable');
+        $doc->forceFill(['filePath' => 'documents/3f2b8c1e-9a4d-4e7b-8c55-0a1b2c3d4e5f_Budget Plan.pdf'])->save();
+        Storage::disk('public')->put($doc->filePath, '%PDF-1.4 test');
+
+        foreach ([$this->admin, $this->staff] as $user) {
+            $this->actingAs($user)->get(route('document.download', $doc->documentId))
+                ->assertOk()
+                ->assertDownload('Budget Plan.pdf');
+        }
+    }
+
+    public function test_download_needs_login_and_an_existing_file(): void
+    {
+        Storage::fake('public');
+        $doc = $this->makeDocument('D-1', 'Missing file');   // file was never stored
+
+        $this->get(route('document.download', $doc->documentId))->assertRedirect('/login');
+        $this->actingAs($this->admin)->get(route('document.download', $doc->documentId))->assertNotFound();
     }
 
     public function test_document_actions_require_login(): void

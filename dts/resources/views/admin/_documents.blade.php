@@ -195,21 +195,9 @@
               <td class="text-muted">{{ $doc->documentDate ? \Carbon\Carbon::parse($doc->documentDate)->format('F d, Y') : $doc->created_at?->format('F d, Y') }}</td>
               <td>
                 <div class="actions-cell justify-content-end">
-                  @if($doc->filePath)
-                    <a href="{{ asset('storage/' . $doc->filePath) }}" class="btn-action" target="_blank" title="View PDF">
-                      <i class="bi bi-eye"></i>
-                    </a>
-                  @endif
-                  <a href="{{ route('staff.document.edit', $doc->documentId) }}" class="btn-action" title="Edit Details">
-                    <i class="bi bi-pencil"></i>
-                  </a>
-                  <form action="{{ route('staff.document.delete', $doc->documentId) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this document?')">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn-action btn-delete border-0 bg-transparent text-danger" title="Delete">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </form>
+                  <button type="button" class="btn-action" title="View details" data-doc-view="{{ json_encode($doc->viewData()) }}">
+                    <i class="bi bi-eye"></i>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -226,6 +214,8 @@
     </div>
   </div>
 </section>
+
+@include('partials.document-view-modal', ['canManage' => true])
 
 <!-- Add Document Modal -->
 <div class="modal fade" id="addDocumentModal" tabindex="-1" aria-labelledby="addDocumentModalLabel" aria-hidden="true" data-bs-backdrop="true">

@@ -36,7 +36,7 @@ class StaffDocumentController extends Controller
     public function documents(Request $request)
     {
         $user = auth()->user();
-        $query = \App\Models\Document::with('department')
+        $query = \App\Models\Document::with(['department', 'owner'])
             ->when($user->departmentID, function($q) use ($user) {
                 return $q->where('currentDepartmentID', $user->departmentID);
             });
@@ -342,5 +342,15 @@ class StaffDocumentController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    // Download a document's PDF with its original file name
+    public function download(Document $document)
+    {
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+
+        abort_unless($document->filePath && $disk->exists($document->filePath), 404, 'File not found.');
+
+        return $disk->download($document->filePath, $document->displayFileName());
     }
 }

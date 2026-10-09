@@ -233,21 +233,9 @@
                   <td><span class="badge bg-light text-dark border">{{ $document->status->statusName ?? 'Pending' }}</span></td>
                   <td>
                     <div class="actions-cell justify-content-end">
-                      @if($document->filePath)
-                      <a href="{{ asset('storage/' . $document->filePath) }}" class="btn-action" target="_blank" title="View PDF">
-                        <i class="bi bi-eye"></i>
-                      </a>
-                      @endif
-                      <a href="{{ route('staff.document.edit', $document->documentId) }}" class="btn-action" title="Edit Details">
-                        <i class="bi bi-pencil"></i>
-                      </a>
-                      <form action="{{ route('staff.document.delete', $document->documentId) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this file?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn-action btn-delete border-0 bg-transparent text-danger" title="Delete">
-                          <i class="bi bi-trash"></i>
-                        </button>
-                      </form>
+                      <button type="button" class="btn-action" title="View details" data-doc-view="{{ json_encode($document->viewData()) }}">
+                    <i class="bi bi-eye"></i>
+                  </button>
                     </div>
                   </td>
                 </tr>
@@ -267,6 +255,8 @@
     </div>
   </div>
 </div>
+
+@include('partials.document-view-modal', ['canManage' => false])
 
 @push('scripts')
 <script>
@@ -419,4 +409,5 @@
   });
 </script>
 @endif
+@endpush
 @endsection

@@ -43,6 +43,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/user-search', [UserManagementController::class, 'searchUser'])->name('admin.userSearch');
 
     // Staff
+    Route::get('/documents/{document}/download', [StaffDocumentController::class, 'download'])->name('document.download');
     Route::get('/staff/history', [StaffDocumentController::class, 'history'])->name('staff.history');
     Route::get('/staff/documents', [StaffDocumentController::class, 'documents'])->name('staff.documents');
     Route::get('/staff/documents/create', [StaffDocumentController::class, 'create'])->name('staff.document.create');
