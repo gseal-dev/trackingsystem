@@ -18,17 +18,9 @@ class UserManagementController extends Controller
         $roles = Role::whereIn('roleName', ['Admin', 'Staff'])->orderBy('roleName')->get();
         return view('admin.UserManagement.admins', compact('users', 'roles'));
     }
-    public function owners() {
-        $users = User::whereHas('role', fn($q) => $q->where('roleName', 'DocumentOwner'))->get();
-        return view('admin.UserManagement.owners', compact('users'));
-    }
     public function staffs() {
         $users = User::whereHas('role', fn($q) => $q->where('roleName', 'Staff'))->get();
         return view('admin.UserManagement.staffs', compact('users'));
-    }
-    public function auditors() {
-        $users = User::whereHas('role', fn($q) => $q->where('roleName', 'Auditor'))->get();
-        return view('admin.UserManagement.auditors', compact('users'));
     }
 
     public function addForm($type) {
@@ -64,7 +56,7 @@ class UserManagementController extends Controller
     }
 
     public function editForm($type, User $user) {
-        $roles = Role::whereNotIn('roleName', ['Auditor', 'DocumentOwner'])
+        $roles = Role::whereIn('roleName', ['Admin', 'Staff'])
             ->orderBy('roleName')
             ->get();
         return view('admin.UserManagement.editUser', compact('user', 'type', 'roles'));
@@ -85,14 +77,14 @@ class UserManagementController extends Controller
         if ($request->filled('password')) {
             $user->update(['password' => \Hash::make($request->password)]);
         }
-        $redirectType = $type === 'documentowners' ? 'dashboard' : $type;
+        $redirectType = $type;
         return redirect()->route($redirectType === 'admins' || $redirectType === 'dashboard' ? 'dashboard' : "admin.userManagement.$redirectType")
             ->with('success', 'User updated!');
     }
 
     public function delete($type, User $user) {
         $user->delete();
-        $redirectType = $type === 'documentowners' ? 'dashboard' : $type;
+        $redirectType = $type;
         return redirect()->route($redirectType === 'admins' || $redirectType === 'staffs' || $redirectType === 'dashboard' ? 'dashboard' : "admin.userManagement.$redirectType")
             ->with('success', 'User deleted!');
     }

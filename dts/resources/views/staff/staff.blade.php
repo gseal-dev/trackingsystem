@@ -126,13 +126,6 @@
           </div>
         </div>
 
-        @if(session('success'))
-          <div class="alert alert-success alert-dismissible fade show border-0 mb-4" role="alert" style="background: #ecfdf5; color: #065f46; border-radius: 12px;">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        @endif
-
         <!-- Summary Metric Cards -->
         @php $totalDeptDocs = isset($statusCounts) ? $statusCounts->sum() : 0; @endphp
         <div class="row g-4 mb-4">

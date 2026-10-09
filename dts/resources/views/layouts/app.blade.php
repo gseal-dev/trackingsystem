@@ -11,13 +11,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       :root {
-        --brand-dark: #001253;
+        --brand-dark: #000000;
         --brand-muted: #64748b;
         --bg-main: #f1f5f9;
         --card-bg: #ffffff;
         --input-bg: #ffffff;
         --border-color: #cbd5e1;
-        --btn-dark: #001253;
+        --btn-dark: #000000;
         --btn-dark-hover: #000a33;
         --accent-orange: #ea3a14;
       }
@@ -565,17 +565,6 @@
         font-weight: 700;
       }
 
-      /* Dark Mode Overrides */
-      body.theme-dark {
-        --brand-dark: #f3f4f6;
-        --brand-muted: #9ca3af;
-        --bg-main: #0f172a;
-        --card-bg: #1e293b;
-        --input-bg: #0f172a;
-        --border-color: #334155;
-        --btn-dark: #ffffff;
-        --btn-dark-hover: #e2e8f0;
-      }
 
       body.theme-dark .btn-brand,
       body.theme-dark .btn-custom-dark,
@@ -628,18 +617,11 @@
           @php $role = auth()->user()->role?->roleName; @endphp
           @if($role === 'Admin')
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-grid-fill me-1"></i> Dashboard</a>
-            <a href="{{ route('admin.documents') }}" class="{{ request()->routeIs('admin.documents') ? 'active' : '' }}"><i class="bi bi-folder2-open me-1"></i> Documents List</a>
             <a href="{{ route('admin.userManagement.admins') }}" class="{{ request()->routeIs('admin.userManagement.*') ? 'active' : '' }}"><i class="bi bi-people-fill me-1"></i> Users List</a>
           @elseif($role === 'Staff')
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-grid-fill me-1"></i> Dashboard</a>
             <a href="{{ route('staff.documents') }}" class="{{ request()->routeIs('staff.documents') ? 'active' : '' }}"><i class="bi bi-folder2-open me-1"></i> Documents List</a>
             <a href="{{ route('staff.history') }}" class="{{ request()->routeIs('staff.history') ? 'active' : '' }}"><i class="bi bi-clock-history me-1"></i> History</a>
-          @elseif($role === 'Auditor')
-            <a href="{{ route('auditor.documentTransactions') }}" class="{{ request()->routeIs('auditor.*') ? 'active' : '' }}"><i class="bi bi-journal-text me-1"></i> Transactions</a>
-          @elseif($role === 'DocumentOwner')
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-box-seam me-1"></i> Submitted</a>
-            <a href="{{ route('documentOwner.pendingDocuments') }}" class="{{ request()->routeIs('documentOwner.pendingDocuments') ? 'active' : '' }}"><i class="bi bi-hourglass-split me-1"></i> Pending</a>
-            <a href="{{ route('documentOwner.completedDocuments') }}" class="{{ request()->routeIs('documentOwner.completedDocuments') ? 'active' : '' }}"><i class="bi bi-check-circle me-1"></i> Completed</a>
           @endif
         </div>
         <div class="nav-user-area">
@@ -660,7 +642,48 @@
       @yield('content')
     </main>
 
+    {{-- Notification popup: every success/error message is shown here, once, with an OK button --}}
+    @php
+      $flashSuccess = session('success');
+      $flashError = session('error');
+      $flashMessage = $flashSuccess ?: $flashError;
+      $flashIsError = ! $flashSuccess && $flashError;
+    @endphp
+    @if($flashMessage)
+    <div class="modal fade" id="flashModal" tabindex="-1" aria-labelledby="flashModalMessage" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 20px; background-color: #ffffff; color: #1e293b;">
+          <div class="modal-body p-4">
+            <div class="mb-2" style="font-size: 2.75rem; line-height: 1; color: {{ $flashIsError ? '#dc2626' : '#16a34a' }};">
+              <i class="bi {{ $flashIsError ? 'bi-x-circle-fill' : 'bi-check-circle-fill' }}"></i>
+            </div>
+            <p id="flashModalMessage" class="fw-semibold mb-1">{{ $flashMessage }}</p>
+            @if(session('undo_delete_title'))
+              <p class="text-muted small mb-0">{{ session('undo_delete_title') }}</p>
+            @endif
+            <div class="d-flex justify-content-center gap-2 mt-4">
+              @if(session('undo_delete_id') && \Illuminate\Support\Facades\Route::has('staff.document.undo'))
+                <form method="POST" action="{{ route('staff.document.undo', session('undo_delete_id')) }}" class="m-0">
+                  @csrf
+                  <button type="submit" class="btn btn-outline-dark rounded-pill px-4">Undo</button>
+                </form>
+              @endif
+              <button type="button" class="btn rounded-pill px-4 text-white" style="background-color: #001253;" data-bs-dismiss="modal">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    @endif
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @if($flashMessage)
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        new bootstrap.Modal(document.getElementById('flashModal')).show();
+      });
+    </script>
+    @endif
     <script>
       (function(){
         const root = document.body;
