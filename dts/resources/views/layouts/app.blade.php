@@ -508,7 +508,7 @@
       body.theme-dark .btn-brand,
       body.theme-dark .btn-custom-dark,
       body.theme-dark .btn-login-submit {
-        color: #0f172a;
+        color: #ffffff;
       }
       body.theme-dark .btn-brand:hover,
       body.theme-dark .btn-custom-dark:hover,
