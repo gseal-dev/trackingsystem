@@ -901,27 +901,41 @@
         const sidebar = document.getElementById('appSidebar');
         const toggle = document.getElementById('sidebarToggle');
         const overlay = document.getElementById('sidebarOverlay');
+
         if (!sidebar || !toggle) return;
-        function setSidebarExpanded(expanded) {
+
+        function setSidebarExpanded(expanded, save = true) {
           body.classList.toggle('sidebar-expanded', expanded);
           toggle.setAttribute('aria-expanded', String(expanded));
           toggle.setAttribute('aria-label', expanded ? 'Collapse sidebar' : 'Expand sidebar');
+
           const icon = toggle.querySelector('i');
           if (icon) {
             icon.className = expanded ? 'bi bi-layout-sidebar-inset' : 'bi bi-list';
           }
+
+          if (save) {
+            localStorage.setItem('sidebar-expanded', String(expanded));
+          }
         }
-        setSidebarExpanded(false);
+
+        // Check localStorage on load; default to false (collapsed) if not set
+        const savedState = localStorage.getItem('sidebar-expanded') === 'true';
+        setSidebarExpanded(savedState, false);
+
         toggle.addEventListener('click', function () {
-          setSidebarExpanded(!body.classList.contains('sidebar-expanded'));
+          const willExpand = !body.classList.contains('sidebar-expanded');
+          setSidebarExpanded(willExpand, true);
         });
+
         if (overlay) {
           overlay.addEventListener('click', function () {
-            setSidebarExpanded(false);
+            setSidebarExpanded(false, true);
           });
         }
+
         document.addEventListener('keydown', function (event) {
-          if (event.key === 'Escape') setSidebarExpanded(false);
+          if (event.key === 'Escape') setSidebarExpanded(false, true);
         });
       })();
     </script>

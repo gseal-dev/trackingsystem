@@ -161,7 +161,7 @@
     </div>
   </div>
 
-  <div class="border rounded-2 overflow-hidden">
+  <div class="card border rounded-4 bg-white shadow-sm overflow-hidden p-3">
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
         <thead class="bg-light">
