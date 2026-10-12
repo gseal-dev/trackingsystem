@@ -113,7 +113,7 @@
   <div class="section-header" style="margin-bottom: 1.25rem;">
     <div>
       <h2 class="section-subtitle">Documents</h2>
-      <p class="text-muted mb-0">Add, edit and delete documents</p>
+      <p class="text-muted mb-0">Add and delete documents</p>
     </div>
     <div class="d-flex gap-2 align-items-center flex-wrap">
       <button type="button" class="btn btn-outline-success fw-bold px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;">
@@ -215,7 +215,7 @@
   </div>
 </section>
 
-@include('partials.document-view-modal', ['canManage' => true])
+@include('partials.document-view-modal', ['canDelete' => true])
 
 <!-- Add Document Modal -->
 <div class="modal fade" id="addDocumentModal" tabindex="-1" aria-labelledby="addDocumentModalLabel" aria-hidden="true" data-bs-backdrop="true">

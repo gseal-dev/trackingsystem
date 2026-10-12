@@ -78,9 +78,9 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->assertSame(2, substr_count($html, 'title="View details"'));
         $this->assertStringNotContainsString('title="Edit Details"', $html);
         $this->assertStringNotContainsString('title="Delete"', $html);
-        // admins manage documents from inside the popup
-        $this->assertStringContainsString('id="documentEditBtn"', $html);
+        // admins can delete (from the popup) but not edit
         $this->assertStringContainsString('id="documentDeleteForm"', $html);
+        $this->assertStringNotContainsString('id="documentEditBtn"', $html);
     }
 
     public function test_admin_sees_documents_from_every_department_and_uploader(): void
@@ -131,25 +131,32 @@ class AdminDashboardDocumentsTest extends TestCase
             ->assertSessionHasErrors(['documentNo', 'title', 'documentType', 'fromOffice', 'file']);
     }
 
-    public function test_admin_can_edit_a_document(): void
+    public function test_staff_can_edit_a_document_in_a_popup(): void
     {
         Storage::fake('public');
         $doc = $this->makeDocument('D-1', 'Old title', 'Finance');
 
-        $this->actingAs($this->admin)->get(route('staff.document.edit', $doc->documentId))
-            ->assertOk()
+        // the Edit popup lives on the list page and is filled from the document's data
+        $html = $this->actingAs($this->staff)->get('/staff/documents')->assertOk()
+            ->assertSee('id="editDocumentModal"', false)
             ->assertSee('name="fromOffice"', false)
             ->assertSee('name="documentNo"', false)
-            ->assertSee('value="Finance"', false)
-            ->assertSee('enctype="multipart/form-data"', false);
+            ->assertSee('enctype="multipart/form-data"', false)
+            ->getContent();
+        $data = $this->popupData($html);
+        $this->assertSame(route('staff.document.update', $doc->documentId), $data['updateUrl']);
+        $this->assertSame(
+            ['documentNo' => 'D-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Old title', 'documentDate' => '2026-10-01'],
+            $data['edit']
+        );
 
-        $this->post(route('staff.document.update', $doc->documentId), [
+        $this->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
             'documentNo' => 'D-1',
             'fromOffice' => 'Legal Office',
             'documentType' => 'Report',
             'title' => 'New title',
             'documentDate' => '2026-10-03',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect('/staff/documents')->assertSessionHas('success', 'Document updated successfully!');
 
         $doc->refresh();
         $this->assertSame('New title', $doc->title);
@@ -157,16 +164,45 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->assertSame('Legal Office', $doc->department->depName);
     }
 
-    public function test_edit_can_replace_the_pdf(): void
+    public function test_there_is_no_separate_edit_page(): void
+    {
+        $doc = $this->makeDocument('D-1', 'No page');
+
+        $this->actingAs($this->staff)->get('/staff/documents/' . $doc->documentId . '/edit')->assertStatus(405);
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('staff.document.edit'));
+    }
+
+    public function test_failed_edit_reopens_the_edit_popup_with_its_errors(): void
+    {
+        $doc = $this->makeDocument('D-1', 'Keep me');
+
+        $this->actingAs($this->staff)->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
+            '_editing_id' => $doc->documentId,
+            'documentNo' => 'D-1', 'fromOffice' => '', 'documentType' => 'Report', 'title' => 'Typed but invalid',
+        ])->assertRedirect('/staff/documents')
+          ->assertSessionHasErrorsIn('editDocument', ['fromOffice']);
+
+        $html = $this->get('/staff/documents')->getContent();
+        // the Edit popup reopens for this document, with the errors and the typed values...
+        $this->assertStringContainsString('action="' . route('staff.document.update', $doc->documentId) . '"', $html);
+        $this->assertStringContainsString('Typed but invalid', $html);
+        $this->assertStringContainsString('openEditModal', $html);
+        $this->assertStringContainsString('The from office field is required', $html);
+        // ...and the Add Document popup is not triggered by it
+        $this->assertStringNotContainsString("getElementById('addDocumentModal')", $html);
+        $this->assertSame('Keep me', $doc->fresh()->title);
+    }
+
+    public function test_staff_edit_can_replace_the_pdf(): void
     {
         Storage::fake('public');
         $doc = $this->makeDocument('D-1', 'With file');
         Storage::disk('public')->put($doc->filePath, 'old');
 
-        $this->actingAs($this->admin)->post(route('staff.document.update', $doc->documentId), [
+        $this->actingAs($this->staff)->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
             'documentNo' => 'D-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'With file',
             'file' => UploadedFile::fake()->create('new.pdf', 20, 'application/pdf'),
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect('/staff/documents');
 
         $doc->refresh();
         Storage::disk('public')->assertMissing('documents/D-1.pdf');
@@ -194,11 +230,11 @@ class AdminDashboardDocumentsTest extends TestCase
     {
         $doc = $this->makeDocument('D-1', 'Editable');
 
-        $this->actingAs($this->admin)->post(route('staff.document.update', $doc->documentId), [
+        $this->actingAs($this->staff)->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
             'documentNo' => 'D-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Edited',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect('/staff/documents');
 
-        $this->get('/dashboard')
+        $this->get('/staff/documents')
             ->assertSee('id="flashModal"', false)
             ->assertSee('Document updated successfully!')
             ->assertSee('>OK</button>', false)
@@ -206,7 +242,7 @@ class AdminDashboardDocumentsTest extends TestCase
             ->assertDontSee('>Undo</button>', false);
 
         // shown once only: the next page has no popup
-        $this->get('/dashboard')->assertDontSee('id="flashModal"', false);
+        $this->get('/staff/documents')->assertDontSee('id="flashModal"', false);
     }
 
     public function test_delete_popup_has_undo_and_ok(): void
@@ -268,7 +304,7 @@ class AdminDashboardDocumentsTest extends TestCase
         return json_decode(html_entity_decode($m[1][$index]), true);
     }
 
-    public function test_staff_list_has_only_a_view_button_and_a_read_only_popup(): void
+    public function test_staff_list_has_only_a_view_button_and_an_edit_only_popup(): void
     {
         $this->makeDocument('D-1', 'Readable');
 
@@ -280,8 +316,8 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->assertStringContainsString('id="documentViewModal"', $html);
         $this->assertStringContainsString('id="documentViewBtn"', $html);
         $this->assertStringContainsString('id="documentDownloadBtn"', $html);
-        // staff cannot edit or delete from the popup
-        $this->assertStringNotContainsString('id="documentEditBtn"', $html);
+        // staff can edit (from the popup) but not delete
+        $this->assertStringContainsString('id="documentEditBtn"', $html);
         $this->assertStringNotContainsString('id="documentDeleteForm"', $html);
         // layout: info card with labelled rows, and no document ID shown
         $this->assertStringContainsString('Document Information', $html);
@@ -354,6 +390,34 @@ class AdminDashboardDocumentsTest extends TestCase
 
         $this->get(route('document.download', $doc->documentId))->assertRedirect('/login');
         $this->actingAs($this->admin)->get(route('document.download', $doc->documentId))->assertNotFound();
+    }
+
+    // ---- Who can edit / delete ---------------------------------------------------------
+
+    public function test_staff_can_edit_but_not_delete(): void
+    {
+        $doc = $this->makeDocument('D-1', 'Staff cannot delete');
+
+        $this->actingAs($this->staff)->post(route('staff.document.update', $doc->documentId), [
+            'documentNo' => 'D-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Staff edit',
+        ])->assertRedirect();
+        $this->assertSame('Staff edit', $doc->fresh()->title);
+        $this->delete(route('staff.document.delete', $doc->documentId))->assertForbidden();
+        $this->post(route('staff.document.undo', $doc->documentId))->assertForbidden();
+        $this->assertNotSoftDeleted($doc);
+    }
+
+    public function test_admin_can_delete_but_not_edit(): void
+    {
+        $doc = $this->makeDocument('D-1', 'Admin cannot edit');
+
+        $this->actingAs($this->admin)->post(route('staff.document.update', $doc->documentId), [
+            'documentNo' => 'D-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Hacked title',
+        ])->assertForbidden();
+        $this->assertSame('Admin cannot edit', $doc->fresh()->title);
+
+        $this->delete(route('staff.document.delete', $doc->documentId))->assertRedirect();
+        $this->assertSoftDeleted($doc);
     }
 
     public function test_document_actions_require_login(): void

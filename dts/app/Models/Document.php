@@ -84,7 +84,14 @@ class Document extends Model
                 : '-',
             'viewUrl' => $this->filePath ? asset('storage/' . $this->filePath) : null,
             'downloadUrl' => $this->filePath ? route('document.download', $this->documentId) : null,
-            'editUrl' => route('staff.document.edit', $this->documentId),
+            'updateUrl' => route('staff.document.update', $this->documentId),
+            'edit' => [
+                'documentNo' => $this->documentNo,
+                'fromOffice' => $this->department->depName ?? '',
+                'documentType' => $this->documentType,
+                'title' => $this->title,
+                'documentDate' => $date ? \Carbon\Carbon::parse($date)->format('Y-m-d') : '',
+            ],
             'deleteUrl' => route('staff.document.delete', $this->documentId),
         ];
     }

@@ -188,14 +188,11 @@ class StaffDocumentController extends Controller
         return redirect()->route('dashboard')->with('success', 'Document added successfully!');
     }
 
-    public function edit(Document $document)
-    {
-        return view('staff.edit_document', compact('document'));
-    }
-
+    // Editing happens in a popup on the documents list (no separate edit page).
     public function update(Request $request, Document $document)
     {
-        $request->validate([
+        // Own error bag, so the Edit popup's errors don't reopen the Add Document popup
+        $request->validateWithBag('editDocument', [
             'documentNo' => 'required|unique:documents,documentNo,' . $document->documentId . ',documentId',
             'title' => 'required|string|max:255',
             'documentType' => 'required|string|max:255',
@@ -235,7 +232,8 @@ class StaffDocumentController extends Controller
 
         $document->update($updateData);
 
-        return redirect()->route('dashboard')->with('success', 'Document updated successfully!');
+        // Stay on the list the user was looking at (keeps their year/month/day filters)
+        return redirect()->to(url()->previous(route('staff.documents')))->with('success', 'Document updated successfully!');
     }
 
     public function delete(Document $document)

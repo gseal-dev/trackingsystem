@@ -48,10 +48,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/staff/documents', [StaffDocumentController::class, 'documents'])->name('staff.documents');
     Route::get('/staff/documents/create', [StaffDocumentController::class, 'create'])->name('staff.document.create');
     Route::post('/staff/documents/create', [StaffDocumentController::class, 'store'])->name('staff.document.store');
-    Route::get('/staff/documents/{document}/edit', [StaffDocumentController::class, 'edit'])->name('staff.document.edit');
-    Route::post('/staff/documents/{document}/edit', [StaffDocumentController::class, 'update'])->name('staff.document.update');
-    Route::delete('/staff/documents/{document}', [StaffDocumentController::class, 'delete'])->name('staff.document.delete');
-    Route::post('/staff/documents/{id}/undo', [StaffDocumentController::class, 'undoDelete'])->name('staff.document.undo');
+
+    // Staff can edit documents (in a popup) but not delete them
+    Route::middleware('role:Staff')->group(function () {
+        Route::post('/staff/documents/{document}/edit', [StaffDocumentController::class, 'update'])->name('staff.document.update');
+    });
+
+    // Admins can delete documents (and undo a delete) but not edit them
+    Route::middleware('role:Admin')->group(function () {
+        Route::delete('/staff/documents/{document}', [StaffDocumentController::class, 'delete'])->name('staff.document.delete');
+        Route::post('/staff/documents/{id}/undo', [StaffDocumentController::class, 'undoDelete'])->name('staff.document.undo');
+    });
+
     Route::post('/staff/documents/import', [StaffDocumentController::class, 'import'])->name('staff.document.import');
     Route::get('/staff/documents/template', [StaffDocumentController::class, 'downloadTemplate'])->name('staff.document.template');
     Route::get('/staff/user-search', [UserManagementController::class, 'searchUser'])->name('staff.userSearch');

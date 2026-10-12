@@ -1,9 +1,13 @@
 {{--
   Document details popup, shared by the admin dashboard list and the staff list.
   Open it with a button that carries  data-doc-view="{{ json_encode($document->viewData()) }}".
-  Pass  ['canManage' => true]  to also show Edit / Delete (admin only).
+  Pass  ['canEdit' => true]    to show the Edit button   (staff only),
+        ['canDelete' => true]  to show the Delete button (admin only).
 --}}
-@php $canManage = $canManage ?? false; @endphp
+@php
+  $canEdit = $canEdit ?? false;
+  $canDelete = $canDelete ?? false;
+@endphp
 
 <div class="modal fade" id="documentViewModal" tabindex="-1" aria-labelledby="documentViewTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
@@ -39,14 +43,18 @@
         </div>
       </div>
 
-      @if($canManage)
+      @if($canEdit || $canDelete)
         <div class="modal-footer">
-          <a href="#" id="documentEditBtn" class="btn btn-outline-secondary px-4"><i class="bi bi-pencil me-1"></i> Edit</a>
-          <form method="POST" action="#" id="documentDeleteForm" class="m-0" onsubmit="return confirm('Are you sure you want to delete this document?')">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-outline-danger px-4"><i class="bi bi-trash me-1"></i> Delete</button>
-          </form>
+          @if($canEdit)
+            <button type="button" id="documentEditBtn" class="btn btn-outline-secondary px-4"><i class="bi bi-pencil me-1"></i> Edit</button>
+          @endif
+          @if($canDelete)
+            <form method="POST" action="#" id="documentDeleteForm" class="m-0" onsubmit="return confirm('Are you sure you want to delete this document?')">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="btn btn-outline-danger px-4"><i class="bi bi-trash me-1"></i> Delete</button>
+            </form>
+          @endif
         </div>
       @endif
     </div>
@@ -98,6 +106,7 @@
     const noFileNote = document.getElementById('documentNoFileNote');
     const editBtn = document.getElementById('documentEditBtn');
     const deleteForm = document.getElementById('documentDeleteForm');
+    let currentDoc = null;
 
     function setLink(link, url) {
       if (url) {
@@ -117,6 +126,7 @@
       if (!trigger) return;
 
       const doc = JSON.parse(trigger.dataset.docView);
+      currentDoc = doc;
 
       modalEl.querySelectorAll('[data-doc-field]').forEach(function (el) {
         const value = doc[el.dataset.docField];
@@ -127,13 +137,24 @@
       setLink(downloadBtn, doc.downloadUrl);
       noFileNote.classList.toggle('d-none', !!doc.viewUrl);
 
-      if (editBtn) editBtn.href = doc.editUrl;
       if (deleteForm) deleteForm.action = doc.deleteUrl;
 
       // Keep the popup directly under <body> so nothing can cover it
       if (modalEl.parentElement !== document.body) document.body.appendChild(modalEl);
       bootstrap.Modal.getOrCreateInstance(modalEl).show();
     });
+
+    // Edit: close this popup, then open the Edit popup for the same document
+    if (editBtn) {
+      editBtn.addEventListener('click', function () {
+        const doc = currentDoc;
+        if (!doc) return;
+        modalEl.addEventListener('hidden.bs.modal', function () {
+          document.dispatchEvent(new CustomEvent('document-edit-requested', { detail: doc }));
+        }, { once: true });
+        bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+      });
+    }
   })();
 </script>
 @endpush
