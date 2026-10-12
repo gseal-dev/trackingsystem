@@ -3,7 +3,7 @@
 
 @push('head')
 <style>
-  .upload-wrap { width: 100%; max-width: 1150px; margin: 0 auto; padding: 0.5rem 0 2rem; }
+  .upload-wrap { width: 100%; max-width: var(--page-max); margin: 0 auto; padding: 0; }
   .upload-card { background: #ffffff; border-radius: 6px; overflow: hidden; box-shadow: 0 6px 24px rgba(15, 23, 42, 0.12); color: #1f2937; }
 
   .upload-header { display: flex; align-items: center; gap: 0.6rem; padding: 0.95rem 1.5rem; color: #ffffff; font-weight: 700; font-size: 0.95rem; background: linear-gradient(90deg, rgb(0, 18, 83)0%,rgb(0, 18, 83) 100%); }

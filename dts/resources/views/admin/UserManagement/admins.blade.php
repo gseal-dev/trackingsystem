@@ -5,18 +5,7 @@
 @push('head')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  .dashboard-shell {
-    width: 100%;
-    min-height: calc(100vh - 100px);
-    padding: clamp(1rem, 2vw, 2rem);
-  }
 
-  .dashboard-container {
-    width: 100%;
-    max-width: 1350px;
-    margin: 0 auto;
-    padding: 0 1rem;
-  }
 
   .staff-layout {
     display: grid;
@@ -65,14 +54,6 @@
     color: #fff;
   }
 
-  .staff-main-content {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    padding: 0;
-    min-height: 600px;
-  }
 
   .section-header {
     display: flex;
@@ -168,10 +149,10 @@
 @section('content')
 <div class="dashboard-shell">
   <div class="dashboard-container wide">
-      <main class="staff-main-content" style="background: transparent; border: none; border-radius: 0; padding: 0; min-height: 600px; width: 100%;">
+      <div class="page-card">
+        <div class="page-card-header"><i class="bi bi-people-fill"></i> Users List</div>
         <div class="section-header">
           <div>
-            <h1 class="section-title">Users List</h1>
             <p class="text-muted">Manage and track all system users</p>
           </div>
         </div>
@@ -187,7 +168,8 @@
           </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="border rounded-2 overflow-hidden">
+          <div class="table-responsive">
           <table class="table table-hover table-sm align-middle">
             <thead class="bg-light">
               <tr>
@@ -225,11 +207,11 @@
               @endforelse
             </tbody>
           </table>
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   </div>
-</div>
 
 <!-- Add User Modal -->
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">

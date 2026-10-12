@@ -5,26 +5,8 @@
 @push('head')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  .dashboard-shell {
-    width: 100%;
-    min-height: calc(100vh - 100px);
-    padding: clamp(1rem, 2vw, 2rem);
-  }
 
-  .dashboard-container {
-    width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-  }
 
-  .staff-main-content {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    padding: 0;
-    min-height: 600px;
-  }
 
   .section-header {
     display: flex;
@@ -118,10 +100,10 @@
 @section('content')
 <div class="dashboard-shell">
   <div class="dashboard-container wide">
-      <main class="staff-main-content" style="background: transparent; border: none; border-radius: 0; padding: 0; min-height: 600px; width: 100%;">
+      <div class="page-card">
+        <div class="page-card-header"><i class="bi bi-grid-fill"></i> Staff Dashboard</div>
         <div class="section-header">
           <div>
-            <h1 class="section-title">Staff Dashboard</h1>
             <p class="text-muted">System analytics and overview</p>
           </div>
         </div>
@@ -147,7 +129,7 @@
         <!-- Staff Analytics Dashboard Graphs Section -->
         <div class="row g-4 mb-4">
           <div class="col-md-6">
-            <div class="p-4 border rounded-4 bg-light shadow-sm">
+            <div class="p-4 border rounded-4 bg-white shadow-sm">
               <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-graph-up me-2 text-success"></i> Monthly Document Trend</h5>
               <div style="height: 250px; position: relative;">
                 <canvas id="staffMonthlyChart"></canvas>
@@ -155,10 +137,9 @@
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   </div>
-</div>
 
 @push('scripts')
 <script>

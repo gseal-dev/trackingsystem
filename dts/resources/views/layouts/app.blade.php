@@ -20,6 +20,8 @@
         --btn-dark: #000000;
         --btn-dark-hover: #000a33;
         --accent-orange: #ea3a14;
+        --page-max: 1800px;   /* max content width on very wide screens */
+        --page-gutter: 1rem;  /* single left/right margin used by header, nav and pages */
       }
 
       body {
@@ -79,12 +81,12 @@
       }
 
       .header-inner {
-        max-width: 1350px;
+        max-width: var(--page-max);
         margin: 0 auto;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.9rem 2rem;
+        padding: 0.9rem var(--page-gutter);
       }
 
       .header-dept-name {
@@ -124,12 +126,12 @@
       }
 
       .nav-inner {
-        max-width: 1350px;
+        max-width: var(--page-max);
         margin: 0 auto;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.55rem 2rem;
+        padding: 0.55rem var(--page-gutter);
       }
 
       .nav-links {
@@ -194,9 +196,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 2rem 1rem;
+        padding: 1rem var(--page-gutter);
         position: relative;
 
+      }
+
+      body:not(.login-page) main.main-content {
+        align-items: flex-start;
       }
 
       /* Card Styling */
@@ -218,8 +224,37 @@
         width: 100%;
         display: flex;
         justify-content: center;
-        padding: 1rem 0 2rem;
+        padding: 0;
         position: relative;
+      }
+
+      /* Container box used by every tab: same look as the Create Document (upload) card */
+      .page-card {
+        --pc-pad: 1.75rem;
+        background: #ffffff;
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 6px 24px rgba(15, 23, 42, 0.12);
+        color: #1f2937;
+        width: 100%;
+        margin: 0 auto;
+        padding: 0 var(--pc-pad) var(--pc-pad);
+      }
+
+      .page-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin: 0 calc(var(--pc-pad) * -1) 1.5rem;
+        padding: 0.95rem 1.5rem;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        background: rgb(0, 18, 83);
+      }
+
+      @media (max-width: 575.98px) {
+        .page-card { --pc-pad: 1rem; }
       }
 
       /* Keep modals above the fixed header (1100) and navbar (1090) */
@@ -312,18 +347,12 @@
         }
       }
 
-      .dashboard-container {
-        width: 100%;
-        max-width: 1350px;
-        margin: 0 auto;
-        padding: 0 1rem;
-      }
-
+      .dashboard-container,
       .dashboard-container.wide {
         width: 100%;
-        max-width: 1350px;
+        max-width: var(--page-max);
         margin: 0 auto;
-        padding: 0 1rem;
+        padding: 0;
       }
 
       .dashboard-header {
@@ -617,7 +646,6 @@
           @php $role = auth()->user()->role?->roleName; @endphp
           @if($role === 'Admin')
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-grid-fill me-1"></i> Dashboard</a>
-            <a href="{{ route('staff.document.create') }}" class="{{ request()->routeIs('staff.document.create') ? 'active' : '' }}"><i class="bi bi-file-earmark-plus me-1"></i> Create Document</a>
             <a href="{{ route('admin.userManagement.admins') }}" class="{{ request()->routeIs('admin.userManagement.*') ? 'active' : '' }}"><i class="bi bi-people-fill me-1"></i> Users List</a>
           @elseif($role === 'Staff')
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-grid-fill me-1"></i> Dashboard</a>

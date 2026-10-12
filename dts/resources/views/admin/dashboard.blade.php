@@ -5,16 +5,7 @@
 @push('head')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  .dashboard-shell {
-    width: 100%;
-    padding: clamp(1rem, 2vw, 2rem);
-  }
 
-  .dashboard-container {
-    width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-  }
 
   .staff-layout {
     display: grid;
@@ -63,14 +54,6 @@
     color: #fff;
   }
 
-  .staff-main-content {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    padding: 0;
-    min-height: 600px;
-  }
 
   .section-header {
     display: flex;
@@ -193,10 +176,10 @@
 @section('content')
 <div class="dashboard-shell">
   <div class="dashboard-container wide">
-    <main class="staff-main-content">
+    <div class="page-card">
+        <div class="page-card-header"><i class="bi bi-grid-fill"></i> Admin Dashboard</div>
       <div class="section-header">
         <div>
-          <h1 class="section-title">Admin Dashboard</h1>
           <p class="text-muted">System analytics and overview</p>
         </div>
       </div>
@@ -235,7 +218,7 @@
 
         <!-- Documents by Department Chart Card -->
         <div class="col-12 col-md-6 d-flex">
-          <div class="p-4 border rounded-4 bg-light shadow-sm chart-card w-100">
+          <div class="p-4 border rounded-4 bg-white shadow-sm chart-card w-100">
             <h5 class="fw-bold mb-3 text-dark">
               <i class="bi bi-bar-chart-fill me-2 text-success"></i> Documents by Department
             </h5>
@@ -247,7 +230,7 @@
       </div>
 
       @include('admin._documents')
-    </main>
+    </div>
   </div>
 </div>
 

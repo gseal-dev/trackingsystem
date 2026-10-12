@@ -4,26 +4,8 @@
 
 @push('head')
 <style>
-  .dashboard-shell {
-    width: 100%;
-    min-height: calc(100vh - 100px);
-    padding: clamp(1rem, 2vw, 2rem);
-  }
 
-  .dashboard-container {
-    width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-  }
 
-  .staff-main-content {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    padding: 0;
-    min-height: 600px;
-  }
 
   .section-header {
     display: flex;
@@ -150,10 +132,10 @@
 @section('content')
 <div class="dashboard-shell">
   <div class="dashboard-container wide">
-      <main class="staff-main-content" style="background: transparent; border: none; border-radius: 0; padding: 0; min-height: 600px; width: 100%;">
+      <div class="page-card">
+        <div class="page-card-header"><i class="bi bi-folder2-open"></i> Documents List</div>
         <div class="section-header">
           <div>
-            <h1 class="section-title">Documents List</h1>
             <p class="text-muted">Manage and track all registered documents</p>
           </div>
           <div class="d-flex gap-2 align-items-center flex-wrap">
@@ -204,7 +186,7 @@
           </div>
         </div>
 
-        <div class="card border rounded-4 bg-white shadow-sm overflow-hidden p-3">
+        <div class="border rounded-2 overflow-hidden">
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead class="bg-light">
@@ -247,10 +229,9 @@
           </table>
         </div>
       </div>
-      </main>
+      </div>
     </div>
   </div>
-</div>
 
 @include('partials.document-view-modal', ['canEdit' => true])
 @include('partials.document-edit-modal')
