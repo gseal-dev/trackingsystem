@@ -142,50 +142,10 @@
               </div>
             </div>
           </div>
-
-          @if(isset($statusCounts))
-            @php
-              $colors = [
-                ['bg' => '#ffedd5', 'color' => '#ea580c', 'icon' => 'bi-clock-history'],
-                ['bg' => '#dcfce7', 'color' => '#16a34a', 'icon' => 'bi-check-circle-fill'],
-                ['bg' => '#fee2e2', 'color' => '#dc2626', 'icon' => 'bi-exclamation-triangle-fill'],
-                ['bg' => '#e0e7ff', 'color' => '#4f46e5', 'icon' => 'bi-arrow-repeat'],
-              ];
-              $i = 0;
-            @endphp
-            @foreach($statusCounts as $statusName => $count)
-              @php
-                $theme = $colors[$i % count($colors)];
-                $pct = $totalDeptDocs > 0 ? round(($count / $totalDeptDocs) * 100, 1) : 0;
-                $i++;
-              @endphp
-              <div class="col-md-4 col-lg-3">
-                <div class="metric-card">
-                  <div class="metric-card-content">
-                    <div class="metric-icon-box" style="background: {{ $theme['bg'] }}; color: {{ $theme['color'] }};">
-                      <i class="bi {{ $theme['icon'] }}"></i>
-                    </div>
-                    <div class="metric-value" style="color: {{ $theme['color'] }};">{{ number_format($count) }}</div>
-                    <div class="metric-sub">({{ $pct }}%)</div>
-                    <div class="metric-title">{{ $statusName }}</div>
-                    <div class="metric-desc">Status Breakdown</div>
-                  </div>
-                </div>
-              </div>
-            @endforeach
-          @endif
         </div>
 
         <!-- Staff Analytics Dashboard Graphs Section -->
         <div class="row g-4 mb-4">
-          <div class="col-md-6">
-            <div class="p-4 border rounded-4 bg-light shadow-sm">
-              <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-pie-chart-fill me-2 text-primary"></i> Department Document Status</h5>
-              <div style="height: 250px; position: relative;">
-                <canvas id="staffStatusChart"></canvas>
-              </div>
-            </div>
-          </div>
           <div class="col-md-6">
             <div class="p-4 border rounded-4 bg-light shadow-sm">
               <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-graph-up me-2 text-success"></i> Monthly Document Trend</h5>
@@ -203,19 +163,6 @@
 @push('scripts')
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    const staffStatusCtx = document.getElementById('staffStatusChart').getContext('2d');
-    new Chart(staffStatusCtx, {
-      type: 'doughnut',
-      data: {
-        labels: {!! json_encode($statusCounts?->keys() ?? []) !!},
-        datasets: [{
-          data: {!! json_encode($statusCounts?->values() ?? []) !!},
-          backgroundColor: ['#001253', '#ea3a14', '#16a34a', '#eab308', '#64748b']
-        }]
-      },
-      options: { responsive: true, maintainAspectRatio: false }
-    });
-
     const staffMonthlyCtx = document.getElementById('staffMonthlyChart').getContext('2d');
     new Chart(staffMonthlyCtx, {
       type: 'bar',
