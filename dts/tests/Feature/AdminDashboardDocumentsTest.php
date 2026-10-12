@@ -124,11 +124,97 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->get('/dashboard')->assertSee('Added by admin')->assertSee('Legal Office');
     }
 
-    public function test_add_document_validation_errors_come_back_to_the_dashboard(): void
+    // ---- Upload page ---------------------------------------------------------------------
+
+    public function test_upload_page_has_the_form_and_read_only_metadata(): void
     {
-        $this->actingAs($this->admin)->from('/dashboard')->post(route('staff.document.store'), [])
-            ->assertRedirect('/dashboard')
-            ->assertSessionHasErrors(['documentNo', 'title', 'documentType', 'fromOffice', 'file']);
+        foreach ([$this->admin, $this->staff] as $user) {
+            $this->actingAs($user)->get(route('staff.document.create'))
+                ->assertOk()
+                ->assertSee('Upload New Document')
+                ->assertSee('Document Information')
+                ->assertSee('File Upload')
+                ->assertSee('Document Metadata')
+                ->assertSee('name="documentType"', false)
+                ->assertSee('name="documentNo"', false)
+                ->assertSee('name="fromOffice"', false)
+                ->assertSee('name="documentDate"', false)
+                ->assertSee('name="title"', false)
+                ->assertSee('name="file"', false)
+                ->assertSee('enctype="multipart/form-data"', false)
+                ->assertSee('Click to browse')
+                ->assertSee($user->username)          // "Uploaded By"
+                ->assertSee(route('staff.document.store'), false);
+        }
+    }
+
+    public function test_upload_page_suggests_existing_types_and_offices(): void
+    {
+        $this->makeDocument('D-1', 'x', 'Finance Office');
+
+        $this->actingAs($this->staff)->get(route('staff.document.create'))
+            ->assertSee('<option value="Memo"></option>', false)
+            ->assertSee('<option value="Finance Office"></option>', false);
+    }
+
+    public function test_cancel_goes_back_to_the_right_list(): void
+    {
+        $this->actingAs($this->staff)->get(route('staff.document.create'))
+            ->assertSee('href="' . route('staff.documents') . '" class="up-btn up-btn-cancel"', false);
+        $this->actingAs($this->admin)->get(route('staff.document.create'))
+            ->assertSee('href="' . route('dashboard') . '" class="up-btn up-btn-cancel"', false);
+    }
+
+    public function test_lists_link_to_the_upload_page_instead_of_a_popup(): void
+    {
+        $link = 'href="' . route('staff.document.create') . '" class="btn-create"';
+
+        $this->actingAs($this->admin)->get('/dashboard')
+            ->assertSee($link, false)->assertDontSee('addDocumentModal', false);
+        $this->actingAs($this->staff)->get('/staff/documents')
+            ->assertSee($link, false)->assertDontSee('addDocumentModal', false);
+    }
+
+    public function test_staff_upload_returns_to_the_staff_list_with_a_popup(): void
+    {
+        Storage::fake('public');
+
+        $this->actingAs($this->staff)->from(route('staff.document.create'))->post(route('staff.document.store'), [
+            'documentNo' => 'UP-001', 'fromOffice' => 'Finance', 'documentType' => 'Letter',
+            'title' => 'Uploaded from the page', 'documentDate' => '2026-10-12',
+            'file' => UploadedFile::fake()->create('letter.pdf', 50, 'application/pdf'),
+        ])->assertRedirect(route('staff.documents'));
+
+        $this->assertSame($this->staff->userID, Document::where('documentNo', 'UP-001')->firstOrFail()->ownerID);
+
+        $this->get('/staff/documents')
+            ->assertSee('Document added successfully!')
+            ->assertSee('id="flashModal"', false)
+            ->assertSee('Uploaded from the page');
+    }
+
+    public function test_upload_errors_come_back_to_the_upload_page_with_what_was_typed(): void
+    {
+        Storage::fake('public');
+        $this->makeDocument('TAKEN-1', 'Existing');
+
+        $this->actingAs($this->staff)->from(route('staff.document.create'))->post(route('staff.document.store'), [
+            'documentNo' => 'TAKEN-1', 'fromOffice' => '', 'documentType' => 'Letter', 'title' => 'Typed subject',
+            'file' => UploadedFile::fake()->create('notes.txt', 10, 'text/plain'),
+        ])->assertRedirect(route('staff.document.create'))
+          ->assertSessionHasErrors(['documentNo', 'fromOffice', 'file']);
+
+        $this->get(route('staff.document.create'))
+            ->assertSee('value="TAKEN-1"', false)
+            ->assertSee('value="Typed subject"', false)
+            ->assertSee('The reference number has already been taken.')
+            ->assertSee('The from office field is required')
+            ->assertSee('is-invalid', false);
+    }
+
+    public function test_upload_page_needs_login(): void
+    {
+        $this->get(route('staff.document.create'))->assertRedirect('/login');
     }
 
     public function test_staff_can_edit_a_document_in_a_popup(): void

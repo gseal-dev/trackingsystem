@@ -617,10 +617,12 @@
           @php $role = auth()->user()->role?->roleName; @endphp
           @if($role === 'Admin')
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-grid-fill me-1"></i> Dashboard</a>
+            <a href="{{ route('staff.document.create') }}" class="{{ request()->routeIs('staff.document.create') ? 'active' : '' }}"><i class="bi bi-file-earmark-plus me-1"></i> Create Document</a>
             <a href="{{ route('admin.userManagement.admins') }}" class="{{ request()->routeIs('admin.userManagement.*') ? 'active' : '' }}"><i class="bi bi-people-fill me-1"></i> Users List</a>
           @elseif($role === 'Staff')
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-grid-fill me-1"></i> Dashboard</a>
             <a href="{{ route('staff.documents') }}" class="{{ request()->routeIs('staff.documents') ? 'active' : '' }}"><i class="bi bi-folder2-open me-1"></i> Documents List</a>
+            <a href="{{ route('staff.document.create') }}" class="{{ request()->routeIs('staff.document.create') ? 'active' : '' }}"><i class="bi bi-file-earmark-plus me-1"></i> Create Document</a>
             <a href="{{ route('staff.history') }}" class="{{ request()->routeIs('staff.history') ? 'active' : '' }}"><i class="bi bi-clock-history me-1"></i> History</a>
           @endif
         </div>

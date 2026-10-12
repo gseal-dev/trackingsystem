@@ -130,9 +130,39 @@ class StaffDocumentController extends Controller
     }
 
 
+    // The Upload New Document page (a page of its own, linked from the document lists)
     public function create()
     {
-        return view('staff.create_document');
+        $user = auth()->user();
+        $fullName = trim(($user->firstName ?? '') . ' ' . ($user->lastName ?? ''));
+
+        return view('documents.upload', [
+            // suggestions for the type / office boxes (people can still type something new)
+            'documentTypes' => Document::whereNotNull('documentType')->distinct()->orderBy('documentType')->pluck('documentType'),
+            'offices' => Department::orderBy('depName')->pluck('depName'),
+            'uploadedBy' => $fullName !== '' ? $fullName . ' (' . $user->username . ')' : $user->username,
+            'uploadDate' => now()->timezone(Document::DISPLAY_TIMEZONE)->format('Y-m-d H:i'),
+            'backRoute' => $this->listRouteFor($user),
+        ]);
+    }
+
+    // Names shown in validation messages ("The reference number has already been taken.")
+    private function fieldNames(): array
+    {
+        return [
+            'documentNo' => 'reference number',
+            'documentType' => 'document type',
+            'fromOffice' => 'from office',
+            'documentDate' => 'document date',
+            'title' => 'subject',
+            'file' => 'PDF file',
+        ];
+    }
+
+    // Where each role goes to see the document list
+    private function listRouteFor($user): string
+    {
+        return $user->role?->roleName === 'Admin' ? 'dashboard' : 'staff.documents';
     }
 
     public function store(Request $request)
@@ -145,7 +175,7 @@ class StaffDocumentController extends Controller
             'documentDate' => 'nullable|date',
             'currentStatus' => 'nullable|exists:document_statuses,statusID',
             'file' => 'required|file|mimes:pdf|max:10240',
-        ]);
+        ], [], $this->fieldNames());
 
         $officeName = trim($request->fromOffice);
         $department = Department::where('depName', 'LIKE', $officeName)->first();
@@ -185,7 +215,7 @@ class StaffDocumentController extends Controller
             'updated_at' => now(),
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Document added successfully!');
+        return redirect()->route($this->listRouteFor(auth()->user()))->with('success', 'Document added successfully!');
     }
 
     // Editing happens in a popup on the documents list (no separate edit page).
@@ -200,7 +230,7 @@ class StaffDocumentController extends Controller
             'documentDate' => 'nullable|date',
             'currentStatus' => 'nullable|exists:document_statuses,statusID',
             'file' => 'nullable|file|mimes:pdf|max:10240',
-        ]);
+        ], [], $this->fieldNames());
 
         $officeName = trim($request->fromOffice);
         $department = Department::where('depName', 'LIKE', $officeName)->first();
