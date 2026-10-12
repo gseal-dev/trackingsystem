@@ -19,18 +19,13 @@ class Document extends Model
     }
 
     protected $fillable = [
-        'documentId', 'documentNo', 'title', 'description', 'documentType', 'documentDate',
-        'ownerID', 'currentStatus', 'currentDepartmentID', 'filePath'
+        'documentId', 'documentNo', 'documentTitle', 'title', 'description', 'documentType', 'documentDate',
+        'ownerID', 'currentDepartmentID', 'filePath'
     ];
 
     public function owner()
     {
         return $this->belongsTo(User::class, 'ownerID', 'userID');
-    }
-
-    public function status()
-    {
-        return $this->belongsTo(DocumentStatus::class, 'currentStatus', 'statusID');
     }
 
     public function department()
@@ -72,6 +67,8 @@ class Document extends Model
         return [
             'id' => $this->documentId,
             'referenceNo' => $this->documentNo,
+            'heading' => $this->documentTitle ?: $this->title,
+            'documentTitle' => $this->documentTitle,
             'subject' => $this->title,
             'description' => $this->description ?: 'No description',
             'type' => $this->documentType,
@@ -87,6 +84,7 @@ class Document extends Model
             'updateUrl' => route('staff.document.update', $this->documentId),
             'edit' => [
                 'documentNo' => $this->documentNo,
+                'documentTitle' => $this->documentTitle,
                 'fromOffice' => $this->department->depName ?? '',
                 'documentType' => $this->documentType,
                 'title' => $this->title,

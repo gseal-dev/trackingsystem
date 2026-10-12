@@ -192,23 +192,23 @@
               <thead class="bg-light">
                 <tr>
                   <th>Reference Number</th>
+                  <th>Document Title</th>
                   <th>From Office</th>
                   <th>Type</th>
                   <th>Subject</th>
                   <th>Date</th>
-                  <th>Status</th>
                   <th class="text-end">Actions</th>
                 </tr>
               </thead>
             <tbody id="staff-records-body" data-live-refresh>
               @forelse($documents as $document)
-                <tr data-record-search="{{ strtolower($document->documentNo . ' ' . ($document->department->depName ?? '') . ' ' . $document->documentType . ' ' . $document->title) }}">
+                <tr data-record-search="{{ strtolower($document->documentNo . ' ' . $document->documentTitle . ' ' . ($document->department->depName ?? '') . ' ' . $document->documentType . ' ' . $document->title) }}">
                   <td class="fw-bold">{{ $document->documentNo }}</td>
+                  <td>{{ $document->documentTitle ?: '-' }}</td>
                   <td>{{ $document->department->depName ?? '-' }}</td>
                   <td style="text-transform: uppercase;">{{ $document->documentType }}</td>
                   <td>{{ $document->title }}</td>
                   <td class="text-muted">{{ $document->documentDate ? \Carbon\Carbon::parse($document->documentDate)->format('F d, Y') : $document->created_at?->format('F d, Y') }}</td>
-                  <td><span class="badge bg-light text-dark border">{{ $document->status->statusName ?? 'Pending' }}</span></td>
                   <td>
                     <div class="actions-cell justify-content-end">
                       <button type="button" class="btn-action" title="View details" data-doc-view="{{ json_encode($document->viewData()) }}">
@@ -219,7 +219,7 @@
                 </tr>
               @empty
                 <tr>
-                  <td colspan="6" class="text-center py-5 text-muted">
+                  <td colspan="7" class="text-center py-5 text-muted">
                     <i class="bi bi-folder-x display-4 mb-3 d-block"></i>
                     No records found.
                   </td>
@@ -249,20 +249,12 @@
 
   document.getElementById('export-documents-btn').addEventListener('click', function () {
     const rows = [
-      ['Reference Number', 'From Office', 'Type', 'Subject', 'Date']
+      ['Reference Number', 'Document Title', 'From Office', 'Type', 'Subject', 'Date']
     ];
     document.querySelectorAll('#staff-records-body tr[data-record-search]').forEach(function (row) {
       if (!row.hidden) {
         const cols = row.querySelectorAll('td');
-        if (cols.length >= 5) {
-          rows.push([
-            cols[0].innerText.trim(),
-            cols[1].innerText.trim(),
-            cols[2].innerText.trim(),
-            cols[3].innerText.trim(),
-            cols[4].innerText.trim()
-          ]);
-        }
+        rows.push(Array.from(cols).slice(0, 6).map(function (cell) { return cell.innerText.trim(); }));
       }
     });
     const csv = rows.map(function (row) { 

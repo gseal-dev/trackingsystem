@@ -22,7 +22,7 @@ class AdminDashboardDocumentsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(); // roles, departments, document statuses, default admin
+        $this->seed(); // roles, departments, default admin
 
         $this->admin = $this->makeUser('Admin', 'boss');
         $this->staff = $this->makeUser('Staff', 'worker');
@@ -47,12 +47,12 @@ class AdminDashboardDocumentsTest extends TestCase
         return Document::create([
             'documentId' => (string) Str::uuid(),
             'documentNo' => $no,
+            'documentTitle' => 'Title for ' . $no,
             'title' => $title,
             'description' => $title,
             'documentType' => 'Memo',
             'documentDate' => $date,
             'ownerID' => $this->staff->userID,
-            'currentStatus' => 1,
             'currentDepartmentID' => $dep->depID,
             'filePath' => "documents/$no.pdf",
         ]);
@@ -69,7 +69,6 @@ class AdminDashboardDocumentsTest extends TestCase
             ->assertSee('First subject')
             ->assertSee('Second subject')
             ->assertSee('2 Documents Found')
-            ->assertSee('Add Document')
             ->getContent();
 
         // the list comes after the stats cards
@@ -108,7 +107,7 @@ class AdminDashboardDocumentsTest extends TestCase
         Storage::fake('public');
 
         $this->actingAs($this->admin)->post(route('staff.document.store'), [
-            'documentNo' => 'ADM-001',
+            'documentNo' => 'ADM-001', 'documentTitle' => 'A document title',
             'fromOffice' => 'Legal Office',
             'documentType' => 'Letter',
             'title' => 'Added by admin',
@@ -165,14 +164,17 @@ class AdminDashboardDocumentsTest extends TestCase
             ->assertSee('href="' . route('dashboard') . '" class="up-btn up-btn-cancel"', false);
     }
 
-    public function test_lists_link_to_the_upload_page_instead_of_a_popup(): void
+    public function test_upload_link_is_in_the_staff_sidebar_and_not_on_the_lists(): void
     {
-        $link = 'href="' . route('staff.document.create') . '" class="btn-create"';
-
-        $this->actingAs($this->admin)->get('/dashboard')
-            ->assertSee($link, false)->assertDontSee('addDocumentModal', false);
         $this->actingAs($this->staff)->get('/staff/documents')
-            ->assertSee($link, false)->assertDontSee('addDocumentModal', false);
+            ->assertSee('href="' . route('staff.document.create') . '"', false)
+            ->assertSee('title="Create Document"', false);
+
+        foreach ([[$this->admin, '/dashboard'], [$this->staff, '/staff/documents']] as [$user, $url]) {
+            $this->actingAs($user)->get($url)
+                ->assertDontSee('class="btn-create"', false)
+                ->assertDontSee('addDocumentModal', false);
+        }
     }
 
     public function test_staff_upload_returns_to_the_staff_list_with_a_popup(): void
@@ -180,7 +182,7 @@ class AdminDashboardDocumentsTest extends TestCase
         Storage::fake('public');
 
         $this->actingAs($this->staff)->from(route('staff.document.create'))->post(route('staff.document.store'), [
-            'documentNo' => 'UP-001', 'fromOffice' => 'Finance', 'documentType' => 'Letter',
+            'documentNo' => 'UP-001', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'documentType' => 'Letter',
             'title' => 'Uploaded from the page', 'documentDate' => '2026-10-12',
             'file' => UploadedFile::fake()->create('letter.pdf', 50, 'application/pdf'),
         ])->assertRedirect(route('staff.documents'));
@@ -199,7 +201,7 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->makeDocument('TAKEN-1', 'Existing');
 
         $this->actingAs($this->staff)->from(route('staff.document.create'))->post(route('staff.document.store'), [
-            'documentNo' => 'TAKEN-1', 'fromOffice' => '', 'documentType' => 'Letter', 'title' => 'Typed subject',
+            'documentNo' => 'TAKEN-1', 'documentTitle' => 'A document title', 'fromOffice' => '', 'documentType' => 'Letter', 'title' => 'Typed subject',
             'file' => UploadedFile::fake()->create('notes.txt', 10, 'text/plain'),
         ])->assertRedirect(route('staff.document.create'))
           ->assertSessionHasErrors(['documentNo', 'fromOffice', 'file']);
@@ -232,12 +234,12 @@ class AdminDashboardDocumentsTest extends TestCase
         $data = $this->popupData($html);
         $this->assertSame(route('staff.document.update', $doc->documentId), $data['updateUrl']);
         $this->assertSame(
-            ['documentNo' => 'D-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Old title', 'documentDate' => '2026-10-01'],
+            ['documentNo' => 'D-1', 'documentTitle' => 'Title for D-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Old title', 'documentDate' => '2026-10-01'],
             $data['edit']
         );
 
         $this->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
-            'documentNo' => 'D-1',
+            'documentNo' => 'D-1', 'documentTitle' => 'A document title',
             'fromOffice' => 'Legal Office',
             'documentType' => 'Report',
             'title' => 'New title',
@@ -264,7 +266,7 @@ class AdminDashboardDocumentsTest extends TestCase
 
         $this->actingAs($this->staff)->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
             '_editing_id' => $doc->documentId,
-            'documentNo' => 'D-1', 'fromOffice' => '', 'documentType' => 'Report', 'title' => 'Typed but invalid',
+            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => '', 'documentType' => 'Report', 'title' => 'Typed but invalid',
         ])->assertRedirect('/staff/documents')
           ->assertSessionHasErrorsIn('editDocument', ['fromOffice']);
 
@@ -286,7 +288,7 @@ class AdminDashboardDocumentsTest extends TestCase
         Storage::disk('public')->put($doc->filePath, 'old');
 
         $this->actingAs($this->staff)->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
-            'documentNo' => 'D-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'With file',
+            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'With file',
             'file' => UploadedFile::fake()->create('new.pdf', 20, 'application/pdf'),
         ])->assertRedirect('/staff/documents');
 
@@ -317,7 +319,7 @@ class AdminDashboardDocumentsTest extends TestCase
         $doc = $this->makeDocument('D-1', 'Editable');
 
         $this->actingAs($this->staff)->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
-            'documentNo' => 'D-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Edited',
+            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Edited',
         ])->assertRedirect('/staff/documents');
 
         $this->get('/staff/documents')
@@ -485,7 +487,7 @@ class AdminDashboardDocumentsTest extends TestCase
         $doc = $this->makeDocument('D-1', 'Staff cannot delete');
 
         $this->actingAs($this->staff)->post(route('staff.document.update', $doc->documentId), [
-            'documentNo' => 'D-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Staff edit',
+            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Staff edit',
         ])->assertRedirect();
         $this->assertSame('Staff edit', $doc->fresh()->title);
         $this->delete(route('staff.document.delete', $doc->documentId))->assertForbidden();
@@ -498,12 +500,162 @@ class AdminDashboardDocumentsTest extends TestCase
         $doc = $this->makeDocument('D-1', 'Admin cannot edit');
 
         $this->actingAs($this->admin)->post(route('staff.document.update', $doc->documentId), [
-            'documentNo' => 'D-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Hacked title',
+            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Hacked title',
         ])->assertForbidden();
         $this->assertSame('Admin cannot edit', $doc->fresh()->title);
 
         $this->delete(route('staff.document.delete', $doc->documentId))->assertRedirect();
         $this->assertSoftDeleted($doc);
+    }
+
+    // ---- No document status ----------------------------------------------------------------
+
+    public function test_documents_no_longer_have_a_status(): void
+    {
+        $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('documents', 'currentStatus'));
+        $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('document_histories', 'statusID'));
+        $this->assertFalse(\Illuminate\Support\Facades\Schema::hasTable('document_statuses'));
+        $this->assertFileDoesNotExist(app_path('Models/DocumentStatus.php'));
+        $this->assertFalse(method_exists(Document::class, 'status'));
+    }
+
+    public function test_no_list_shows_a_status(): void
+    {
+        $this->makeDocument('D-1', 'Plain document');
+
+        foreach ([[$this->admin, '/dashboard'], [$this->staff, '/staff/documents']] as [$user, $url]) {
+            $this->actingAs($user)->get($url)->assertOk()
+                ->assertDontSee('>Status<', false)
+                ->assertDontSee('Pending')
+                ->assertDontSee('Approved')
+                ->assertDontSee('badge bg-light', false);
+        }
+
+        $this->actingAs($this->staff)->get('/staff/history')->assertOk()->assertDontSee('Status');
+        $this->assertArrayNotHasKey('status', $this->popupData($this->get('/staff/documents')->getContent()));
+    }
+
+    public function test_uploading_works_without_any_status(): void
+    {
+        Storage::fake('public');
+
+        $this->actingAs($this->staff)->post(route('staff.document.store'), [
+            'documentNo' => 'NS-1', 'documentTitle' => 'No status title', 'fromOffice' => 'Finance',
+            'documentType' => 'Memo', 'title' => 'No status subject',
+            'file' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf'),
+        ])->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('documents', ['documentNo' => 'NS-1']);
+        $this->assertDatabaseCount('document_histories', 1);
+    }
+
+    // ---- Document title ----------------------------------------------------------------------
+
+    public function test_upload_page_has_a_required_document_title_field(): void
+    {
+        foreach ([$this->admin, $this->staff] as $user) {
+            $this->actingAs($user)->get(route('staff.document.create'))
+                ->assertSee('Document Title')
+                ->assertSee('name="documentTitle"', false)
+                ->assertSee('id="documentTitle" name="documentTitle" maxlength="255" autocomplete="off"', false);
+        }
+    }
+
+    public function test_document_title_is_required_when_uploading(): void
+    {
+        Storage::fake('public');
+
+        $this->actingAs($this->staff)->from(route('staff.document.create'))->post(route('staff.document.store'), [
+            'documentNo' => 'NT-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Subject only',
+            'file' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf'),
+        ])->assertRedirect(route('staff.document.create'))->assertSessionHasErrors('documentTitle');
+
+        $this->get(route('staff.document.create'))->assertSee('The document title field is required');
+        $this->assertDatabaseMissing('documents', ['documentNo' => 'NT-1']);
+    }
+
+    public function test_uploaded_document_title_is_saved_and_listed(): void
+    {
+        Storage::fake('public');
+
+        $this->actingAs($this->staff)->post(route('staff.document.store'), [
+            'documentNo' => 'DT-1', 'documentTitle' => '  Road Widening Permit  ', 'fromOffice' => 'Finance',
+            'documentType' => 'Permit', 'title' => 'Permit for the road project',
+            'file' => UploadedFile::fake()->create('permit.pdf', 10, 'application/pdf'),
+        ]);
+
+        $this->assertSame('Road Widening Permit', Document::where('documentNo', 'DT-1')->value('documentTitle'));
+
+        foreach ([[$this->admin, '/dashboard'], [$this->staff, '/staff/documents']] as [$user, $url]) {
+            $html = $this->actingAs($user)->get($url)->getContent();
+            $this->assertStringContainsString('<th>Document Title</th>', $html);
+            $this->assertStringContainsString('<td>Road Widening Permit</td>', $html);
+            $this->assertStringContainsString('<td>Permit for the road project</td>', $html);   // subject still shown
+        }
+    }
+
+    public function test_list_columns_come_in_the_expected_order(): void
+    {
+        $this->makeDocument('D-1', 'x');
+
+        $staff = $this->actingAs($this->staff)->get('/staff/documents')->getContent();
+        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*<th>Document Title<\/th>\s*<th>From Office<\/th>\s*<th>Type<\/th>\s*<th>Subject<\/th>\s*<th>Date<\/th>/', $staff));
+
+        $admin = $this->actingAs($this->admin)->get('/dashboard')->getContent();
+        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*<th>Document Title<\/th>\s*<th>From Office<\/th>\s*<th>Type<\/th>\s*<th>Subject<\/th>\s*<th>Uploaded By<\/th>\s*<th>Date<\/th>/', $admin));
+    }
+
+    public function test_documents_uploaded_before_titles_existed_show_a_dash(): void
+    {
+        $doc = $this->makeDocument('OLD-1', 'Legacy subject');
+        Document::where('documentId', $doc->documentId)->update(['documentTitle' => null]);
+
+        $this->actingAs($this->staff)->get('/staff/documents')
+            ->assertSee('<td>-</td>', false)
+            ->assertSee('Legacy subject');
+
+        // the popup heading falls back to the subject
+        $this->assertSame('Legacy subject', $this->popupData($this->get('/staff/documents')->getContent())['heading']);
+    }
+
+    public function test_popup_shows_the_document_title_and_subject(): void
+    {
+        $doc = $this->makeDocument('D-9', 'The subject text');
+        $doc->forceFill(['documentTitle' => 'The document title'])->save();
+
+        foreach ([[$this->admin, '/dashboard'], [$this->staff, '/staff/documents']] as [$user, $url]) {
+            $html = $this->actingAs($user)->get($url)->getContent();
+            $data = $this->popupData($html);
+
+            $this->assertSame('The document title', $data['heading']);
+            $this->assertSame('The document title', $data['documentTitle']);
+            $this->assertSame('The subject text', $data['subject']);
+            $this->assertStringContainsString('data-doc-field="documentTitle"', $html);
+            $this->assertStringContainsString('data-doc-field="subject"', $html);
+        }
+    }
+
+    public function test_edit_popup_can_change_the_document_title(): void
+    {
+        $doc = $this->makeDocument('D-1', 'Subject stays');
+
+        $this->actingAs($this->staff)->get('/staff/documents')
+            ->assertSee('name="documentTitle"', false)
+            ->assertSee('id="editDocumentTitle"', false);
+
+        $this->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
+            'documentNo' => 'D-1', 'documentTitle' => 'Renamed title', 'fromOffice' => 'Finance',
+            'documentType' => 'Memo', 'title' => 'Subject stays',
+        ])->assertRedirect('/staff/documents');
+
+        $this->assertSame('Renamed title', $doc->fresh()->documentTitle);
+
+        // and it cannot be blanked out
+        $this->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
+            'documentNo' => 'D-1', 'documentTitle' => '', 'fromOffice' => 'Finance',
+            'documentType' => 'Memo', 'title' => 'Subject stays',
+        ])->assertSessionHasErrorsIn('editDocument', ['documentTitle']);
+        $this->assertSame('Renamed title', $doc->fresh()->documentTitle);
     }
 
     public function test_document_actions_require_login(): void

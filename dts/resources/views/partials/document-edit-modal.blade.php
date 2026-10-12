@@ -34,6 +34,10 @@
               <div class="flex-grow-1"><input type="text" name="documentNo" id="editDocumentNo" class="form-control rounded-pill text-uppercase bg-white" placeholder="REFERENCE NUMBER" value="{{ old('documentNo') }}" required></div>
             </div>
             <div class="d-flex align-items-center gap-3">
+              <div style="{{ $fieldIcon }}"><i class="bi bi-type"></i></div>
+              <div class="flex-grow-1"><input type="text" name="documentTitle" id="editDocumentTitle" class="form-control rounded-pill bg-white" placeholder="DOCUMENT TITLE" value="{{ old('documentTitle') }}" required></div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
               <div style="{{ $fieldIcon }}"><i class="bi bi-building"></i></div>
               <div class="flex-grow-1"><input type="text" name="fromOffice" id="editFromOffice" class="form-control rounded-pill text-uppercase bg-white" placeholder="FROM OFFICE" value="{{ old('fromOffice') }}" required></div>
             </div>
@@ -87,6 +91,7 @@
       form.action = doc.updateUrl;
       document.getElementById('editDocumentId').value = doc.id;
       document.getElementById('editDocumentNo').value = data.documentNo || '';
+      document.getElementById('editDocumentTitle').value = data.documentTitle || '';
       document.getElementById('editFromOffice').value = data.fromOffice || '';
       document.getElementById('editDocumentType').value = data.documentType || '';
       document.getElementById('editTitle').value = data.title || '';

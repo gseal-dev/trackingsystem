@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Document;
 use App\Models\Department;
-use App\Notifications\DocumentProcessedNotification;
 
 class StaffDocumentController extends Controller
 {
@@ -22,15 +21,13 @@ class StaffDocumentController extends Controller
 
         $documents = $query->get();
 
-        $statusCounts = $documents->groupBy(function($doc) {
-            return $doc->status->statusName ?? 'Pending';
-        })->map->count();
-
         $monthlyCounts = $documents->groupBy(function($doc) {
             return $doc->documentDate ? date('Y-m', strtotime($doc->documentDate)) : date('Y-m', strtotime($doc->created_at));
         })->map->count();
 
-        return view('staff.staff', compact('statusCounts', 'monthlyCounts'));
+        $totalDocuments = $documents->count();
+
+        return view('staff.staff', compact('totalDocuments', 'monthlyCounts'));
     }
 
     public function documents(Request $request)
@@ -84,7 +81,6 @@ class StaffDocumentController extends Controller
                 [
                     'prevDepartmentID' => $doc->currentDepartmentID,
                     'currentDepartmentID' => $doc->currentDepartmentID,
-                    'statusID' => $doc->currentStatus ?? 1,
                     'userID' => $doc->ownerID ?? $user->userID,
                     'action' => 'Document added / registered',
                     'created_at' => $doc->created_at,
@@ -93,7 +89,7 @@ class StaffDocumentController extends Controller
             );
         }
 
-        $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.status', 'document.department'])
+        $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department'])
             ->when($user->departmentID, function($q) use ($user) {
                 return $q->where(function($sub) use ($user) {
                     $sub->where('currentDepartmentID', $user->departmentID)
@@ -105,6 +101,7 @@ class StaffDocumentController extends Controller
         if ($search) {
             $historiesQuery->whereHas('document', function ($q) use ($search) {
                 $q->where('title', 'LIKE', "%$search%")
+                ->orWhere('documentTitle', 'LIKE', "%$search%")
                 ->orWhere('documentNo', 'LIKE', "%$search%")
                 ->orWhereHas('owner', function ($oq) use ($search) {
                     $oq->where('username', 'LIKE', "%$search%")
@@ -154,6 +151,7 @@ class StaffDocumentController extends Controller
             'documentType' => 'document type',
             'fromOffice' => 'from office',
             'documentDate' => 'document date',
+            'documentTitle' => 'document title',
             'title' => 'subject',
             'file' => 'PDF file',
         ];
@@ -169,11 +167,11 @@ class StaffDocumentController extends Controller
     {
         $request->validate([
             'documentNo' => 'required|unique:documents,documentNo',
+            'documentTitle' => 'required|string|max:255',
             'title' => 'required|string|max:255',
             'documentType' => 'required|string|max:255',
             'fromOffice' => 'required|string|max:255',
             'documentDate' => 'nullable|date',
-            'currentStatus' => 'nullable|exists:document_statuses,statusID',
             'file' => 'required|file|mimes:pdf|max:10240',
         ], [], $this->fieldNames());
 
@@ -190,16 +188,15 @@ class StaffDocumentController extends Controller
         $fileName = Str::uuid() . '_' . $file->getClientOriginalName();
         $filePath = $file->storeAs('documents', $fileName, 'public');
 
-        $statusID = $request->input('currentStatus', 1);
         $newDoc = Document::create([
             'documentId' => (string) Str::uuid(),
             'documentNo' => $request->documentNo,
+            'documentTitle' => trim($request->documentTitle),
             'title' => $request->title,
             'description' => $request->title,
             'documentType' => $request->documentType,
             'documentDate' => $request->documentDate ?? now()->toDateString(),
             'ownerID' => auth()->user()->userID,
-            'currentStatus' => $statusID,
             'currentDepartmentID' => $department->depID,
             'filePath' => $filePath,
         ]);
@@ -208,7 +205,6 @@ class StaffDocumentController extends Controller
             'documentId' => $newDoc->documentId,
             'prevDepartmentID' => $department->depID,
             'currentDepartmentID' => $department->depID,
-            'statusID' => $statusID,
             'userID' => auth()->user()->userID,
             'action' => 'Document added / registered',
             'created_at' => now(),
@@ -224,11 +220,11 @@ class StaffDocumentController extends Controller
         // Own error bag, so the Edit popup's errors don't reopen the Add Document popup
         $request->validateWithBag('editDocument', [
             'documentNo' => 'required|unique:documents,documentNo,' . $document->documentId . ',documentId',
+            'documentTitle' => 'required|string|max:255',
             'title' => 'required|string|max:255',
             'documentType' => 'required|string|max:255',
             'fromOffice' => 'required|string|max:255',
             'documentDate' => 'nullable|date',
-            'currentStatus' => 'nullable|exists:document_statuses,statusID',
             'file' => 'nullable|file|mimes:pdf|max:10240',
         ], [], $this->fieldNames());
 
@@ -243,11 +239,11 @@ class StaffDocumentController extends Controller
 
         $updateData = [
             'documentNo' => $request->documentNo,
+            'documentTitle' => trim($request->documentTitle),
             'title' => $request->title,
             'description' => $request->title,
             'documentType' => $request->documentType,
             'documentDate' => $request->documentDate ?? $document->documentDate,
-            'currentStatus' => $request->input('currentStatus', $document->currentStatus),
             'currentDepartmentID' => $department->depID,
         ];
 
@@ -333,7 +329,6 @@ class StaffDocumentController extends Controller
                 'documentType' => trim($documentType) ?: 'Memo',
                 'documentDate' => !empty($documentDate) ? date('Y-m-d', strtotime($documentDate)) : now()->toDateString(),
                 'ownerID' => auth()->user()->userID,
-                'currentStatus' => 1,
                 'currentDepartmentID' => $department->depID,
             ]);
 
@@ -341,7 +336,6 @@ class StaffDocumentController extends Controller
                 'documentId' => $newDoc->documentId,
                 'prevDepartmentID' => $department->depID,
                 'currentDepartmentID' => $department->depID,
-                'statusID' => 1,
                 'userID' => auth()->user()->userID,
                 'action' => 'Imported via CSV/Excel',
                 'created_at' => now(),

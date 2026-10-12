@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\UserManagementController;
-use App\Http\Controllers\Admin\DocumentRegistrationController;
 use App\Http\Controllers\Staff\StaffDocumentController;
 
 Route::get('/', function () {
@@ -38,8 +37,6 @@ Route::middleware(['auth'])->group(function () {
 
 // Document routes (login required)
 Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/document-registration', [DocumentRegistrationController::class, 'showForm'])->name('admin.documentRegistration');
-    Route::post('/admin/document-registration', [DocumentRegistrationController::class, 'register'])->name('admin.documentRegistration.submit');
     Route::get('/admin/user-search', [UserManagementController::class, 'searchUser'])->name('admin.userSearch');
 
     // Staff

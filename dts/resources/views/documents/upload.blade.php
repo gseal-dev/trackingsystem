@@ -99,6 +99,14 @@
           </div>
 
           <div class="col-12">
+            <label class="up-label" for="documentTitle">Document Title <span class="req">*</span></label>
+            <input type="text" id="documentTitle" name="documentTitle" maxlength="255" autocomplete="off"
+                   class="up-input @error('documentTitle') is-invalid @enderror" placeholder="Enter document title"
+                   value="{{ old('documentTitle') }}" required>
+            @error('documentTitle') <div class="up-error">{{ $message }}</div> @enderror
+          </div>
+
+          <div class="col-12">
             <label class="up-label" for="title">Subject <span class="req">*</span></label>
             <input type="text" id="title" name="title" maxlength="255" autocomplete="off"
                    class="up-input @error('title') is-invalid @enderror" placeholder="Provide a brief subject of the document..."

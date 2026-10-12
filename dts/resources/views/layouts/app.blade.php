@@ -35,7 +35,7 @@
         display: flex;
         flex-direction: column;
         margin: 0;
-        padding-top: 92px;
+        padding-top: 70px;
         position: relative;
         overflow-x: hidden;
       }

@@ -167,6 +167,7 @@
         <thead class="bg-light">
           <tr>
             <th>Reference Number</th>
+            <th>Document Title</th>
             <th>From Office</th>
             <th>Type</th>
             <th>Subject</th>
@@ -182,8 +183,9 @@
                 ? ($doc->owner->username ?: trim(($doc->owner->firstName ?? '') . ' ' . ($doc->owner->lastName ?? '')))
                 : 'Unknown';
             @endphp
-            <tr data-doc-search="{{ strtolower($doc->documentNo . ' ' . ($doc->department->depName ?? '') . ' ' . $doc->documentType . ' ' . $doc->title . ' ' . $uploader) }}">
+            <tr data-doc-search="{{ strtolower($doc->documentNo . ' ' . $doc->documentTitle . ' ' . ($doc->department->depName ?? '') . ' ' . $doc->documentType . ' ' . $doc->title . ' ' . $uploader) }}">
               <td class="fw-bold">{{ $doc->documentNo }}</td>
+              <td>{{ $doc->documentTitle ?: '-' }}</td>
               <td>{{ $doc->department->depName ?? '-' }}</td>
               <td style="text-transform: uppercase;">{{ $doc->documentType }}</td>
               <td>{{ $doc->title }}</td>
@@ -199,7 +201,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="7" class="text-center py-5 text-muted">
+              <td colspan="8" class="text-center py-5 text-muted">
                 <i class="bi bi-folder-x display-4 mb-3 d-block"></i>
                 No documents found.
               </td>
@@ -227,10 +229,10 @@
 
   // Export the visible rows as CSV
   document.getElementById('export-documents-btn').addEventListener('click', function () {
-    const rows = [['Reference Number', 'From Office', 'Type', 'Subject', 'Uploaded By', 'Date']];
+    const rows = [['Reference Number', 'Document Title', 'From Office', 'Type', 'Subject', 'Uploaded By', 'Date']];
     document.querySelectorAll('#admin-docs-body tr[data-doc-search]').forEach(function (row) {
       if (!row.hidden) {
-        rows.push(Array.from(row.querySelectorAll('td')).slice(0, 6).map(function (cell) { return cell.innerText.trim(); }));
+        rows.push(Array.from(row.querySelectorAll('td')).slice(0, 7).map(function (cell) { return cell.innerText.trim(); }));
       }
     });
     const csv = rows.map(function (row) {

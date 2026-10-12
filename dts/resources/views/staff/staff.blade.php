@@ -109,7 +109,7 @@
         </div>
 
         <!-- Summary Metric Cards -->
-        @php $totalDeptDocs = isset($statusCounts) ? $statusCounts->sum() : 0; @endphp
+        @php $totalDeptDocs = $totalDocuments ?? 0; @endphp
         <div class="row g-4 mb-4">
           <div class="col-md-4 col-lg-3">
             <div class="metric-card">
