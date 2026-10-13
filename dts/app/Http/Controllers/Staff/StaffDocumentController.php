@@ -149,7 +149,16 @@ class StaffDocumentController extends Controller
             $historiesQuery->whereDay('created_at', $request->day);
         }
 
-        $histories = $historiesQuery->orderByDesc('created_at')->get();
+        $histories = $historiesQuery
+            ->orderByDesc('created_at')
+            ->orderByDesc('historyID')
+            ->paginate(DocumentList::perPage($request))
+            ->withQueryString();
+
+        // e.g. the last page emptied out: go to the new last page
+        if ($histories->isEmpty() && $histories->currentPage() > 1) {
+            return redirect()->to($histories->url($histories->lastPage()));
+        }
 
         return view('staff.history', compact('histories'));
     }

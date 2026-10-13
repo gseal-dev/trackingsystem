@@ -25,6 +25,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 Route::middleware(['auth'])->group(function () {
     Route::get('/admin/user-management/admins', [UserManagementController::class, 'admins'])->name('admin.userManagement.admins');
     Route::get('/admin/user-management/staffs', [UserManagementController::class, 'staffs'])->name('admin.userManagement.staffs');
+    Route::get('/admin/user-management/export', [UserManagementController::class, 'exportUsers'])->middleware('role:Admin')->name('admin.userManagement.export');
     Route::get('/admin/user-management/{type}/add', [UserManagementController::class, 'addForm'])
         ->where('type', 'admins')
         ->name('admin.userManagement.addForm');

@@ -183,6 +183,7 @@
             @if(request('search') || request('year') || request('month') || request('day'))
               <a href="{{ route('staff.history') }}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 50px;">Reset</a>
             @endif
+            @include('partials.per-page-select', ['paginator' => $histories, 'id' => 'history-per-page'])
           </form>
         </div>
 
@@ -219,6 +220,8 @@
           </table>
           </div>
         </div>
+
+        @include('partials.list-pager', ['paginator' => $histories, 'noun' => 'records'])
       </div>
     </div>
   </div>
