@@ -135,7 +135,7 @@ class StaffDashboardTest extends TestCase
         }
     }
 
-    public function test_quick_access_sits_below_the_stats_with_a_dead_settings_button(): void
+    public function test_quick_access_sits_below_the_stats_and_links_to_settings(): void
     {
         $html = $this->actingAs($this->staff)->get('/dashboard')->getContent();
 
@@ -149,9 +149,9 @@ class StaffDashboardTest extends TestCase
         $this->assertStringContainsString('>Documents<', $html);
         $this->assertStringContainsString('>Upload Documents<', $html);
 
-        // Settings is only a button: no link, no form, no click handler
-        $this->assertSame(1, preg_match('/<button type="button" class="quick-btn" id="quickSettings">/', $html));
-        $this->assertSame(1, substr_count($html, 'quickSettings'), 'nothing should reference the Settings button');
+        // Settings opens the account settings page
+        $this->assertStringContainsString('href="' . route('staff.settings') . '" class="quick-btn" id="quickSettings"', $html);
+        $this->assertStringContainsString('>Settings<', $html);
     }
 
     public function test_quick_access_links_work(): void

@@ -250,11 +250,10 @@
               </a>
             </div>
             <div class="col-12 col-md-4">
-              {{-- Settings does nothing for now --}}
-              <button type="button" class="quick-btn" id="quickSettings">
+              <a href="{{ route('staff.settings') }}" class="quick-btn" id="quickSettings">
                 <span class="quick-icon"><i class="bi bi-gear-fill"></i></span>
                 <span>Settings</span>
-              </button>
+              </a>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Staff\StaffDocumentController;
+use App\Http\Controllers\Staff\StaffSettingsController;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -49,6 +50,10 @@ Route::middleware(['auth'])->group(function () {
     // Staff can edit documents (in a popup) but not delete them
     Route::middleware('role:Staff')->group(function () {
         Route::post('/staff/documents/{document}/edit', [StaffDocumentController::class, 'update'])->name('staff.document.update');
+
+        // Staff settings: staff can change their own password (nothing else)
+        Route::get('/staff/settings', [StaffSettingsController::class, 'show'])->name('staff.settings');
+        Route::post('/staff/settings/password', [StaffSettingsController::class, 'updatePassword'])->name('staff.settings.password');
     });
 
     // Admins can delete documents (and undo a delete) but not edit them

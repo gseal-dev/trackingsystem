@@ -659,6 +659,19 @@
         font-size: 0.85rem;
         overflow: hidden;
       }
+      /* profile row (staff): clickable, opens Account Settings */
+      a.sidebar-profile {
+        margin-bottom: 0;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+      a.sidebar-profile:hover,
+      a.sidebar-profile.active {
+        color: #ffffff;
+        background: #ea3a14;
+      }
       .sidebar-footer form { margin: 6px 0 0; }
       .sidebar-logout { cursor: pointer; font-family: inherit; }
       body:not(.login-page) main.main-content {
@@ -771,10 +784,18 @@
         @endif
       </div>
       <div class="sidebar-footer">
-        <div class="sidebar-user">
-          <i class="bi bi-person-circle"></i>
-          <span class="sidebar-label">{{ auth()->user()->username ?? auth()->user()->firstName }}</span>
-        </div>
+        @if($role === 'Staff')
+          <a href="{{ route('staff.settings') }}"
+             class="sidebar-user sidebar-profile {{ request()->routeIs('staff.settings*') ? 'active' : '' }}" title="Account Settings">
+            <i class="bi bi-person-circle"></i>
+            <span class="sidebar-label">{{ auth()->user()->username ?? auth()->user()->firstName }}</span>
+          </a>
+        @else
+          <div class="sidebar-user">
+            <i class="bi bi-person-circle"></i>
+            <span class="sidebar-label">{{ auth()->user()->username ?? auth()->user()->firstName }}</span>
+          </div>
+        @endif
         <form method="POST" action="{{ route('logout') }}">
           @csrf
           <button type="submit" class="sidebar-link sidebar-logout" title="Logout">
