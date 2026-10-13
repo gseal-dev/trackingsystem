@@ -27,7 +27,24 @@ class StaffDocumentController extends Controller
 
         $totalDocuments = $documents->count();
 
-        return view('staff.staff', compact('totalDocuments', 'monthlyCounts'));
+        // Uploads made by this user only (not their department's or anyone else's)
+        $myUploads = Document::where('ownerID', $user->userID)->count();
+
+        // ...and how many of those were uploaded this month (months follow Philippine time)
+        $monthStart = now(Document::DISPLAY_TIMEZONE)->startOfMonth();
+        $myUploadsThisMonth = Document::where('ownerID', $user->userID)
+            ->where('created_at', '>=', $monthStart->copy()->setTimezone(config('app.timezone')))
+            ->count();
+        $monthLabel = $monthStart->format('F Y');
+
+        // Starting value of the live date/time shown in the card header
+        $now = now(Document::DISPLAY_TIMEZONE);
+        $clockDate = $now->format('l, F j, Y');
+        $clockTime = $now->format('g:i:s A');
+
+        return view('staff.staff', compact(
+            'totalDocuments', 'monthlyCounts', 'myUploads', 'myUploadsThisMonth', 'monthLabel', 'clockDate', 'clockTime'
+        ));
     }
 
     public function documents(Request $request)
