@@ -5,8 +5,6 @@
 @push('head')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-
-
   .staff-layout {
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -53,7 +51,6 @@
     background: #001253;
     color: #fff;
   }
-
 
   .section-header {
     display: flex;
@@ -155,7 +152,8 @@
     position: relative;
     flex: 1;
     width: 100%;
-    min-height: 160px;
+    max-height: 140px;
+    margin: auto;
   }
 
   @media (max-width: 1024px) {
@@ -184,10 +182,10 @@
         </div>
       </div>
 
-      <!-- Equal-Height Cards Row -->
+      <!-- Equal-Width Cards Row (Changed to col-md-4 for equal 3-column layout) -->
       <div class="row g-4 mb-4 align-items-stretch">
         <!-- Total Documents Card -->
-        <div class="col-12 col-md-3 d-flex">
+        <div class="col-12 col-md-4 d-flex">
           <div class="metric-card w-100">
             <div class="metric-card-content">
               <div class="metric-icon-box" style="background: #f3e8ff; color: #9333ea;">
@@ -202,7 +200,7 @@
         </div>
 
         <!-- Total Users Card -->
-        <div class="col-12 col-md-3 d-flex">
+        <div class="col-12 col-md-4 d-flex">
           <div class="metric-card w-100">
             <div class="metric-card-content">
               <div class="metric-icon-box" style="background: #e0f2fe; color: #0284c7;">
@@ -217,10 +215,10 @@
         </div>
 
         <!-- Documents by Department Chart Card -->
-        <div class="col-12 col-md-6 d-flex">
+        <div class="col-12 col-md-4 d-flex">
           <div class="p-4 border rounded-4 bg-white shadow-sm chart-card w-100">
             <h5 class="fw-bold mb-3 text-dark">
-              <i class="bi bi-bar-chart-fill me-2 text-success"></i> Documents by Department
+              <i class="bi bi-pie-chart-fill me-2 text-success"></i> Documents by Department
             </h5>
             <div class="chart-container">
               <canvas id="adminDeptChart"></canvas>
@@ -239,19 +237,24 @@
   document.addEventListener('DOMContentLoaded', function () {
     const adminDeptCtx = document.getElementById('adminDeptChart').getContext('2d');
     new Chart(adminDeptCtx, {
-      type: 'bar',
+      type: 'pie',
       data: {
         labels: {!! json_encode(isset($documentsByDept) ? $documentsByDept->keys() : []) !!},
         datasets: [{
           label: 'Documents',
           data: {!! json_encode(isset($documentsByDept) ? $documentsByDept->values() : []) !!},
-          backgroundColor: '#001253'
+          backgroundColor: ['#001253', '#ea3a14', '#0284c7', '#9333ea', '#16a34a', '#eab308', '#64748b', '#cbd5e1', '#374151', '#f43f5e', '#06b6d4', '#84cc16']
         }]
       },
       options: { 
         responsive: true, 
-        maintainAspectRatio: false, 
-        scales: { y: { beginAtZero: true } } 
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 10, font: { size: 10 } }
+          }
+        }
       }
     });
   });

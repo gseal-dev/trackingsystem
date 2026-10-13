@@ -5,14 +5,10 @@
 @push('head')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-
-
-
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* margin-bottom: 2rem; */
     flex-wrap: wrap;
     gap: 1rem;
   }
@@ -217,39 +213,31 @@
               </div>
             </div>
           </div>
-
-          <!-- <div class="col-12 col-md-4">
-            <div class="metric-card">
-              <div class="metric-card-content">
-                <div class="metric-icon-box" style="background: #dcfce7; color: #16a34a;">
-                  <i class="bi bi-calendar-check-fill"></i>
-                </div>
-                <div class="metric-value" style="color: #16a34a;" id="statMyUploadsMonth">{{ number_format($myUploadsThisMonth) }}</div>
-                <div class="metric-sub">({{ $monthLabel }})</div>
-                <div class="metric-title">Uploaded This Month</div>
-                <div class="metric-desc">Your uploads this month</div>
-              </div>
-            </div>
-          </div> -->
         </div>
 
         <!-- Quick Access -->
         <div class="mb-4" id="quickAccess">
           <h5 class="quick-title"><i class="bi bi-lightning-charge-fill"></i> Quick Access</h5>
           <div class="row g-3">
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
               <a href="{{ route('staff.documents') }}" class="quick-btn" id="quickDocuments">
                 <span class="quick-icon"><i class="bi bi-folder2-open"></i></span>
                 <span>Documents</span>
               </a>
             </div>
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
               <a href="{{ route('staff.document.create') }}" class="quick-btn" id="quickUpload">
                 <span class="quick-icon"><i class="bi bi-file-earmark-plus"></i></span>
                 <span>Upload Documents</span>
               </a>
             </div>
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
+              <a href="{{ route('staff.history') }}" class="quick-btn" id="quickHistory">
+                <span class="quick-icon"><i class="bi bi-clock-history"></i></span>
+                <span>History</span>
+              </a>
+            </div>
+            <div class="col-12 col-md-3">
               <a href="{{ route('staff.settings') }}" class="quick-btn" id="quickSettings">
                 <span class="quick-icon"><i class="bi bi-gear-fill"></i></span>
                 <span>Settings</span>
@@ -258,8 +246,6 @@
           </div>
         </div>
 
-        <!-- Staff Analytics Dashboard Graphs Section -->
-        
       </div>
     </div>
   </div>
