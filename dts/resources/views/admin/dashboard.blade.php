@@ -59,7 +59,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    /* margin-bottom: 0.01rem; */
     flex-wrap: wrap;
     gap: 1rem;
   }

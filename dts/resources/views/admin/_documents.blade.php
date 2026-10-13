@@ -99,12 +99,12 @@
     letter-spacing: 0.05em;
     color: #374151;
     background-color: #f8fafc !important;
-    padding: 1.15rem 1rem !important;
+    padding: 0.5rem 1rem !important;
     border-bottom: 2px solid #e5e7eb !important;
   }
 
   .table td {
-    padding: 1.15rem 1rem !important;
+    padding: 0.2rem 1rem !important;
   }
 </style>
 @endpush
