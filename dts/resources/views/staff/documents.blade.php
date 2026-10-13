@@ -11,7 +11,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    /* margin-bottom: 2rem; */
+    margin-bottom: 1rem;
     flex-wrap: wrap;
     gap: 1rem;
   }
@@ -139,10 +139,10 @@
             <p class="text-muted">Manage and track all registered documents</p>
           </div>
           <div class="d-flex gap-2 align-items-center flex-wrap">
-            <button type="button" class="btn btn-outline-success fw-bold px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;">
+            <a href="{{ route('staff.documents.export', request()->only(['year', 'month', 'day', 'q'])) }}" class="btn btn-outline-success fw-bold px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;" title="Exports every document matching the current filters">
               <i class="bi bi-file-earmark-spreadsheet"></i>
               <span>Export Excel</span>
-            </button>
+            </a>
           </div>
         </div>
 
@@ -150,7 +150,7 @@
           <form method="GET" action="{{ route('staff.documents') }}" class="w-100">
             <div class="search-box w-100 mb-3" style="max-width: 100%;">
               <i class="bi bi-search"></i>
-              <input type="text" id="staff-record-search" class="form-control" placeholder="Search by reference number, subject, etc..." style="max-width: 100%;">
+              <input type="text" id="staff-record-search" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search by reference number, subject, etc..." style="max-width: 100%;" autocomplete="off">
             </div>
             <div class="d-flex gap-2 flex-wrap align-items-center">
               <select name="year" class="form-select" style="width: 160px;" onchange="this.form.submit()">
@@ -171,9 +171,17 @@
                   <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>Day {{ $d }}</option>
                 @endfor
               </select>
-              @if(request('year') || request('month') || request('day'))
+              @if(request('year') || request('month') || request('day') || request('q'))
                 <a href="{{ route('staff.documents') }}" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 50px;">Reset</a>
               @endif
+              <div class="ms-auto d-flex align-items-center gap-2">
+                <label for="per-page" class="small text-muted mb-0">Rows per page</label>
+                <select name="per_page" id="per-page" class="form-select" style="width: 90px;" onchange="this.form.submit()">
+                  @foreach(\App\Support\DocumentList::PER_PAGE_OPTIONS as $n)
+                    <option value="{{ $n }}" {{ $documents->perPage() == $n ? 'selected' : '' }}>{{ $n }}</option>
+                  @endforeach
+                </select>
+              </div>
             </div>
           </form>
         </div>
@@ -182,7 +190,7 @@
 
         <div class="mb-3" id="staff-docs-count" data-live-refresh>
           <div class="d-inline-flex align-items-center px-4 py-2 text-white fw-bold shadow-sm" style="background-color: #ea3a14; border-radius: 50px; font-size: 0.9rem;">
-            <i class="bi bi-file-earmark-text-fill me-2"></i> {{ count($documents) }} Documents Found
+            <i class="bi bi-file-earmark-text-fill me-2"></i> {{ number_format($documents->total()) }} Documents Found
           </div>
         </div>
 
@@ -202,7 +210,7 @@
               </thead>
             <tbody id="staff-records-body" data-live-refresh>
               @forelse($documents as $document)
-                <tr data-record-search="{{ strtolower($document->documentNo . ' ' . $document->documentTitle . ' ' . ($document->department->depName ?? '') . ' ' . $document->documentType . ' ' . $document->title) }}">
+                <tr>
                   <td class="fw-bold">{{ $document->documentNo }}</td>
                   <td>{{ $document->documentTitle ?: '-' }}</td>
                   <td>{{ $document->department->depName ?? '-' }}</td>
@@ -228,7 +236,11 @@
             </tbody>
           </table>
         </div>
-      </div>
+        </div>
+
+        <div id="staff-docs-pager" data-live-refresh>
+          @include('partials.documents-pager')
+        </div>
       </div>
     </div>
   </div>
@@ -238,35 +250,19 @@
 
 @push('scripts')
 <script>
-  function applyStaffSearch() {
-    const search = document.getElementById('staff-record-search').value.trim().toLowerCase();
-    document.querySelectorAll('#staff-records-body tr[data-record-search]').forEach(function (row) {
-      row.hidden = !row.dataset.recordSearch.includes(search);
+  // Search runs on the server (it has to look through every page, not just the 25 rows on screen)
+  (function () {
+    const input = document.getElementById('staff-record-search');
+    let timer = null;
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { input.form.submit(); }, 450);
     });
-  }
-  document.getElementById('staff-record-search').addEventListener('input', applyStaffSearch);
-  document.addEventListener('live-refreshed', applyStaffSearch);
-
-  document.getElementById('export-documents-btn').addEventListener('click', function () {
-    const rows = [
-      ['Reference Number', 'Document Title', 'From Office', 'Type', 'Subject', 'Date']
-    ];
-    document.querySelectorAll('#staff-records-body tr[data-record-search]').forEach(function (row) {
-      if (!row.hidden) {
-        const cols = row.querySelectorAll('td');
-        rows.push(Array.from(cols).slice(0, 6).map(function (cell) { return cell.innerText.trim(); }));
-      }
-    });
-    const csv = rows.map(function (row) { 
-      return row.map(function (cell) { return '"' + cell.replace(/"/g, '""') + '"'; }).join(','); 
-    }).join('\n');
-    
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'documents_export.csv';
-    link.click();
-  });
+    if (input.value) {
+      input.focus({ preventScroll: true });
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  })();
 </script>
 @endpush
 @endsection

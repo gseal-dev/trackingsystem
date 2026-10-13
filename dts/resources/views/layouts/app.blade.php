@@ -177,6 +177,16 @@
       body:not(.login-page) main.main-content {
         align-items: flex-start;
       }
+
+      /* Pagination links (document lists) in the system's navy */
+      .pagination {
+        --bs-pagination-color: rgb(0, 18, 83);
+        --bs-pagination-hover-color: rgb(0, 18, 83);
+        --bs-pagination-focus-color: rgb(0, 18, 83);
+        --bs-pagination-active-bg: rgb(0, 18, 83);
+        --bs-pagination-active-border-color: rgb(0, 18, 83);
+        --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(0, 18, 83, 0.15);
+      }
       .login-card, .card-surface {
         background-color: var(--card-bg);
         border: none;

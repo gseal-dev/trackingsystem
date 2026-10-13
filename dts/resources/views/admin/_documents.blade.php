@@ -109,25 +109,25 @@
 </style>
 @endpush
 
-<section class="documents-section">
+<section class="documents-section" id="documents">
   <div class="section-header" style="margin-bottom: 1.25rem;">
     <div>
       <h2 class="section-subtitle">Documents</h2>
       <p class="text-muted mb-0">Add and delete documents</p>
     </div>
     <div class="d-flex gap-2 align-items-center flex-wrap">
-      <button type="button" class="btn btn-outline-success fw-bold px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;">
+      <a href="{{ route('admin.documents.export', request()->only(['year', 'month', 'day', 'q'])) }}" class="btn btn-outline-success fw-bold px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;" title="Exports every document matching the current filters">
         <i class="bi bi-file-earmark-spreadsheet"></i>
         <span>Export Excel</span>
-      </button>
+      </a>
     </div>
   </div>
 
   <div class="table-toolbar">
-    <form method="GET" action="{{ route('dashboard') }}" class="w-100">
+    <form method="GET" action="{{ route('dashboard') }}#documents" class="w-100">
       <div class="search-box w-100 mb-3" style="max-width: 100%;">
         <i class="bi bi-search"></i>
-        <input type="text" id="admin-doc-search" class="form-control" placeholder="Search by reference number, subject, office..." style="max-width: 100%;">
+        <input type="text" id="admin-doc-search" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search by reference number, subject, office..." style="max-width: 100%;" autocomplete="off">
       </div>
       <div class="d-flex gap-2 flex-wrap align-items-center">
         <select name="year" class="form-select" style="width: 160px;" onchange="this.form.submit()">
@@ -148,16 +148,24 @@
             <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>Day {{ $d }}</option>
           @endfor
         </select>
-        @if(request('year') || request('month') || request('day'))
-          <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 50px;">Reset</a>
+        @if(request('year') || request('month') || request('day') || request('q'))
+          <a href="{{ route('dashboard') }}#documents" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 50px;">Reset</a>
         @endif
+        <div class="ms-auto d-flex align-items-center gap-2">
+          <label for="admin-per-page" class="small text-muted mb-0">Rows per page</label>
+          <select name="per_page" id="admin-per-page" class="form-select" style="width: 90px;" onchange="this.form.submit()">
+            @foreach(\App\Support\DocumentList::PER_PAGE_OPTIONS as $n)
+              <option value="{{ $n }}" {{ $documents->perPage() == $n ? 'selected' : '' }}>{{ $n }}</option>
+            @endforeach
+          </select>
+        </div>
       </div>
     </form>
   </div>
 
   <div class="mb-3" id="admin-docs-count" data-live-refresh>
     <div class="d-inline-flex align-items-center px-4 py-2 text-white fw-bold shadow-sm" style="background-color: #ea3a14; border-radius: 50px; font-size: 0.9rem;">
-      <i class="bi bi-file-earmark-text-fill me-2"></i> {{ count($documents) }} Documents Found
+      <i class="bi bi-file-earmark-text-fill me-2"></i> {{ number_format($documents->total()) }} Documents Found
     </div>
   </div>
 
@@ -183,7 +191,7 @@
                 ? ($doc->owner->username ?: trim(($doc->owner->firstName ?? '') . ' ' . ($doc->owner->lastName ?? '')))
                 : 'Unknown';
             @endphp
-            <tr data-doc-search="{{ strtolower($doc->documentNo . ' ' . $doc->documentTitle . ' ' . ($doc->department->depName ?? '') . ' ' . $doc->documentType . ' ' . $doc->title . ' ' . $uploader) }}">
+            <tr>
               <td class="fw-bold">{{ $doc->documentNo }}</td>
               <td>{{ $doc->documentTitle ?: '-' }}</td>
               <td>{{ $doc->department->depName ?? '-' }}</td>
@@ -211,39 +219,28 @@
       </table>
     </div>
   </div>
+
+  <div id="admin-docs-pager" data-live-refresh>
+    @include('partials.documents-pager')
+  </div>
 </section>
 
 @include('partials.document-view-modal', ['canDelete' => true])
 
 @push('scripts')
 <script>
-  // Client-side search; re-applied after every live refresh
-  function applyAdminSearch() {
-    const search = document.getElementById('admin-doc-search').value.trim().toLowerCase();
-    document.querySelectorAll('#admin-docs-body tr[data-doc-search]').forEach(function (row) {
-      row.hidden = !row.dataset.docSearch.includes(search);
+  // Search runs on the server (it has to look through every page, not just the 25 rows on screen)
+  (function () {
+    const input = document.getElementById('admin-doc-search');
+    let timer = null;
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { input.form.submit(); }, 450);
     });
-  }
-  document.getElementById('admin-doc-search').addEventListener('input', applyAdminSearch);
-  document.addEventListener('live-refreshed', applyAdminSearch);
-
-  // Export the visible rows as CSV
-  document.getElementById('export-documents-btn').addEventListener('click', function () {
-    const rows = [['Reference Number', 'Document Title', 'From Office', 'Type', 'Subject', 'Uploaded By', 'Date']];
-    document.querySelectorAll('#admin-docs-body tr[data-doc-search]').forEach(function (row) {
-      if (!row.hidden) {
-        rows.push(Array.from(row.querySelectorAll('td')).slice(0, 7).map(function (cell) { return cell.innerText.trim(); }));
-      }
-    });
-    const csv = rows.map(function (row) {
-      return row.map(function (cell) { return '"' + cell.replace(/"/g, '""') + '"'; }).join(',');
-    }).join('\n');
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-    link.download = 'documents_export.csv';
-    link.click();
-    URL.revokeObjectURL(link.href);
-  });
-
+    if (input.value) {
+      input.focus({ preventScroll: true });
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  })();
 </script>
 @endpush

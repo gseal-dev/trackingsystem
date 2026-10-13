@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Document;
 use App\Models\Department;
+use App\Support\DocumentList;
 
 class StaffDocumentController extends Controller
 {
@@ -47,43 +48,53 @@ class StaffDocumentController extends Controller
         ));
     }
 
-    public function documents(Request $request)
+    /** Documents the logged-in staff member may see, filtered and searched, newest first. */
+    private function staffDocumentsQuery(Request $request)
     {
         $user = auth()->user();
-        $query = \App\Models\Document::with(['department', 'owner'])
-            ->when($user->departmentID, function($q) use ($user) {
+
+        return Document::with(['department', 'owner'])
+            ->when($user->departmentID, function ($q) use ($user) {
                 return $q->where('currentDepartmentID', $user->departmentID);
-            });
+            })
+            ->dateFilter($request->input('year'), $request->input('month'), $request->input('day'))
+            ->search($request->input('q'))
+            ->orderByDesc('documentDate')
+            ->orderByDesc('created_at')
+            ->orderByDesc('documentId');
+    }
 
-        if ($request->filled('year')) {
-            $query->where(function($q) use ($request) {
-                $q->whereYear('documentDate', $request->year)
-                  ->orWhere(function($sub) use ($request) {
-                      $sub->whereNull('documentDate')->whereYear('created_at', $request->year);
-                  });
-            });
-        }
-        if ($request->filled('month')) {
-            $query->where(function($q) use ($request) {
-                $q->whereMonth('documentDate', $request->month)
-                  ->orWhere(function($sub) use ($request) {
-                      $sub->whereNull('documentDate')->whereMonth('created_at', $request->month);
-                  });
-            });
-        }
-        if ($request->filled('day')) {
-            $query->where(function($q) use ($request) {
-                $q->whereDay('documentDate', $request->day)
-                  ->orWhere(function($sub) use ($request) {
-                      $sub->whereNull('documentDate')->whereDay('created_at', $request->day);
-                  });
-            });
+    public function documents(Request $request)
+    {
+        $documents = $this->staffDocumentsQuery($request)
+            ->paginate(DocumentList::perPage($request))
+            ->withQueryString();
+
+        // e.g. the last page emptied out after deletions: go to the new last page
+        if ($documents->isEmpty() && $documents->currentPage() > 1) {
+            return redirect()->to($documents->url($documents->lastPage()));
         }
 
-        $documents = $query->get();
-        $departments = \App\Models\Department::all();
+        $departments = Department::all();
 
         return view('staff.documents', compact('documents', 'departments'));
+    }
+
+    /** CSV of every document matching the current filters (not only the page on screen). */
+    public function exportDocuments(Request $request)
+    {
+        return DocumentList::csv(
+            $this->staffDocumentsQuery($request),
+            ['Reference Number', 'Document Title', 'From Office', 'Type', 'Subject', 'Date'],
+            fn ($d) => [
+                $d->documentNo,
+                $d->documentTitle,
+                $d->department->depName ?? '',
+                strtoupper((string) $d->documentType),
+                $d->title,
+                $d->documentDate ? \Carbon\Carbon::parse($d->documentDate)->format('F d, Y') : $d->created_at?->format('F d, Y'),
+            ]
+        );
     }
 
 

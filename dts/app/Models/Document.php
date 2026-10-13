@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -31,6 +32,56 @@ class Document extends Model
     public function department()
     {
         return $this->belongsTo(Department::class, 'currentDepartmentID', 'depID');
+    }
+
+    /**
+     * Filter by year / month / day of the document date
+     * (falls back to the upload date for documents that have no document date).
+     */
+    public function scopeDateFilter(Builder $query, $year = null, $month = null, $day = null): Builder
+    {
+        foreach (['whereYear' => $year, 'whereMonth' => $month, 'whereDay' => $day] as $method => $value) {
+            if ($value === null || $value === '' || is_array($value)) {
+                continue;
+            }
+            $value = (int) $value;
+            $query->where(function ($q) use ($method, $value) {
+                $q->$method('documentDate', $value)
+                  ->orWhere(function ($sub) use ($method, $value) {
+                      $sub->whereNull('documentDate')->$method('created_at', $value);
+                  });
+            });
+        }
+
+        return $query;
+    }
+
+    /**
+     * Search reference number, title, subject, type and office (and the uploader when asked).
+     * Every word typed has to match somewhere, in any order.
+     */
+    public function scopeSearch(Builder $query, ?string $term, bool $withUploader = false): Builder
+    {
+        $words = preg_split('/\s+/', trim((string) $term), -1, PREG_SPLIT_NO_EMPTY);
+
+        foreach ($words as $word) {
+            $like = '%' . $word . '%';
+            $query->where(function ($q) use ($like, $withUploader) {
+                $q->where('documentNo', 'like', $like)
+                  ->orWhere('documentTitle', 'like', $like)
+                  ->orWhere('title', 'like', $like)
+                  ->orWhere('documentType', 'like', $like)
+                  ->orWhereHas('department', fn ($d) => $d->where('depName', 'like', $like));
+
+                if ($withUploader) {
+                    $q->orWhereHas('owner', fn ($o) => $o->where('username', 'like', $like)
+                        ->orWhere('firstName', 'like', $like)
+                        ->orWhere('lastName', 'like', $like));
+                }
+            });
+        }
+
+        return $query;
     }
 
     public function histories()
