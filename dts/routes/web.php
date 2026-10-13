@@ -22,7 +22,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 
 // User Management - Per Role
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::get('/admin/user-management/admins', [UserManagementController::class, 'admins'])->name('admin.userManagement.admins');
     Route::get('/admin/user-management/staffs', [UserManagementController::class, 'staffs'])->name('admin.userManagement.staffs');
     Route::get('/admin/user-management/export', [UserManagementController::class, 'exportUsers'])->middleware('role:Admin')->name('admin.userManagement.export');
