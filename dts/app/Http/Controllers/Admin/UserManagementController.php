@@ -7,19 +7,51 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\Department;
 use Illuminate\Http\Request;
+use App\Support\CsvExport;
+use App\Support\Paging;
 
 class UserManagementController extends Controller
 {
     public function index() {
         return view('admin.UserManagement.userManagement');
     }
+    /** Every user, searched, in the order they were created. */
+    private function usersQuery(Request $request) {
+        return User::with('role')->search($request->input('q'))->orderBy('userID');
+    }
+
     public function admins(Request $request) {
-        $users = User::with('role')->get();
+        $users = $this->usersQuery($request)->paginate(Paging::perPage($request))->withQueryString();
+
+        // e.g. the last page emptied out after deletions: go to the new last page
+        if ($users->isEmpty() && $users->currentPage() > 1) {
+            return redirect()->to($users->url($users->lastPage()));
+        }
+
         $roles = Role::whereIn('roleName', ['Admin', 'Staff'])->orderBy('roleName')->get();
         return view('admin.UserManagement.admins', compact('users', 'roles'));
     }
-    public function staffs() {
-        $users = User::whereHas('role', fn($q) => $q->where('roleName', 'Staff'))->get();
+
+    /** CSV of every user matching the search (not only the page on screen). */
+    public function exportUsers(Request $request) {
+        return CsvExport::stream(
+            $this->usersQuery($request),
+            ['Name', 'Email', 'Role'],
+            fn ($u) => [trim($u->firstName . ' ' . $u->lastName), $u->email, $u->role->roleName ?? 'Admin'],
+            'admin-users.csv'
+        );
+    }
+
+    public function staffs(Request $request) {
+        $users = User::whereHas('role', fn($q) => $q->where('roleName', 'Staff'))
+            ->orderBy('userID')
+            ->paginate(Paging::perPage($request))
+            ->withQueryString();
+
+        if ($users->isEmpty() && $users->currentPage() > 1) {
+            return redirect()->to($users->url($users->lastPage()));
+        }
+
         return view('admin.UserManagement.staffs', compact('users'));
     }
 

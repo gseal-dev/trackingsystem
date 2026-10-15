@@ -33,6 +33,8 @@
       @empty
         <div class="alert alert-info mb-0">No staff found.</div>
       @endforelse
+
+      @include('partials.list-pager', ['paginator' => $users, 'noun' => 'staff'])
     </div>
   </div>
 </div>

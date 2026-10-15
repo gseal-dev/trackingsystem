@@ -5,18 +5,7 @@
 @push('head')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  .dashboard-shell {
-    width: 100%;
-    min-height: calc(100vh - 100px);
-    padding: clamp(1rem, 2vw, 2rem);
-  }
 
-  .dashboard-container {
-    width: 100%;
-    max-width: 1350px;
-    margin: 0 auto;
-    padding: 0 1rem;
-  }
 
   .staff-layout {
     display: grid;
@@ -65,20 +54,12 @@
     color: #fff;
   }
 
-  .staff-main-content {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    padding: 0;
-    min-height: 600px;
-  }
 
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    /* margin-bottom: 2rem; */
     flex-wrap: wrap;
     gap: 1rem;
   }
@@ -168,26 +149,33 @@
 @section('content')
 <div class="dashboard-shell">
   <div class="dashboard-container wide">
-      <main class="staff-main-content" style="background: transparent; border: none; border-radius: 0; padding: 0; min-height: 600px; width: 100%;">
+      <div class="page-card">
+        <div class="page-card-header"><i class="bi bi-people-fill"></i> Users List</div>
         <div class="section-header">
           <div>
-            <h1 class="section-title">Users List</h1>
             <p class="text-muted">Manage and track all system users</p>
           </div>
         </div>
 
         <div class="table-toolbar">
-          <div class="search-box">
-            <i class="bi bi-search"></i>
-            <input type="text" id="admin-user-search" class="form-control" placeholder="Search users...">
-          </div>
+          <form method="GET" action="{{ route('admin.userManagement.admins') }}" class="d-flex align-items-center gap-2 flex-wrap flex-grow-1 me-3">
+            <div class="search-box">
+              <i class="bi bi-search"></i>
+              <input type="text" id="admin-user-search" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search users..." autocomplete="off">
+            </div>
+            @if(request('q'))
+              <a href="{{ route('admin.userManagement.admins') }}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 50px;">Reset</a>
+            @endif
+            @include('partials.per-page-select', ['paginator' => $users, 'id' => 'users-per-page'])
+          </form>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-secondary px-3 py-2" id="export-users" style="border-radius: 50px;"><i class="bi bi-download me-1"></i> Export Excel</button>
+            <a href="{{ route('admin.userManagement.export', request()->only('q')) }}" class="btn btn-outline-secondary px-3 py-2" id="export-users" style="border-radius: 50px;" title="Exports every user matching the search"><i class="bi bi-download me-1"></i> Export Excel</a>
             <button type="button" class="btn btn-dark px-4 py-2" style="background-color: #ea3a14; color: #ffffff; border-radius: 50px; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#addUserModal" title="Add user"><i class="bi bi-person-plus me-1"></i> Add User</button>
           </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="border rounded-2 overflow-hidden">
+          <div class="table-responsive">
           <table class="table table-hover table-sm align-middle">
             <thead class="bg-light">
               <tr>
@@ -200,7 +188,7 @@
             </thead>
             <tbody id="admin-users-body">
               @forelse($users as $user)
-                <tr data-user-search="{{ strtolower(($user->firstName ?? '') . ' ' . ($user->lastName ?? '') . ' ' . $user->email . ' ' . ($user->role->roleName ?? 'Admin')) }}">
+                <tr>
                   <td class="fw-bold">{{ $user->firstName }} {{ $user->lastName }}</td>
                   <td>{{ $user->email }}</td>
                   <td><span class="badge bg-light text-dark border">{{ $user->role->roleName ?? 'Admin' }}</span></td>
@@ -225,11 +213,13 @@
               @endforelse
             </tbody>
           </table>
+          </div>
         </div>
-      </main>
+
+        @include('partials.list-pager', ['paginator' => $users, 'noun' => 'users'])
+      </div>
     </div>
   </div>
-</div>
 
 <!-- Add User Modal -->
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
@@ -313,27 +303,19 @@
 
 @push('scripts')
 <script>
-  document.getElementById('admin-user-search').addEventListener('input', function () {
-    const search = this.value.trim().toLowerCase();
-    document.querySelectorAll('#admin-users-body tr[data-user-search]').forEach(function (row) {
-      row.hidden = !row.dataset.userSearch.includes(search);
+  // Search runs on the server (it has to look through every page, not just the rows on screen)
+  (function () {
+    const input = document.getElementById('admin-user-search');
+    let timer = null;
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { input.form.submit(); }, 450);
     });
-  });
-
-  document.getElementById('export-users').addEventListener('click', function () {
-    const rows = [['Name', 'Email', 'Role']];
-    document.querySelectorAll('#admin-users-body tr').forEach(function (row) {
-      if (!row.hidden && row.querySelectorAll('td').length >= 3) {
-        rows.push(Array.from(row.querySelectorAll('td')).slice(0, 3).map(function (cell) { return cell.innerText.trim(); }));
-      }
-    });
-    const csv = rows.map(function (row) { return row.map(function (cell) { return '"' + cell.replaceAll('"', '""') + '"'; }).join(','); }).join('\n');
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    link.download = 'admin-users.csv';
-    link.click();
-    URL.revokeObjectURL(link.href);
-  });
+    if (input.value) {
+      input.focus({ preventScroll: true });
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  })();
 </script>
 @endpush
 @endsection

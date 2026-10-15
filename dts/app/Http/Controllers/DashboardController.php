@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Staff\StaffDocumentController;
+use App\Support\DocumentList;
 
 class DashboardController extends Controller
 {
@@ -27,24 +28,16 @@ class DashboardController extends Controller
                     return $u->role->roleName ?? 'Unassigned';
                 })->map->count();
 
-                // Full document list shown under the stats (admins see every document)
-                $documentsQuery = \App\Models\Document::with(['department', 'owner'])
-                    ->orderByDesc('documentDate')
-                    ->orderByDesc('created_at');
+                // Document list under the stats: every document, newest first, 25 per page by default
+                $documents = $this->adminDocumentsQuery($request)
+                    ->paginate(DocumentList::perPage($request))
+                    ->withQueryString()
+                    ->fragment('documents');
 
-                foreach (['year' => 'whereYear', 'month' => 'whereMonth', 'day' => 'whereDay'] as $field => $method) {
-                    if ($request->filled($field)) {
-                        $value = (int) $request->input($field);
-                        $documentsQuery->where(function ($q) use ($method, $value) {
-                            $q->$method('documentDate', $value)
-                              ->orWhere(function ($sub) use ($method, $value) {
-                                  $sub->whereNull('documentDate')->$method('created_at', $value);
-                              });
-                        });
-                    }
+                // e.g. the last page emptied out after deletions: go to the new last page
+                if ($documents->isEmpty() && $documents->currentPage() > 1) {
+                    return redirect()->to($documents->url($documents->lastPage()));
                 }
-
-                $documents = $documentsQuery->get();
 
                 return view('admin.dashboard', compact('totalDocuments', 'totalUsers', 'documentsByDept', 'usersByRole', 'documents'));
             case 'Staff':
@@ -52,5 +45,40 @@ class DashboardController extends Controller
             default:
                 abort(403, 'Unauthorized or role not set.');
         }
+    }
+
+    /** Every document (admins see all departments), filtered and searched, newest first. */
+    private function adminDocumentsQuery(Request $request)
+    {
+        return \App\Models\Document::with(['department', 'owner'])
+            ->dateFilter($request->input('year'), $request->input('month'), $request->input('day'))
+            ->search($request->input('q'), true)
+            ->orderByDesc('documentDate')
+            ->orderByDesc('created_at')
+            ->orderByDesc('documentId');
+    }
+
+    /** CSV of every document matching the current filters (not only the page on screen). */
+    public function exportDocuments(Request $request)
+    {
+        return DocumentList::csv(
+            $this->adminDocumentsQuery($request),
+            ['Reference Number', 'Document Title', 'From Office', 'Type', 'Subject', 'Uploaded By', 'Date'],
+            function ($d) {
+                $uploader = $d->owner
+                    ? ($d->owner->username ?: trim(($d->owner->firstName ?? '') . ' ' . ($d->owner->lastName ?? '')))
+                    : 'Unknown';
+
+                return [
+                    $d->documentNo,
+                    $d->documentTitle,
+                    $d->department->depName ?? '',
+                    strtoupper((string) $d->documentType),
+                    $d->title,
+                    $uploader,
+                    $d->documentDate ? \Carbon\Carbon::parse($d->documentDate)->format('F d, Y') : $d->created_at?->format('F d, Y'),
+                ];
+            }
+        );
     }
 }
