@@ -4,32 +4,14 @@
 
 @push('head')
 <style>
-  .dashboard-shell {
-    width: 100%;
-    min-height: calc(100vh - 100px);
-    padding: clamp(1rem, 2vw, 2rem);
-  }
 
-  .dashboard-container {
-    width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-  }
 
-  .staff-main-content {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    padding: 0;
-    min-height: 600px;
-  }
 
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     flex-wrap: wrap;
     gap: 1rem;
   }
@@ -137,12 +119,12 @@
     letter-spacing: 0.05em;
     color: #374151;
     background-color: #f8fafc !important;
-    padding: 1.15rem 1rem !important;
+    padding: 0.5rem 1rem !important;
     border-bottom: 2px solid #e5e7eb !important;
   }
 
   .table td {
-    padding: 1.15rem 1rem !important;
+    padding: 0.2rem 1rem !important;
   }
 </style>
 @endpush
@@ -150,21 +132,17 @@
 @section('content')
 <div class="dashboard-shell">
   <div class="dashboard-container wide">
-      <main class="staff-main-content" style="background: transparent; border: none; border-radius: 0; padding: 0; min-height: 600px; width: 100%;">
+      <div class="page-card">
+        <div class="page-card-header"><i class="bi bi-folder2-open"></i> Documents List</div>
         <div class="section-header">
           <div>
-            <h1 class="section-title">Documents List</h1>
             <p class="text-muted">Manage and track all registered documents</p>
           </div>
           <div class="d-flex gap-2 align-items-center flex-wrap">
-            <button type="button" class="btn btn-outline-success fw-bold px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;">
+            <a href="{{ route('staff.documents.export', request()->only(['year', 'month', 'day', 'q'])) }}" class="btn btn-outline-success fw-bold px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;" title="Exports every document matching the current filters">
               <i class="bi bi-file-earmark-spreadsheet"></i>
               <span>Export Excel</span>
-            </button>
-            <button type="button" class="btn-create border-0 cursor-pointer" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
-              <i class="bi bi-plus-lg"></i>
-              <span>Add Document</span>
-            </button>
+            </a>
           </div>
         </div>
 
@@ -172,7 +150,7 @@
           <form method="GET" action="{{ route('staff.documents') }}" class="w-100">
             <div class="search-box w-100 mb-3" style="max-width: 100%;">
               <i class="bi bi-search"></i>
-              <input type="text" id="staff-record-search" class="form-control" placeholder="Search by reference number, subject, etc..." style="max-width: 100%;">
+              <input type="text" id="staff-record-search" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search by reference number, subject, etc..." style="max-width: 100%;" autocomplete="off">
             </div>
             <div class="d-flex gap-2 flex-wrap align-items-center">
               <select name="year" class="form-select" style="width: 160px;" onchange="this.form.submit()">
@@ -193,9 +171,17 @@
                   <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>Day {{ $d }}</option>
                 @endfor
               </select>
-              @if(request('year') || request('month') || request('day'))
+              @if(request('year') || request('month') || request('day') || request('q'))
                 <a href="{{ route('staff.documents') }}" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 50px;">Reset</a>
               @endif
+              <div class="ms-auto d-flex align-items-center gap-2">
+                <label for="per-page" class="small text-muted mb-0">Rows per page</label>
+                <select name="per_page" id="per-page" class="form-select" style="width: 90px;" onchange="this.form.submit()">
+                  @foreach(\App\Support\DocumentList::PER_PAGE_OPTIONS as $n)
+                    <option value="{{ $n }}" {{ $documents->perPage() == $n ? 'selected' : '' }}>{{ $n }}</option>
+                  @endforeach
+                </select>
+              </div>
             </div>
           </form>
         </div>
@@ -204,56 +190,44 @@
 
         <div class="mb-3" id="staff-docs-count" data-live-refresh>
           <div class="d-inline-flex align-items-center px-4 py-2 text-white fw-bold shadow-sm" style="background-color: #ea3a14; border-radius: 50px; font-size: 0.9rem;">
-            <i class="bi bi-file-earmark-text-fill me-2"></i> {{ count($documents) }} Documents Found
+            <i class="bi bi-file-earmark-text-fill me-2"></i> {{ number_format($documents->total()) }} Documents Found
           </div>
         </div>
 
-        <div class="card border rounded-4 bg-white shadow-sm overflow-hidden p-3">
+        <div class="border rounded-2 overflow-hidden">
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead class="bg-light">
                 <tr>
                   <th>Reference Number</th>
+                  <th>Document Title</th>
                   <th>From Office</th>
                   <th>Type</th>
                   <th>Subject</th>
                   <th>Date</th>
-                  <th>Status</th>
                   <th class="text-end">Actions</th>
                 </tr>
               </thead>
             <tbody id="staff-records-body" data-live-refresh>
               @forelse($documents as $document)
-                <tr data-record-search="{{ strtolower($document->documentNo . ' ' . ($document->department->depName ?? '') . ' ' . $document->documentType . ' ' . $document->title) }}">
+                <tr>
                   <td class="fw-bold">{{ $document->documentNo }}</td>
+                  <td>{{ $document->documentTitle ?: '-' }}</td>
                   <td>{{ $document->department->depName ?? '-' }}</td>
                   <td style="text-transform: uppercase;">{{ $document->documentType }}</td>
                   <td>{{ $document->title }}</td>
                   <td class="text-muted">{{ $document->documentDate ? \Carbon\Carbon::parse($document->documentDate)->format('F d, Y') : $document->created_at?->format('F d, Y') }}</td>
-                  <td><span class="badge bg-light text-dark border">{{ $document->status->statusName ?? 'Pending' }}</span></td>
                   <td>
                     <div class="actions-cell justify-content-end">
-                      @if($document->filePath)
-                      <a href="{{ asset('storage/' . $document->filePath) }}" class="btn-action" target="_blank" title="View PDF">
-                        <i class="bi bi-eye"></i>
-                      </a>
-                      @endif
-                      <a href="{{ route('staff.document.edit', $document->documentId) }}" class="btn-action" title="Edit Details">
-                        <i class="bi bi-pencil"></i>
-                      </a>
-                      <form action="{{ route('staff.document.delete', $document->documentId) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this file?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn-action btn-delete border-0 bg-transparent text-danger" title="Delete">
-                          <i class="bi bi-trash"></i>
-                        </button>
-                      </form>
+                      <button type="button" class="btn-action" title="View details" data-doc-view="{{ json_encode($document->viewData()) }}">
+                    <i class="bi bi-eye"></i>
+                  </button>
                     </div>
                   </td>
                 </tr>
               @empty
                 <tr>
-                  <td colspan="6" class="text-center py-5 text-muted">
+                  <td colspan="7" class="text-center py-5 text-muted">
                     <i class="bi bi-folder-x display-4 mb-3 d-block"></i>
                     No records found.
                   </td>
@@ -262,161 +236,33 @@
             </tbody>
           </table>
         </div>
+        </div>
+
+        <div id="staff-docs-pager" data-live-refresh>
+          @include('partials.documents-pager')
+        </div>
       </div>
-      </main>
     </div>
   </div>
-</div>
+
+@include('partials.document-view-modal', ['canEdit' => true])
+@include('partials.document-edit-modal')
 
 @push('scripts')
 <script>
-  function applyStaffSearch() {
-    const search = document.getElementById('staff-record-search').value.trim().toLowerCase();
-    document.querySelectorAll('#staff-records-body tr[data-record-search]').forEach(function (row) {
-      row.hidden = !row.dataset.recordSearch.includes(search);
+  // Search runs on the server (it has to look through every page, not just the 25 rows on screen)
+  (function () {
+    const input = document.getElementById('staff-record-search');
+    let timer = null;
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { input.form.submit(); }, 450);
     });
-  }
-  document.getElementById('staff-record-search').addEventListener('input', applyStaffSearch);
-  document.addEventListener('live-refreshed', applyStaffSearch);
-
-  document.getElementById('export-documents-btn').addEventListener('click', function () {
-    const rows = [
-      ['Reference Number', 'From Office', 'Type', 'Subject', 'Date']
-    ];
-    document.querySelectorAll('#staff-records-body tr[data-record-search]').forEach(function (row) {
-      if (!row.hidden) {
-        const cols = row.querySelectorAll('td');
-        if (cols.length >= 5) {
-          rows.push([
-            cols[0].innerText.trim(),
-            cols[1].innerText.trim(),
-            cols[2].innerText.trim(),
-            cols[3].innerText.trim(),
-            cols[4].innerText.trim()
-          ]);
-        }
-      }
-    });
-    const csv = rows.map(function (row) { 
-      return row.map(function (cell) { return '"' + cell.replace(/"/g, '""') + '"'; }).join(','); 
-    }).join('\n');
-    
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'documents_export.csv';
-    link.click();
-  });
-</script>
-
-<!-- Add Document Modal -->
-<div class="modal fade" id="addDocumentModal" tabindex="-1" aria-labelledby="addDocumentModalLabel" aria-hidden="true" data-bs-backdrop="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 rounded-4 p-3 shadow-lg" style="background-color: #ffffff !important; color: #1e293b !important;">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title fw-bold text-dark" id="addDocumentModalLabel">Add Document</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form method="POST" action="{{ route('staff.document.store') }}" enctype="multipart/form-data">
-        @csrf
-        <div class="modal-body">
-          @if($errors->any())
-            <div class="alert alert-danger rounded-4 mb-3">
-              <ul class="mb-0">
-                @foreach($errors->all() as $error)
-                  <li>{{ $error }}</li>
-                @endforeach
-              </ul>
-            </div>
-          @endif
-
-          <div class="d-flex flex-column gap-3">
-            <div class="d-flex align-items-center gap-3">
-              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
-                <i class="bi bi-hash"></i>
-              </div>
-              <div class="flex-grow-1">
-                <input type="text" id="documentNo" name="documentNo" class="form-control rounded-pill text-uppercase bg-white" placeholder="REFERENCE NUMBER" value="{{ old('documentNo') }}" required>
-              </div>
-            </div>
-
-            <div class="d-flex align-items-center gap-3">
-              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
-                <i class="bi bi-building"></i>
-              </div>
-              <div class="flex-grow-1">
-                <input type="text" id="fromOffice" name="fromOffice" class="form-control rounded-pill text-uppercase bg-white" placeholder="FROM OFFICE" value="{{ old('fromOffice') }}" required>
-              </div>
-            </div>
-
-            <div class="d-flex align-items-center gap-3">
-              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
-                <i class="bi bi-file-earmark-text"></i>
-              </div>
-              <div class="flex-grow-1">
-                <input type="text" id="documentType" name="documentType" class="form-control rounded-pill text-uppercase bg-white" placeholder="TYPE" value="{{ old('documentType') }}" required>
-              </div>
-            </div>
-
-            <div class="d-flex align-items-center gap-3">
-              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
-                <i class="bi bi-card-heading"></i>
-              </div>
-              <div class="flex-grow-1">
-                <input type="text" id="title" name="title" class="form-control rounded-pill text-uppercase bg-white" placeholder="SUBJECT" value="{{ old('title') }}" required>
-              </div>
-            </div>
-
-            <div class="d-flex align-items-center gap-3">
-              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
-                <i class="bi bi-calendar-event"></i>
-              </div>
-              <div class="flex-grow-1">
-                <input type="date" id="documentDate" name="documentDate" class="form-control rounded-pill bg-white" value="{{ old('documentDate', date('Y-m-d')) }}" required>
-              </div>
-            </div>
-
-            <div class="d-flex align-items-center gap-3">
-              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
-                <i class="bi bi-tag"></i>
-              </div>
-              <div class="flex-grow-1">
-                <select name="currentStatus" id="currentStatus" class="form-select rounded-pill bg-white" required>
-                  @foreach(\App\Models\DocumentStatus::all() as $status)
-                    <option value="{{ $status->statusID }}" {{ old('currentStatus', 1) == $status->statusID ? 'selected' : '' }}>{{ $status->statusName }}</option>
-                  @endforeach
-                </select>
-              </div>
-            </div>
-
-            <div class="d-flex align-items-center gap-3">
-              <div class="field-icon" style="font-size: 1.4rem; color: #333; width: 32px; display: flex; justify-content: center;">
-                <i class="bi bi-paperclip"></i>
-              </div>
-              <div class="flex-grow-1">
-                <input type="file" id="file" name="file" class="form-control rounded-pill bg-white" accept=".pdf" required>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer border-0 pt-0">
-          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-dark rounded-pill px-4 text-uppercase fw-bold" style="background-color: #000; color: #fff;">Add Document</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-@if($errors->any())
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const modalEl = document.getElementById('addDocumentModal');
-    if (modalEl) {
-      const myModal = new bootstrap.Modal(modalEl);
-      myModal.show();
+    if (input.value) {
+      input.focus({ preventScroll: true });
+      input.setSelectionRange(input.value.length, input.value.length);
     }
-  });
+  })();
 </script>
-@endif
+@endpush
 @endsection

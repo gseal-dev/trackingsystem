@@ -4,17 +4,7 @@
 
 @push('head')
 <style>
-  .dashboard-shell {
-    width: 100%;
-    min-height: calc(100vh - 100px);
-    padding: clamp(1rem, 2vw, 2rem);
-  }
 
-  .dashboard-container {
-    width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-  }
 
   .staff-layout {
     display: grid;
@@ -63,20 +53,12 @@
     color: #fff;
   }
 
-  .staff-main-content {
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-    padding: 0;
-    min-height: 600px;
-  }
 
   .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    /* margin-bottom: 2rem; */
     flex-wrap: wrap;
     gap: 1rem;
   }
@@ -166,10 +148,10 @@
 @section('content')
 <div class="dashboard-shell">
   <div class="dashboard-container wide">
-      <main class="staff-main-content" style="background: transparent; border: none; border-radius: 0; padding: 0; min-height: 600px; width: 100%;">
+      <div class="page-card">
+        <div class="page-card-header"><i class="bi bi-clock-history"></i> Document History</div>
         <div class="section-header">
           <div>
-            <h1 class="section-title">Document History</h1>
             <p class="text-muted">View document transaction history</p>
           </div>
         </div>
@@ -201,10 +183,12 @@
             @if(request('search') || request('year') || request('month') || request('day'))
               <a href="{{ route('staff.history') }}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 50px;">Reset</a>
             @endif
+            @include('partials.per-page-select', ['paginator' => $histories, 'id' => 'history-per-page'])
           </form>
         </div>
 
-        <div class="table-responsive">
+        <div class="border rounded-2 overflow-hidden">
+          <div class="table-responsive">
           <table class="table table-hover table-sm align-middle">
             <thead class="bg-light">
               <tr>
@@ -234,9 +218,11 @@
               @endforelse
             </tbody>
           </table>
+          </div>
         </div>
-      </main>
+
+        @include('partials.list-pager', ['paginator' => $histories, 'noun' => 'records'])
+      </div>
     </div>
   </div>
-</div>
 @endsection

@@ -7,7 +7,7 @@ class DocumentHistory extends Model
 {
     protected $primaryKey = 'historyID';
     protected $fillable = [
-        'documentId', 'prevDepartmentID', 'currentDepartmentID', 'statusID', 'userID', 'action'
+        'documentId', 'prevDepartmentID', 'currentDepartmentID', 'userID', 'action'
     ];
     public $timestamps = true;
 

@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Document;
 use App\Models\Department;
-use App\Notifications\DocumentProcessedNotification;
+use App\Support\DocumentList;
 
 class StaffDocumentController extends Controller
 {
@@ -22,54 +22,79 @@ class StaffDocumentController extends Controller
 
         $documents = $query->get();
 
-        $statusCounts = $documents->groupBy(function($doc) {
-            return $doc->status->statusName ?? 'Pending';
-        })->map->count();
-
         $monthlyCounts = $documents->groupBy(function($doc) {
             return $doc->documentDate ? date('Y-m', strtotime($doc->documentDate)) : date('Y-m', strtotime($doc->created_at));
         })->map->count();
 
-        return view('staff.staff', compact('statusCounts', 'monthlyCounts'));
+        $totalDocuments = $documents->count();
+
+        // Uploads made by this user only (not their department's or anyone else's)
+        $myUploads = Document::where('ownerID', $user->userID)->count();
+
+        // ...and how many of those were uploaded this month (months follow Philippine time)
+        $monthStart = now(Document::DISPLAY_TIMEZONE)->startOfMonth();
+        $myUploadsThisMonth = Document::where('ownerID', $user->userID)
+            ->where('created_at', '>=', $monthStart->copy()->setTimezone(config('app.timezone')))
+            ->count();
+        $monthLabel = $monthStart->format('F Y');
+
+        // Starting value of the live date/time shown in the card header
+        $now = now(Document::DISPLAY_TIMEZONE);
+        $clockDate = $now->format('l, F j, Y');
+        $clockTime = $now->format('g:i:s A');
+
+        return view('staff.staff', compact(
+            'totalDocuments', 'monthlyCounts', 'myUploads', 'myUploadsThisMonth', 'monthLabel', 'clockDate', 'clockTime'
+        ));
+    }
+
+    /** Documents the logged-in staff member may see, filtered and searched, newest first. */
+    private function staffDocumentsQuery(Request $request)
+    {
+        $user = auth()->user();
+
+        return Document::with(['department', 'owner'])
+            ->when($user->departmentID, function ($q) use ($user) {
+                return $q->where('currentDepartmentID', $user->departmentID);
+            })
+            ->dateFilter($request->input('year'), $request->input('month'), $request->input('day'))
+            ->search($request->input('q'))
+            ->orderByDesc('documentDate')
+            ->orderByDesc('created_at')
+            ->orderByDesc('documentId');
     }
 
     public function documents(Request $request)
     {
-        $user = auth()->user();
-        $query = \App\Models\Document::with('department')
-            ->when($user->departmentID, function($q) use ($user) {
-                return $q->where('currentDepartmentID', $user->departmentID);
-            });
+        $documents = $this->staffDocumentsQuery($request)
+            ->paginate(DocumentList::perPage($request))
+            ->withQueryString();
 
-        if ($request->filled('year')) {
-            $query->where(function($q) use ($request) {
-                $q->whereYear('documentDate', $request->year)
-                  ->orWhere(function($sub) use ($request) {
-                      $sub->whereNull('documentDate')->whereYear('created_at', $request->year);
-                  });
-            });
-        }
-        if ($request->filled('month')) {
-            $query->where(function($q) use ($request) {
-                $q->whereMonth('documentDate', $request->month)
-                  ->orWhere(function($sub) use ($request) {
-                      $sub->whereNull('documentDate')->whereMonth('created_at', $request->month);
-                  });
-            });
-        }
-        if ($request->filled('day')) {
-            $query->where(function($q) use ($request) {
-                $q->whereDay('documentDate', $request->day)
-                  ->orWhere(function($sub) use ($request) {
-                      $sub->whereNull('documentDate')->whereDay('created_at', $request->day);
-                  });
-            });
+        // e.g. the last page emptied out after deletions: go to the new last page
+        if ($documents->isEmpty() && $documents->currentPage() > 1) {
+            return redirect()->to($documents->url($documents->lastPage()));
         }
 
-        $documents = $query->get();
-        $departments = \App\Models\Department::all();
+        $departments = Department::all();
 
         return view('staff.documents', compact('documents', 'departments'));
+    }
+
+    /** CSV of every document matching the current filters (not only the page on screen). */
+    public function exportDocuments(Request $request)
+    {
+        return DocumentList::csv(
+            $this->staffDocumentsQuery($request),
+            ['Reference Number', 'Document Title', 'From Office', 'Type', 'Subject', 'Date'],
+            fn ($d) => [
+                $d->documentNo,
+                $d->documentTitle,
+                $d->department->depName ?? '',
+                strtoupper((string) $d->documentType),
+                $d->title,
+                $d->documentDate ? \Carbon\Carbon::parse($d->documentDate)->format('F d, Y') : $d->created_at?->format('F d, Y'),
+            ]
+        );
     }
 
 
@@ -84,7 +109,6 @@ class StaffDocumentController extends Controller
                 [
                     'prevDepartmentID' => $doc->currentDepartmentID,
                     'currentDepartmentID' => $doc->currentDepartmentID,
-                    'statusID' => $doc->currentStatus ?? 1,
                     'userID' => $doc->ownerID ?? $user->userID,
                     'action' => 'Document added / registered',
                     'created_at' => $doc->created_at,
@@ -93,7 +117,7 @@ class StaffDocumentController extends Controller
             );
         }
 
-        $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.status', 'document.department'])
+        $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department'])
             ->when($user->departmentID, function($q) use ($user) {
                 return $q->where(function($sub) use ($user) {
                     $sub->where('currentDepartmentID', $user->departmentID)
@@ -105,6 +129,7 @@ class StaffDocumentController extends Controller
         if ($search) {
             $historiesQuery->whereHas('document', function ($q) use ($search) {
                 $q->where('title', 'LIKE', "%$search%")
+                ->orWhere('documentTitle', 'LIKE', "%$search%")
                 ->orWhere('documentNo', 'LIKE', "%$search%")
                 ->orWhereHas('owner', function ($oq) use ($search) {
                     $oq->where('username', 'LIKE', "%$search%")
@@ -124,28 +149,68 @@ class StaffDocumentController extends Controller
             $historiesQuery->whereDay('created_at', $request->day);
         }
 
-        $histories = $historiesQuery->orderByDesc('created_at')->get();
+        $histories = $historiesQuery
+            ->orderByDesc('created_at')
+            ->orderByDesc('historyID')
+            ->paginate(DocumentList::perPage($request))
+            ->withQueryString();
+
+        // e.g. the last page emptied out: go to the new last page
+        if ($histories->isEmpty() && $histories->currentPage() > 1) {
+            return redirect()->to($histories->url($histories->lastPage()));
+        }
 
         return view('staff.history', compact('histories'));
     }
 
 
+    // The Upload New Document page (a page of its own, linked from the document lists)
     public function create()
     {
-        return view('staff.create_document');
+        $user = auth()->user();
+        $fullName = trim(($user->firstName ?? '') . ' ' . ($user->lastName ?? ''));
+
+        return view('documents.upload', [
+            // suggestions for the type / office boxes (people can still type something new)
+            'documentTypes' => Document::whereNotNull('documentType')->distinct()->orderBy('documentType')->pluck('documentType'),
+            'offices' => Department::orderBy('depName')->pluck('depName'),
+            'uploadedBy' => $fullName !== '' ? $fullName . ' (' . $user->username . ')' : $user->username,
+            'uploadDate' => now()->timezone(Document::DISPLAY_TIMEZONE)->format('Y-m-d H:i'),
+            'backRoute' => $this->listRouteFor($user),
+        ]);
+    }
+
+    // Names shown in validation messages ("The reference number has already been taken.")
+    private function fieldNames(): array
+    {
+        return [
+            'documentNo' => 'reference number',
+            'documentType' => 'document type',
+            'fromOffice' => 'from office',
+            'documentDate' => 'document date',
+            'documentTitle' => 'document title',
+            'title' => 'subject',
+            'file' => 'PDF file',
+        ];
+    }
+
+    // Where each role goes to see the document list
+    private function listRouteFor($user): string
+    {
+        return $user->role?->roleName === 'Admin' ? 'dashboard' : 'staff.documents';
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'documentNo' => 'required|unique:documents,documentNo',
+            'documentTitle' => 'required|string|max:255',
             'title' => 'required|string|max:255',
             'documentType' => 'required|string|max:255',
             'fromOffice' => 'required|string|max:255',
             'documentDate' => 'nullable|date',
-            'currentStatus' => 'nullable|exists:document_statuses,statusID',
             'file' => 'required|file|mimes:pdf|max:10240',
-        ]);
+        ], [], $this->fieldNames());
 
         $officeName = trim($request->fromOffice);
         $department = Department::where('depName', 'LIKE', $officeName)->first();
@@ -160,16 +225,15 @@ class StaffDocumentController extends Controller
         $fileName = Str::uuid() . '_' . $file->getClientOriginalName();
         $filePath = $file->storeAs('documents', $fileName, 'public');
 
-        $statusID = $request->input('currentStatus', 1);
         $newDoc = Document::create([
             'documentId' => (string) Str::uuid(),
             'documentNo' => $request->documentNo,
+            'documentTitle' => trim($request->documentTitle),
             'title' => $request->title,
             'description' => $request->title,
             'documentType' => $request->documentType,
             'documentDate' => $request->documentDate ?? now()->toDateString(),
             'ownerID' => auth()->user()->userID,
-            'currentStatus' => $statusID,
             'currentDepartmentID' => $department->depID,
             'filePath' => $filePath,
         ]);
@@ -178,32 +242,28 @@ class StaffDocumentController extends Controller
             'documentId' => $newDoc->documentId,
             'prevDepartmentID' => $department->depID,
             'currentDepartmentID' => $department->depID,
-            'statusID' => $statusID,
             'userID' => auth()->user()->userID,
             'action' => 'Document added / registered',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Document added successfully!');
+        return redirect()->route($this->listRouteFor(auth()->user()))->with('success', 'Document added successfully!');
     }
 
-    public function edit(Document $document)
-    {
-        return view('staff.edit_document', compact('document'));
-    }
-
+    // Editing happens in a popup on the documents list (no separate edit page).
     public function update(Request $request, Document $document)
     {
-        $request->validate([
+        // Own error bag, so the Edit popup's errors don't reopen the Add Document popup
+        $request->validateWithBag('editDocument', [
             'documentNo' => 'required|unique:documents,documentNo,' . $document->documentId . ',documentId',
+            'documentTitle' => 'required|string|max:255',
             'title' => 'required|string|max:255',
             'documentType' => 'required|string|max:255',
             'fromOffice' => 'required|string|max:255',
             'documentDate' => 'nullable|date',
-            'currentStatus' => 'nullable|exists:document_statuses,statusID',
             'file' => 'nullable|file|mimes:pdf|max:10240',
-        ]);
+        ], [], $this->fieldNames());
 
         $officeName = trim($request->fromOffice);
         $department = Department::where('depName', 'LIKE', $officeName)->first();
@@ -216,11 +276,11 @@ class StaffDocumentController extends Controller
 
         $updateData = [
             'documentNo' => $request->documentNo,
+            'documentTitle' => trim($request->documentTitle),
             'title' => $request->title,
             'description' => $request->title,
             'documentType' => $request->documentType,
             'documentDate' => $request->documentDate ?? $document->documentDate,
-            'currentStatus' => $request->input('currentStatus', $document->currentStatus),
             'currentDepartmentID' => $department->depID,
         ];
 
@@ -235,7 +295,8 @@ class StaffDocumentController extends Controller
 
         $document->update($updateData);
 
-        return redirect()->route('dashboard')->with('success', 'Document updated successfully!');
+        // Stay on the list the user was looking at (keeps their year/month/day filters)
+        return redirect()->to(url()->previous(route('staff.documents')))->with('success', 'Document updated successfully!');
     }
 
     public function delete(Document $document)
@@ -305,7 +366,6 @@ class StaffDocumentController extends Controller
                 'documentType' => trim($documentType) ?: 'Memo',
                 'documentDate' => !empty($documentDate) ? date('Y-m-d', strtotime($documentDate)) : now()->toDateString(),
                 'ownerID' => auth()->user()->userID,
-                'currentStatus' => 1,
                 'currentDepartmentID' => $department->depID,
             ]);
 
@@ -313,7 +373,6 @@ class StaffDocumentController extends Controller
                 'documentId' => $newDoc->documentId,
                 'prevDepartmentID' => $department->depID,
                 'currentDepartmentID' => $department->depID,
-                'statusID' => 1,
                 'userID' => auth()->user()->userID,
                 'action' => 'Imported via CSV/Excel',
                 'created_at' => now(),
@@ -342,5 +401,15 @@ class StaffDocumentController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    // Download a document's PDF with its original file name
+    public function download(Document $document)
+    {
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+
+        abort_unless($document->filePath && $disk->exists($document->filePath), 404, 'File not found.');
+
+        return $disk->download($document->filePath, $document->displayFileName());
     }
 }
