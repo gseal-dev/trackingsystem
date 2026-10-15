@@ -91,12 +91,6 @@
       <p class="text-secondary small mb-0">Register new incoming documents to continue</p>
     </div>
 
-    @if(session('success'))
-      <div class="alert alert-success text-center border-0 rounded-4 mb-4" style="background-color: #e6f4ea; color: #137333;">
-        {{ session('success') }}
-      </div>
-    @endif
-
     <form method="POST" action="{{ route('admin.documentRegistration.submit') }}" enctype="multipart/form-data">
       @csrf
 

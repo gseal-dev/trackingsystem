@@ -19,22 +19,8 @@ class RoleSeeder extends Seeder
             ],
             [
                 'roleID' => 2,
-                'roleName' => 'DocumentOwner',
-                'description' => 'Owner of the Document',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'roleID' => 3,
                 'roleName' => 'Staff',
                 'description' => 'Responsible for receiving and Processing of Document',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'roleID' => 4,
-                'roleName' => 'Auditor',
-                'description' => 'Tracking of Documents and Generating Reports',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

@@ -78,50 +78,65 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('staff.document.update', $document->documentId) }}">
+    <form method="POST" action="{{ route('staff.document.update', $document->documentId) }}" enctype="multipart/form-data">
       @csrf
 
       <div class="d-flex flex-column gap-3">
-        <!-- Document No (Read Only) -->
+        <!-- Reference Number -->
         <div class="d-flex align-items-center gap-3">
-          <div class="field-icon">
-            <i class="bi bi-hash"></i>
-          </div>
+          <div class="field-icon"><i class="bi bi-hash"></i></div>
           <div class="flex-grow-1">
-            <input type="text" class="form-control custom-input bg-light" value="{{ $document->documentNo }}" readonly disabled>
+            <input type="text" id="documentNo" name="documentNo" class="form-control custom-input" placeholder="reference number" value="{{ old('documentNo', $document->documentNo) }}" required>
+          </div>
+        </div>
+
+        <!-- From Office -->
+        <div class="d-flex align-items-center gap-3">
+          <div class="field-icon"><i class="bi bi-building"></i></div>
+          <div class="flex-grow-1">
+            <input type="text" id="fromOffice" name="fromOffice" class="form-control custom-input" placeholder="from office" value="{{ old('fromOffice', $document->department->depName ?? '') }}" required>
           </div>
         </div>
 
         <!-- Document Type -->
         <div class="d-flex align-items-center gap-3">
-          <div class="field-icon">
-            <i class="bi bi-file-earmark-text"></i>
-          </div>
+          <div class="field-icon"><i class="bi bi-file-earmark-text"></i></div>
           <div class="flex-grow-1">
             <input type="text" id="documentType" name="documentType" class="form-control custom-input" placeholder="document type" value="{{ old('documentType', $document->documentType) }}" required>
           </div>
         </div>
 
-        <!-- Title -->
+        <!-- Subject -->
         <div class="d-flex align-items-center gap-3">
-          <div class="field-icon">
-            <i class="bi bi-card-heading"></i>
-          </div>
+          <div class="field-icon"><i class="bi bi-card-heading"></i></div>
           <div class="flex-grow-1">
-            <input type="text" id="title" name="title" class="form-control custom-input" placeholder="title" value="{{ old('title', $document->title) }}" required>
+            <input type="text" id="title" name="title" class="form-control custom-input" placeholder="subject" value="{{ old('title', $document->title) }}" required>
           </div>
         </div>
 
-        <!-- Description -->
-        <div class="d-flex align-items-start gap-3 mt-1">
-          <div class="field-icon pt-2">
-            <i class="bi bi-card-text"></i>
-          </div>
+        <!-- Date -->
+        <div class="d-flex align-items-center gap-3">
+          <div class="field-icon"><i class="bi bi-calendar-event"></i></div>
           <div class="flex-grow-1">
-            <textarea id="description" name="description" class="form-control custom-textarea" rows="3" placeholder="description">{{ old('description', $document->description) }}</textarea>
+            <input type="date" id="documentDate" name="documentDate" class="form-control custom-input" value="{{ old('documentDate', $document->documentDate ? \Carbon\Carbon::parse($document->documentDate)->format('Y-m-d') : $document->created_at?->format('Y-m-d')) }}">
+          </div>
+        </div>
+
+        <!-- Replace PDF (optional) -->
+        <div class="d-flex align-items-center gap-3">
+          <div class="field-icon"><i class="bi bi-paperclip"></i></div>
+          <div class="flex-grow-1">
+            <input type="file" id="file" name="file" class="form-control custom-input" accept=".pdf">
           </div>
         </div>
       </div>
+
+      @if($document->filePath)
+        <p class="small text-muted mt-3 mb-0 text-center">
+          Current file: <a href="{{ asset('storage/' . $document->filePath) }}" target="_blank">view PDF</a>
+          &middot; choose a new PDF above only to replace it.
+        </p>
+      @endif
 
       <div class="text-center mt-4 pt-2">
         <button type="submit" class="btn btn-custom-dark w-100">

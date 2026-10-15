@@ -176,10 +176,6 @@
           </div>
         </div>
 
-        @if(session('success'))
-          <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
         <div class="table-toolbar">
           <div class="search-box">
             <i class="bi bi-search"></i>

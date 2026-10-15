@@ -72,75 +72,6 @@ class StaffDocumentController extends Controller
         return view('staff.documents', compact('documents', 'departments'));
     }
 
-    // Staff processes document (reupload and update status)
-    public function processAndRouteDocument(Request $request, Document $document)
-    {
-        $request->validate([
-            'file' => 'required|file|mimes:pdf|max:10240',
-            'statusID' => 'required|exists:document_statuses,statusID',
-            'departmentID' => 'required|exists:departments,depID',
-        ]);
-
-        // Delete old file if exists
-        if ($document->filePath && \Storage::disk('public')->exists($document->filePath)) {
-            \Storage::disk('public')->delete($document->filePath);
-        }
-
-        // Upload new file
-        $file = $request->file('file');
-        $fileName = \Illuminate\Support\Str::uuid() . '_' . $file->getClientOriginalName();
-        $filePath = $file->storeAs('documents', $fileName, 'public');
-
-        $prevDepartment = $document->currentDepartmentID;
-        $document->filePath = $filePath;
-        $document->currentStatus = $request->statusID;
-        $document->currentDepartmentID = $request->departmentID;
-        $document->save();
-
-        $owner = $document->owner;
-        if ($owner && $owner->email) {
-            $owner->notify(new \App\Notifications\DocumentProcessedNotification($document));
-        }
-
-        \DB::table('document_histories')->insert([
-            'documentId' => $document->documentId,
-            'prevDepartmentID' => $prevDepartment,
-            'currentDepartmentID' => $document->currentDepartmentID,
-            'statusID' => $request->statusID,
-            'userID' => auth()->user()->userID,
-            'action' => 'Processed, status updated, and routed',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        return redirect()->route('dashboard')->with('success', 'Document processed, updated, and sent!');
-    }
-
-    // Staff routes document to another department or admin
-    public function routeDocument(Request $request, Document $document)
-    {
-        $request->validate([
-            'departmentID' => 'required|exists:departments,depID',
-        ]);
-
-        $prevDepartment = $document->currentDepartmentID;
-        $document->currentDepartmentID = $request->departmentID;
-        $document->currentStatus = 4; // In Review
-        $document->save();
-
-        \DB::table('document_histories')->insert([
-            'documentId' => $document->documentId,
-            'prevDepartmentID' => $prevDepartment,
-            'currentDepartmentID' => $document->currentDepartmentID, // <-- should be updated value
-            'statusID' => 4,
-            'userID' => auth()->user()->userID,
-            'action' => 'Routed to another department',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        return back()->with('success', 'Document routed!');
-    }
 
     public function history(Request $request)
     {
@@ -198,11 +129,6 @@ class StaffDocumentController extends Controller
         return view('staff.history', compact('histories'));
     }
 
-    public function processDocumentForm(Document $document)
-    {
-        $departments = \App\Models\Department::all();
-        return view('staff.process_document', compact('document', 'departments'));
-    }
 
     public function create()
     {
