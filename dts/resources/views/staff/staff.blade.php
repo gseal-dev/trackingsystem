@@ -206,10 +206,15 @@
           </div>
 
           <div class="col-12 col-md-4">
-            <div class="p-4 border rounded-4 bg-white shadow-sm h-100 d-flex flex-column justify-content-between">
-              <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-pie-chart-fill me-2 text-success"></i> Monthly Document Trend</h5>
-              <div style="height: 170px; position: relative;">
-                <canvas id="staffMonthlyChart"></canvas>
+            <div class="metric-card">
+              <div class="metric-card-content">
+                <div class="metric-icon-box" style="background: #dcfce7; color: #16a34a;">
+                  <i class="bi bi-calendar-check-fill"></i>
+                </div>
+                <div class="metric-value" style="color: #16a34a;" id="statMyUploadsMonth">{{ number_format($myUploadsThisMonth) }}</div>
+                <div class="metric-sub">({{ $monthLabel }})</div>
+                <div class="metric-title">Uploaded This Month</div>
+                <div class="metric-desc">Your uploads this month</div>
               </div>
             </div>
           </div>
@@ -243,6 +248,14 @@
                 <span>Settings</span>
               </a>
             </div>
+          </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="p-4 border rounded-4 bg-white shadow-sm h-100 d-flex flex-column justify-content-between mb-4">
+          <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-pie-chart-fill me-2 text-success"></i> Monthly Document Trend</h5>
+          <div style="height: 170px; position: relative;">
+            <canvas id="staffMonthlyChart"></canvas>
           </div>
         </div>
 

@@ -36,7 +36,6 @@
           <div class="doc-info-row"><div class="doc-info-label">Uploaded By</div><div class="doc-info-value" data-doc-field="uploadedBy"></div></div>
           <div class="doc-info-row"><div class="doc-info-label">Upload Date</div><div class="doc-info-value" data-doc-field="uploadedAt"></div></div>
           <div class="doc-info-row"><div class="doc-info-label">Reference No.</div><div class="doc-info-value" data-doc-field="referenceNo"></div></div>
-          <div class="doc-info-row"><div class="doc-info-label">Document Title</div><div class="doc-info-value" data-doc-field="documentTitle"></div></div>
           <div class="doc-info-row"><div class="doc-info-label">Subject</div><div class="doc-info-value" data-doc-field="subject"></div></div>
           <div class="doc-info-row"><div class="doc-info-label">From Office</div><div class="doc-info-value" data-doc-field="office"></div></div>
           <div class="doc-info-row"><div class="doc-info-label">Type</div><div class="doc-info-value text-uppercase" data-doc-field="type"></div></div>

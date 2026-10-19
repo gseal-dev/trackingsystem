@@ -495,7 +495,7 @@
           @elseif($role === 'Staff')
             <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
             <a href="{{ route('staff.documents') }}" class="{{ request()->routeIs('staff.documents') ? 'active' : '' }}">Documents List</a>
-            <a href="{{ route('staff.document.create') }}" class="{{ request()->routeIs('staff.document.create') ? 'active' : '' }}">Create Document</a>
+            <a href="{{ route('staff.document.create') }}" class="{{ request()->routeIs('staff.document.create') ? 'active' : '' }}">Add Document</a>
             <a href="{{ route('staff.history') }}" class="{{ request()->routeIs('staff.history') ? 'active' : '' }}">History</a>
           @endif
           @endauth

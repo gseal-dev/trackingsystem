@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('documentNo')->unique();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->string('documentType');
+            $table->string('documentType')->nullable();
             $table->unsignedBigInteger('ownerID');
             $table->unsignedBigInteger('currentStatus');
             $table->unsignedBigInteger('currentDepartmentID')->default(1);
