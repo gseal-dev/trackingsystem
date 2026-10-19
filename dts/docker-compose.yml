@@ -1,0 +1,47 @@
+# Records Management / Document Tracking System  -  Synology / Docker deployment
+#
+#   app : nginx + PHP-FPM + the Laravel application   -> http://<NAS-IP>:8081
+#   db  : MariaDB                                      -> only reachable by "app"
+#
+# All settings and passwords live in  tracking.env  (copy tracking.env.example).
+# Everything you must keep (database + uploaded PDFs) is stored in ./data
+
+name: trackingsystem
+
+services:
+  db:
+    image: mariadb:11.4
+    container_name: tracking_db
+    restart: unless-stopped
+    env_file: tracking.env
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - ./data/db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    # No "ports:" on purpose - the database must not be reachable from the network.
+
+  app:
+    build:
+      context: .
+    image: trackingsystem-app:latest
+    container_name: tracking_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: tracking.env
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+    ports:
+      - "8081:80"          # change the left number if 8081 is already used on your NAS
+    volumes:
+      - ./data/storage:/var/www/html/storage   # uploaded PDFs, logs, cache, sessions
