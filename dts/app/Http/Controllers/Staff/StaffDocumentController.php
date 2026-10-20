@@ -97,12 +97,11 @@ class StaffDocumentController extends Controller
         );
     }
 
-    /** CSV/Excel export of history matching the current filters. */
+    /** CSV export of history matching the current filters. */
     public function exportHistory(Request $request)
     {
         $user = auth()->user();
         $search = $request->input('search');
-        $format = $request->input('format', 'csv'); // csv, excel
 
         $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department', 'user'])
             ->when($user->departmentID, function($q) use ($user) {
@@ -175,20 +174,6 @@ class StaffDocumentController extends Controller
 
         // Generate filename with timestamp
         $filename = 'document_history_' . now()->format('Y-m-d_H-i-s');
-
-        // Return based on format
-        switch ($format) {
-            case 'excel':
-            case 'xls':
-            case 'xlsx':
-                // For now, we'll return CSV which Excel can open
-                // In a real implementation, you might use Laravel Excel package
-                $extension = 'csv';
-                break;
-            default:
-                $extension = 'csv';
-                break;
-        }
 
         // CSV export (works in Excel too)
         $output = fopen('php://output', 'w');

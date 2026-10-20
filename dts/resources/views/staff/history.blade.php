@@ -185,16 +185,10 @@
             @endif
             @include('partials.per-page-select', ['paginator' => $histories, 'id' => 'history-per-page'])
 
-            <!-- Export buttons -->
-            <div class="dropdown">
-              <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-download"></i> Export
-              </button>
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ route('staff.history.export', array_merge(request()->all(), ['format' => 'csv'])) }}">CSV (Excel)</a></li>
-                <li><a class="dropdown-item" href="{{ route('staff.history.export', array_merge(request()->all(), ['format' => 'excel'])) }}">Excel</a></li>
-              </ul>
-            </div>
+            <!-- Export button -->
+            <a href="{{ route('staff.history.export', request()->all()) }}" class="btn btn-outline-primary">
+              <i class="bi bi-download"></i> Export CSV
+            </a>
           </form>
         </div>
 
