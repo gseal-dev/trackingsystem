@@ -130,6 +130,17 @@
     color: #646771;
   }
 
+  /* Reduce row height in history table */
+  table.table-sm tbody tr {
+    height: 3rem !important;
+  }
+  table.table-sm tbody td,
+  table.table-sm tbody th {
+    padding: 0.2rem 0.5rem !important;
+    vertical-align: middle !important;
+    line-height: 1.2 !important;
+  }
+
   @media (max-width: 1024px) {
     .staff-layout {
       grid-template-columns: 1fr;
