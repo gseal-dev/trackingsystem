@@ -197,20 +197,44 @@
                 <th class="border-0">Type</th>
                 <th class="border-0">Subject</th>
                 <th class="border-0">Date</th>
+                <th class="border-0">Action</th>
+                <th class="border-0">User</th>
+                <th class="border-0">Timestamp</th>
               </tr>
             </thead>
             <tbody>
               @forelse($histories as $history)
                 <tr>
-                  <td class="fw-bold">{{ $history->document->documentNo ?? '-' }}</td>
-                  <td>{{ $history->document->department->depName ?? '-' }}</td>
-                  <td><span class="badge bg-light text-dark border">{{ $history->document->documentType ?? '-' }}</span></td>
-                  <td>{{ $history->document->title ?? '-' }}</td>
+                  <td class="fw-bold">{{ $history->document?->documentNo ?? '-' }}</td>
+                  <td>{{ $history->document?->department?->depName ?? '-' }}</td>
+                  <td><span class="badge bg-light text-dark border">{{ $history->document?->documentType ?? '-' }}</span></td>
+                  <td>{{ $history->document?->title ?? '-' }}</td>
                   <td class="text-muted">{{ $history->document?->documentDate ? \Carbon\Carbon::parse($history->document->documentDate)->format('F d, Y') : $history->created_at?->format('F d, Y') }}</td>
+                  <td>{{ $history->action ?? '-' }}</td>
+                  <td>
+                    @php
+                        $user = $history->user;
+                        $name = '';
+                        if ($user) {
+                            $firstName = trim($user->firstName ?? '');
+                            $lastName = trim($user->lastName ?? '');
+                            if ($firstName || $lastName) {
+                                $name = trim($firstName . ' ' . $lastName);
+                            }
+                            if (!$name) {
+                                $name = $user->username ?? 'Unknown';
+                            }
+                        } else {
+                            $name = 'Unknown';
+                        }
+                        echo e($name);
+                    @endphp
+                  </td>
+                  <td class="text-muted">{{ $history->created_at->timezone(\App\Models\Document::DISPLAY_TIMEZONE)->format('F d, Y \\a\\t h:i A') }}</td>
                 </tr>
               @empty
                 <tr>
-                  <td colspan="5" class="text-center py-5 text-muted">
+                  <td colspan="8" class="text-center py-5 text-muted">
                     <i class="bi bi-folder-x display-4 mb-3 d-block"></i>
                     No history records found.
                   </td>

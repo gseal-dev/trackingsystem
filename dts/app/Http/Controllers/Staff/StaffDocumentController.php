@@ -117,7 +117,7 @@ class StaffDocumentController extends Controller
             );
         }
 
-        $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department'])
+        $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department', 'user'])
             ->when($user->departmentID, function($q) use ($user) {
                 return $q->where(function($sub) use ($user) {
                     $sub->where('currentDepartmentID', $user->departmentID)
@@ -265,6 +265,9 @@ class StaffDocumentController extends Controller
             ]);
         }
 
+        // Capture the original department ID for history tracking
+        $originalDepartmentID = $document->currentDepartmentID;
+
         $updateData = [
             'documentNo' => $request->documentNo,
             'title' => $request->title,
@@ -285,6 +288,17 @@ class StaffDocumentController extends Controller
 
         $document->update($updateData);
 
+        // Create history record for the update
+        \DB::table('document_histories')->insert([
+            'documentId' => $document->documentId,
+            'prevDepartmentID' => $originalDepartmentID,
+            'currentDepartmentID' => $department->depID,
+            'userID' => auth()->user()->userID,
+            'action' => 'Document updated',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         // Stay on the list the user was looking at (keeps their year/month/day filters)
         return redirect()->to(url()->previous(route('staff.documents')))->with('success', 'Document updated successfully!');
     }
@@ -293,6 +307,17 @@ class StaffDocumentController extends Controller
     {
         $documentId = $document->documentId;
         $documentTitle = $document->title;
+
+        // Create history record for the deletion before soft deleting
+        \DB::table('document_histories')->insert([
+            'documentId' => $document->documentId,
+            'prevDepartmentID' => $document->currentDepartmentID,
+            'currentDepartmentID' => $document->currentDepartmentID,
+            'userID' => auth()->user()->userID,
+            'action' => 'Document deleted',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $document->delete();
 
@@ -307,6 +332,17 @@ class StaffDocumentController extends Controller
     {
         $document = Document::withTrashed()->where('documentId', $id)->firstOrFail();
         $document->restore();
+
+        // Create history record for the restoration
+        \DB::table('document_histories')->insert([
+            'documentId' => $document->documentId,
+            'prevDepartmentID' => $document->currentDepartmentID,
+            'currentDepartmentID' => $document->currentDepartmentID,
+            'userID' => auth()->user()->userID,
+            'action' => 'Document restored',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         return back()->with('success', 'Document retrieved successfully!');
     }
