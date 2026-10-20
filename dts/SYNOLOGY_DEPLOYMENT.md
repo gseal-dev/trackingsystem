@@ -23,13 +23,17 @@ in DSM and copy-paste a few commands.
  └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Everything you must never lose lives in **one folder** next to the project files:
+Everything you must never lose lives in three places:
 
-| Folder / file | What it contains |
+| Where | What it contains |
 |---|---|
-| `data/db` | the database (users, documents, history) |
-| `data/storage` | uploaded PDF files, logs, the app key |
-| `tracking.env` | your settings and passwords |
+| Docker volume **`trackingsystem_db_data`** | the database (users, documents, history). Docker manages it, so you will **not** see it as a folder — the backup script (section 10) protects it. |
+| Folder `data/storage` | uploaded PDF files, logs, the app key |
+| File `tracking.env` | your settings and passwords |
+
+> **Why is the database in a Docker volume and not in a folder?** On Synology, normal folders carry
+> their own permission rules, and MariaDB is then not allowed to write into them (the database
+> container stops with `Permission denied`). A Docker volume avoids that completely.
 
 The program itself is rebuilt from the project files whenever you update, so it is safe to throw away.
 
@@ -50,7 +54,9 @@ Tick every box:
 - [ ] You have a **DSM administrator** account.
 - [ ] The NAS has a **fixed IP address** (set a DHCP reservation in your router, or fix it in
       *DSM → Control Panel → Network*). Example used below: `192.168.1.50`.
-- [ ] Port **8081** is free on the NAS (DSM itself uses 5000/5001/80/443).
+- [ ] A free **port** for the system. This guide uses **8081** (DSM itself uses 5000/5001/80/443).
+      You may pick another one (see *Port numbers* in section 6).
+- [ ] *(For the SSH steps)* your DSM user is in the **administrators** group, so `sudo` works.
 
 ---
 
@@ -58,9 +64,23 @@ Tick every box:
 
 1. Open **Package Center**.
 2. Search **Container Manager** and click **Install**.
-3. After installing, DSM creates a shared folder called **`docker`**. All project files go in there.
+3. After installing, DSM normally creates a shared folder called **`docker`**. All project files go in there.
 
-*(Optional but recommended for the SSH steps later: **Control Panel → Terminal & SNMP → Enable SSH service**.)*
+**Check that it exists.** In File Station look for `docker`, or over SSH run:
+
+```bash
+ls /volume1
+```
+
+- **`docker` is listed** → fine, carry on.
+- **It is missing** (this happens, for example, in Virtual DSM) → create it in the DSM web page:
+  **Control Panel → Shared Folder → Create**, name `docker`, location **Volume 1**.
+  Do **not** create it with `mkdir` over SSH — a folder made that way is not a Synology shared folder
+  and will not appear in File Station.
+- **`/volume1` does not exist** → DSM has no storage volume yet. Create one in **Storage Manager** first.
+
+*(Optional but recommended for the SSH steps later: **Control Panel → Terminal & SNMP → Enable SSH service**.
+You will log in with your DSM administrator account.)*
 
 ---
 
@@ -109,6 +129,10 @@ trackingsystem/
 
 > If `Dockerfile`/`docker-compose.yml` are missing, the deployment files have not been added to
 > the `ui-dev` branch yet. Copy them from the package you received into this folder.
+> Uploading through **File Station** in your browser is the easiest way; copying with `scp` only
+> works after you switch on the SFTP service in DSM.
+> Do not open and re-save `docker/entrypoint.sh` in Windows Notepad: it would get Windows line endings
+> and the container could no longer run it. Replace the file by uploading it instead.
 
 ---
 
@@ -122,7 +146,7 @@ trackingsystem/
 
 | Line | What to put |
 |---|---|
-| `APP_URL=` | the address people will type, e.g. `http://192.168.1.50:8081` |
+| `APP_URL=` | the exact address people will type, **including the port**, e.g. `http://192.168.1.50:8081` (it must use the same port as `docker-compose.yml` — see *Port numbers* in section 6) |
 | `MARIADB_PASSWORD=` | a new password for the database user |
 | `MARIADB_ROOT_PASSWORD=` | another, different password for the database admin |
 | `TZ=` | your time zone (default `Asia/Manila` is already right) |
@@ -139,6 +163,32 @@ Docker treats them specially and the database will not accept the login. Make th
 ---
 
 ## 6. Build and start
+
+### Step 0 — create the storage folder (required)
+
+Synology's Docker does **not** create missing folders for you. Without this step the start fails with
+`Bind mount failed: '…/data/storage' does not exist`.
+
+- **File Station:** open `docker/trackingsystem`, create a folder `data`, and inside it a folder `storage`.
+- **or over SSH:**
+  ```bash
+  cd /volume1/docker/trackingsystem
+  sudo mkdir -p data/storage
+  ```
+
+*(There is no `data/db` folder any more — the database lives in a Docker volume, see section 1.)*
+
+### Port numbers — one number, three places
+
+The system listens on **8081** unless you change it. If you want a different port (for example `8095`),
+the same number must be used in **every** place below, otherwise the browser shows
+*"This site can't be reached / connection refused"*:
+
+| # | Where | What to set |
+|---|---|---|
+| 1 | `docker-compose.yml` → `app` → `ports:` | the **left** number, e.g. `"8095:80"` (leave the `:80` as it is) |
+| 2 | `tracking.env` → `APP_URL=` | `http://<address>:8095` |
+| 3 | *Only if the NAS is itself a virtual machine* (Virtual DSM) | the port must also be forwarded into it — see section 16 |
 
 ### Option A — in the DSM interface
 
@@ -159,9 +209,20 @@ sudo docker compose up -d --build
 ```
 *(On older DSM 7.0/7.1 the command is `sudo docker-compose up -d --build`.)*
 
+When it finishes, check that both containers are up:
+
+```bash
+sudo docker compose ps
+```
+
+`tracking_db` should say **healthy** and `tracking_app` **Up**. If `tracking_app` says **Restarting**, it
+crashed while starting — read why with `sudo docker compose logs --tail 40 app` (see *Troubleshooting*). The very first database start can take
+**1–3 minutes** (longer on a slow or virtual machine) — wait for it.
+
 ### Watch it start
 
-Open **Container Manager → Container → `tracking_app` → Log** (or `sudo docker logs -f tracking_app`).
+Open **Container Manager → Container → `tracking_app` → Log** (or `sudo docker compose logs -f app`;
+press **Ctrl+C** to stop watching — the system keeps running).
 A healthy first start prints these lines and then stays quiet:
 
 ```
@@ -180,8 +241,18 @@ A healthy first start prints these lines and then stays quiet:
 
 ## 7. Open the system and log in
 
-1. On any PC on your network open: **`http://192.168.1.50:8081`** (use your NAS IP).
+1. On any PC on your network open: **`http://192.168.1.50:8081`** (use your NAS IP and your port).
 2. Log in as **`Admin`** (you can type the username `Admin` in the login box).
+
+**Nothing opens?** First ask the NAS itself (over SSH):
+
+```bash
+curl -I http://localhost:8081/up
+```
+
+`HTTP/1.1 200` means the system is running, and the problem is only the network path to it
+(wrong address or port, firewall — see *Troubleshooting*). No answer means the system itself is not
+running — read the app log.
 
 The first start creates the administrator account `Admin`. Its starting password is whatever is
 set in the project's seeder file — **if you do not know it, set a new one** (this works any time):
@@ -203,7 +274,7 @@ Then create your staff accounts from **Users List → Add User**.
 If DSM's firewall is on (**Control Panel → Security → Firewall**), add an **Allow** rule for
 **TCP port 8081**, source = your office network (e.g. `192.168.1.0/24`).
 
-Do **not** forward port 8081 on your internet router. For access from outside the office use
+Do **not** forward the system's port on your internet router. For access from outside the office use
 Synology VPN Server (or the HTTPS option below behind a proper certificate), never plain HTTP.
 
 ---
@@ -259,8 +330,9 @@ The file **`docker/backup.sh`** does both, and deletes backups older than 14 day
 Also include the `backup` folder in **Hyper Backup** so copies leave the NAS.
 Keep a safe copy of `tracking.env` too (it holds your passwords).
 
-> Do **not** back up the database by copying `data/db` while the system is running — use the
-> script (it takes a safe dump).
+> The database lives in a Docker volume, so there is no database folder to copy — and copying live
+> database files would not give a safe backup anyway. **Always use the script** (it takes a proper dump).
+> Never run `docker compose down -v` or `docker volume rm` on a system with real data: that deletes the database.
 
 ### Restore
 
@@ -323,20 +395,30 @@ If something goes wrong: put the previous files back, rebuild, and restore the b
 | What you see | Likely cause → fix |
 |---|---|
 | Build fails while downloading / "could not resolve host" | The NAS has no internet or DNS. Check *Control Panel → Network → DNS* (try `8.8.8.8`), then rebuild. |
-| `port is already allocated` | Something else uses 8081. In `docker-compose.yml` change `"8081:80"` to e.g. `"8082:80"`, update `APP_URL`, rebuild. |
+| `tracking_app` keeps **restarting**; its log ends with `file_put_contents(…/bootstrap/cache/config.php): Failed to open stream: Permission denied` (or `bootstrap/cache directory must be present and writable`) | Files uploaded through the NAS can arrive with unusable permission bits, and the web user then cannot write its cache. Use the current **`Dockerfile`** and **`docker/entrypoint.sh`** (they normalise the permissions and open the cache folders if needed) and rebuild: `sudo docker compose up -d --build`. The start-up log shows a line `note: … was not writable … opening its permissions` when it had to step in. If it still fails, run this and send the output: `sudo docker compose run --rm --entrypoint sh app -c 'id; ls -ld /var/www/html/bootstrap/cache /var/www/html/storage; ls -l /var/www/html/bootstrap/cache'` |
+| `Bind mount failed: '…/data/storage' does not exist` | The storage folder was not created. Run `sudo mkdir -p data/storage` in the project folder (section 6, step 0), then start again. |
+| `dependency failed to start: container tracking_db is unhealthy` | Read the database log: `sudo docker logs tracking_db --tail 40`. **`Permission denied` on `/var/lib/mysql`** means an old `docker-compose.yml` that stores the database in `./data/db`. Use the current file (database in a Docker volume), then: `sudo docker compose down`, `sudo rm -rf data/db`, `sudo docker compose up -d`. |
+| Browser says **"This site can't be reached" / `ERR_CONNECTION_REFUSED`** | The address or port does not match. Run `sudo docker compose ps` and look at the `PORTS` column of `tracking_app` (e.g. `0.0.0.0:8081->80/tcp`): the number before `->` is the port to type. Then check the *Port numbers* table in section 6. On a virtual machine NAS also check section 16. |
+| `port is already allocated` | Something else uses that port. In `docker-compose.yml` change the left number (e.g. `"8082:80"`), update `APP_URL` to the same number, then `sudo docker compose up -d`. |
 | `tracking_app` keeps restarting; log says **`Access denied for user 'tracker'`** | The password in `tracking.env` is not the one the database was created with (see below). |
 | Log says `MARIADB_… are not set` | `tracking.env` is missing, misnamed (e.g. `tracking.env.txt`) or in the wrong folder. |
 | Page shows **500 Server Error** | Read the app log. For more detail set `APP_DEBUG=true` in `tracking.env`, restart, look at the page, then **set it back to `false`**. |
 | Pages load but look plain / no icons | That PC cannot reach the internet CDNs (see section 2). |
 | **419 Page Expired** after logging in | Open the site with the **same address** as `APP_URL`; clear cookies (especially after switching http → https). |
 | Upload of a PDF fails | Maximum size is 20 MB on the server (10 MB in the form). Check the file size. |
-| Others cannot open the site | Firewall rule for port 8081 (section 8), or wrong NAS IP. |
+| Others cannot open the site | Firewall rule for your port (section 8), or wrong NAS IP. Test with `curl -I http://localhost:8081/up` on the NAS first. |
 | Site is slow after months of use | Container Manager → **Image** → delete unused images; check free disk space. |
 
-**"Access denied" fix.** MariaDB takes its passwords only the *first* time it creates `data/db`.
+**"Access denied" fix.** MariaDB takes its passwords only the *first* time it creates its database.
 - If you simply mistyped: put back the password you used on the very first start, then restart.
-- If it is a brand-new install with **no data yet**: stop the project, delete the folder
-  `data/db`, and start again (this creates a fresh database with the passwords now in `tracking.env`).
+- If it is a brand-new install with **no data yet**: remove the database volume and start again
+  (this creates a fresh database with the passwords now in `tracking.env`):
+  ```bash
+  cd /volume1/docker/trackingsystem
+  sudo docker compose down
+  sudo docker volume rm trackingsystem_db_data
+  sudo docker compose up -d
+  ```
   ⚠️ This erases the database — never do it on a system that holds real documents.
 
 ---
@@ -346,7 +428,9 @@ If something goes wrong: put the previous files back, rebuild, and restore the b
 - [ ] Set a new strong **Admin password** (section 7).
 - [ ] Use long, unique passwords in `tracking.env`; keep that file private
       (only DSM administrators should have access to the `docker` shared folder).
-- [ ] Do not expose port 8081 to the internet. Use VPN or HTTPS behind a certificate.
+- [ ] Passwords from a **practice or test setup** (or any that appeared in a screenshot or chat) must
+      never be reused on the real NAS — choose fresh ones before the first real start.
+- [ ] Do not expose the system's port to the internet. Use VPN or HTTPS behind a certificate.
 - [ ] The database has **no published port** — keep it that way.
 - [ ] Keep DSM, Container Manager and the system updated.
 - [ ] Backups run and have been **test-restored at least once**.
@@ -362,7 +446,7 @@ If something goes wrong: put the previous files back, rebuild, and restore the b
 | File | Purpose |
 |---|---|
 | `Dockerfile` | Builds the system image (PHP 8.4 + nginx). |
-| `docker-compose.yml` | Defines the two containers, the port (8081) and the data folders. |
+| `docker-compose.yml` | Defines the two containers, the port (8081), the storage folder and the database volume. |
 | `tracking.env.example` | Template for your settings and passwords. |
 | `.dockerignore` | Keeps passwords and local files out of the image. |
 | `docker/entrypoint.sh` | Runs at every start: folders, key, database tables, first-time data. |
@@ -374,5 +458,100 @@ If something goes wrong: put the previous files back, rebuild, and restore the b
 - PHP **8.4** is required by the project's locked libraries; the image already uses it.
 - The system does not need Node/Vite — there is nothing to compile for the website.
 - Uploaded PDFs are stored in `data/storage/app/public/documents`.
+- The database is in the Docker volume `trackingsystem_db_data` (not in `data/`).
+- Synology's Docker needs the `data/storage` folder to exist before the first start (section 6, step 0).
 - The seeder runs **only on the very first start**, so restarts and updates never reset
   the Admin password or your department names.
+
+---
+
+## 16. Practising in Virtual DSM (vDSM) before the real NAS
+
+You can rehearse this whole guide in **Virtual DSM** — Synology's DSM 7.2 running as a virtual machine
+inside a container (for example on ZimaOS, with the `vdsm/virtual-dsm` image). Everything in sections 3–14
+works the same, with these differences.
+
+> ⚠️ Synology's licence for Virtual DSM only allows it on Synology hardware. Use it for private practice
+> only, never for anything real. Treat all data in it as disposable.
+
+### 16.1 Give the virtual DSM enough power
+
+vDSM defaults to **2 CPU cores and 2 GB RAM**, which is tight for building the image and running two
+containers. In the settings (compose file) of the vDSM container add these lines (keep the ones you already
+have, such as `cap_add: NET_ADMIN` and `/dev/net/tun`):
+
+```yaml
+    environment:
+      RAM_SIZE: "4G"
+      CPU_CORES: "2"
+    devices:
+      - /dev/kvm
+```
+
+Check that the host really provides `/dev/kvm`. Without it vDSM falls back to slow software emulation,
+and building images becomes painfully slow. Recreate the vDSM container after changing its settings.
+
+### 16.2 Reach the system from your PC
+
+Inside vDSM the system listens on its port (8081, or the one you chose), but your PC can only see the
+**host machine** (e.g. ZimaOS). Two ways to bridge that:
+
+**Option 1 — forward the port** (simple). In the vDSM container settings add the port twice — as an
+extra forwarded port into DSM and as a published port:
+
+```yaml
+    environment:
+      USER_PORTS: "8081"
+    ports:
+      - 5000:5000      # the DSM web page
+      - 8081:8081      # the system
+```
+
+Use your own port number if you changed it. Recreate the vDSM container afterwards.
+
+**Option 2 — give vDSM its own IP address** on your network (macvlan, described in the vDSM project's
+README). Then no port forwarding is needed at all.
+
+Your address is then:
+
+```
+http://<IP-of-the-host-machine>:8081        (Option 1)
+http://<IP-of-the-vDSM>:8081                (Option 2)
+```
+
+- Use the **host's** IP (e.g. your ZimaOS address), **not** the container's internal address such as
+  `172.23.0.2` — that one only works on the host itself.
+- Put the same address, with the port, in `APP_URL` in `tracking.env`.
+- The DSM web page itself stays on `http://<host-IP>:5000`.
+
+### 16.3 Logging in to DSM over SSH
+
+From the host's terminal you can reach DSM's SSH at the container's internal address (find it with
+`docker inspect <vdsm-container-name>`) and the SSH port you set in DSM. That internal address works on
+the host only. The login banner "Data should only be stored in shared folders…" is DSM's standard message.
+
+Your home folder only contains a hidden `@eaDir` folder — that is normal. The shared folders
+(including `docker`) are under **`/volume1`**.
+
+### 16.4 Find out which layer is broken
+
+If the page does not open from your PC, run these two checks:
+
+```bash
+# inside DSM (SSH): is the system itself running?
+curl -I http://localhost:8081/up
+# on the host machine: does the port get through into DSM?
+curl -I http://127.0.0.1:8081/up
+```
+
+`HTTP/1.1 200` means that layer is fine. If the first fails, read the `tracking_app` log. If only the
+second fails, the port forwarding in 16.2 is not set up (or uses a different number).
+
+### 16.5 What to practise, and what to expect
+
+- Do the **whole** guide once: folders, `tracking.env`, build, login, Admin password.
+- Set up the **backup task** (section 10) and do a **test restore** — this is the most valuable rehearsal.
+- Do an **update** (section 12).
+- The DSM firewall and Hyper Backup steps mean little in a virtual machine; just read them.
+- When you move to the real NAS, repeat the steps there with **new passwords**. To carry data over,
+  restore a backup (section 10) instead of copying folders.

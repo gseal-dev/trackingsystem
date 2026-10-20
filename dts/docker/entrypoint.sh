@@ -11,9 +11,20 @@ echo "==> Preparing storage folders"
 mkdir -p storage/app/public/documents \
          storage/framework/cache/data storage/framework/sessions storage/framework/views \
          storage/logs bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache \
+    || echo "    note: could not change the owner of every file (continuing)"
+chmod -R u+rwX,g+rwX bootstrap/cache || true
 # nginx must be able to read the uploaded PDFs
-chmod 755 storage storage/app storage/app/public storage/app/public/documents
+chmod 755 storage storage/app storage/app/public storage/app/public/documents 2>/dev/null || true
+
+# The web user MUST be able to write here. If the NAS filesystem ignored chown/chmod,
+# open these two folders up (they only hold cache, sessions, logs and uploads).
+for dir in storage bootstrap/cache; do
+    if ! su-exec www-data sh -c "touch '$dir/.write-test' && rm -f '$dir/.write-test'" 2>/dev/null; then
+        echo "    note: $dir was not writable for the web user - opening its permissions"
+        chmod -R a+rwX "$dir" || true
+    fi
+done
 
 echo "==> Checking settings"
 # The database settings are shared with the MariaDB container (MARIADB_*).

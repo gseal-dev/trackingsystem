@@ -56,6 +56,12 @@ RUN chmod +x /usr/local/bin/entrypoint
 WORKDIR /var/www/html
 COPY --from=vendor --chown=www-data:www-data /app /var/www/html
 
+# Files uploaded through a NAS (File Station, ZIP) can arrive with odd permission bits.
+# Normalise them: folders 755, files 644, and the cache folder writable for the web user.
+RUN find /var/www/html -type d -exec chmod 755 {} + \
+ && find /var/www/html -type f -exec chmod 644 {} + \
+ && chmod -R u+rwX,g+rwX /var/www/html/bootstrap/cache
+
 EXPOSE 80
 
 # Laravel's built-in health route (does not touch the database)
