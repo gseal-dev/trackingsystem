@@ -4,7 +4,16 @@
 #   db  : MariaDB                                      -> only reachable by "app"
 #
 # All settings and passwords live in  tracking.env  (copy tracking.env.example).
-# Everything you must keep (database + uploaded PDFs) is stored in ./data
+#
+# What to keep safe:
+#   ./data/storage   uploaded PDFs, logs, the app key. A normal folder (visible in File Station).
+#   db_data          the database. Kept in a Docker-managed volume and NOT in ./data, because
+#                    Synology folder permissions stop MariaDB from writing to a normal folder.
+#                    Back it up with docker/backup.sh (a database dump), never by copying files.
+#
+# BEFORE THE FIRST START create the storage folder yourself:
+#     mkdir -p data/storage
+# (Synology's Docker does not create missing folders for you: "Bind mount failed ... does not exist")
 
 name: trackingsystem
 
@@ -18,7 +27,7 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     volumes:
-      - ./data/db:/var/lib/mysql
+      - db_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -42,6 +51,10 @@ services:
       DB_HOST: db
       DB_PORT: "3306"
     ports:
-      - "8081:80"          # change the left number if 8081 is already used on your NAS
+      - "8081:80"          # LEFT number = the port you type in the browser. Change it if 8081 is taken,
+                           # and then also change APP_URL in tracking.env to the same number.
     volumes:
       - ./data/storage:/var/www/html/storage   # uploaded PDFs, logs, cache, sessions
+
+volumes:
+  db_data:
