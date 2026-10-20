@@ -22,3 +22,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Docker / Synology deployment: secrets and live data must never be committed
+/tracking.env
+/data/

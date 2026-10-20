@@ -1,0 +1,60 @@
+# Records Management / Document Tracking System  -  Synology / Docker deployment
+#
+#   app : nginx + PHP-FPM + the Laravel application   -> http://<NAS-IP>:8081
+#   db  : MariaDB                                      -> only reachable by "app"
+#
+# All settings and passwords live in  tracking.env  (copy tracking.env.example).
+#
+# What to keep safe:
+#   ./data/storage   uploaded PDFs, logs, the app key. A normal folder (visible in File Station).
+#   db_data          the database. Kept in a Docker-managed volume and NOT in ./data, because
+#                    Synology folder permissions stop MariaDB from writing to a normal folder.
+#                    Back it up with docker/backup.sh (a database dump), never by copying files.
+#
+# BEFORE THE FIRST START create the storage folder yourself:
+#     mkdir -p data/storage
+# (Synology's Docker does not create missing folders for you: "Bind mount failed ... does not exist")
+
+name: trackingsystem
+
+services:
+  db:
+    image: mariadb:11.4
+    container_name: tracking_db
+    restart: unless-stopped
+    env_file: tracking.env
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    # No "ports:" on purpose - the database must not be reachable from the network.
+
+  app:
+    build:
+      context: .
+    image: trackingsystem-app:latest
+    container_name: tracking_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: tracking.env
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+    ports:
+      - "8081:80"          # LEFT number = the port you type in the browser. Change it if 8081 is taken,
+                           # and then also change APP_URL in tracking.env to the same number.
+    volumes:
+      - ./data/storage:/var/www/html/storage   # uploaded PDFs, logs, cache, sessions
+
+volumes:
+  db_data:
