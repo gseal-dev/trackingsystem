@@ -134,7 +134,7 @@ class AdminDashboardDocumentsTest extends TestCase
                 ->assertSee('Document Information')
                 ->assertSee('File Upload')
                 ->assertSee('Document Metadata')
-                ->assertSee('name="documentType"', false)
+                ->assertDontSee('name="documentType"', false)
                 ->assertSee('name="documentNo"', false)
                 ->assertSee('name="fromOffice"', false)
                 ->assertSee('name="documentDate"', false)
@@ -147,12 +147,12 @@ class AdminDashboardDocumentsTest extends TestCase
         }
     }
 
-    public function test_upload_page_suggests_existing_types_and_offices(): void
+    public function test_upload_page_suggests_existing_offices(): void
     {
         $this->makeDocument('D-1', 'x', 'Finance Office');
 
         $this->actingAs($this->staff)->get(route('staff.document.create'))
-            ->assertSee('<option value="Memo"></option>', false)
+            ->assertDontSee('<option value="Memo"></option>', false)
             ->assertSee('<option value="Finance Office"></option>', false);
     }
 
@@ -168,7 +168,7 @@ class AdminDashboardDocumentsTest extends TestCase
     {
         $this->actingAs($this->staff)->get('/staff/documents')
             ->assertSee('href="' . route('staff.document.create') . '"', false)
-            ->assertSee('title="Create Document"', false);
+            ->assertSee('title="Add Document"', false);
 
         foreach ([[$this->admin, '/dashboard'], [$this->staff, '/staff/documents']] as [$user, $url]) {
             $this->actingAs($user)->get($url)
@@ -549,49 +549,27 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->assertDatabaseCount('document_histories', 1);
     }
 
-    // ---- Document title ----------------------------------------------------------------------
+    // ---- Document upload without document title ----------------------------------------------
 
-    public function test_upload_page_has_a_required_document_title_field(): void
+    public function test_upload_page_does_not_have_document_title_field(): void
     {
         foreach ([$this->admin, $this->staff] as $user) {
             $this->actingAs($user)->get(route('staff.document.create'))
-                ->assertSee('Document Title')
-                ->assertSee('name="documentTitle"', false)
-                ->assertSee('id="documentTitle" name="documentTitle" maxlength="255" autocomplete="off"', false);
+                ->assertDontSee('Document Title')
+                ->assertDontSee('name="documentTitle"', false);
         }
     }
 
-    public function test_document_title_is_required_when_uploading(): void
-    {
-        Storage::fake('public');
-
-        $this->actingAs($this->staff)->from(route('staff.document.create'))->post(route('staff.document.store'), [
-            'documentNo' => 'NT-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Subject only',
-            'file' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf'),
-        ])->assertRedirect(route('staff.document.create'))->assertSessionHasErrors('documentTitle');
-
-        $this->get(route('staff.document.create'))->assertSee('The document title field is required');
-        $this->assertDatabaseMissing('documents', ['documentNo' => 'NT-1']);
-    }
-
-    public function test_uploaded_document_title_is_saved_and_listed(): void
+    public function test_upload_succeeds_without_document_title(): void
     {
         Storage::fake('public');
 
         $this->actingAs($this->staff)->post(route('staff.document.store'), [
-            'documentNo' => 'DT-1', 'documentTitle' => '  Road Widening Permit  ', 'fromOffice' => 'Finance',
-            'documentType' => 'Permit', 'title' => 'Permit for the road project',
-            'file' => UploadedFile::fake()->create('permit.pdf', 10, 'application/pdf'),
-        ]);
+            'documentNo' => 'NT-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Subject only',
+            'file' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf'),
+        ])->assertSessionDoesntHaveErrors();
 
-        $this->assertSame('Road Widening Permit', Document::where('documentNo', 'DT-1')->value('documentTitle'));
-
-        foreach ([[$this->admin, '/dashboard'], [$this->staff, '/staff/documents']] as [$user, $url]) {
-            $html = $this->actingAs($user)->get($url)->getContent();
-            $this->assertStringContainsString('<th>Document Title</th>', $html);
-            $this->assertStringContainsString('<td>Road Widening Permit</td>', $html);
-            $this->assertStringContainsString('<td>Permit for the road project</td>', $html);   // subject still shown
-        }
+        $this->assertDatabaseHas('documents', ['documentNo' => 'NT-1', 'documentTitle' => null]);
     }
 
     public function test_list_columns_come_in_the_expected_order(): void
@@ -599,63 +577,10 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->makeDocument('D-1', 'x');
 
         $staff = $this->actingAs($this->staff)->get('/staff/documents')->getContent();
-        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*<th>Document Title<\/th>\s*<th>From Office<\/th>\s*<th>Type<\/th>\s*<th>Subject<\/th>\s*<th>Date<\/th>/', $staff));
+        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*<th>From Office<\/th>\s*<th>Type<\/th>\s*<th>Subject<\/th>\s*<th>Date<\/th>/', $staff));
 
         $admin = $this->actingAs($this->admin)->get('/dashboard')->getContent();
-        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*<th>Document Title<\/th>\s*<th>From Office<\/th>\s*<th>Type<\/th>\s*<th>Subject<\/th>\s*<th>Uploaded By<\/th>\s*<th>Date<\/th>/', $admin));
-    }
-
-    public function test_documents_uploaded_before_titles_existed_show_a_dash(): void
-    {
-        $doc = $this->makeDocument('OLD-1', 'Legacy subject');
-        Document::where('documentId', $doc->documentId)->update(['documentTitle' => null]);
-
-        $this->actingAs($this->staff)->get('/staff/documents')
-            ->assertSee('<td>-</td>', false)
-            ->assertSee('Legacy subject');
-
-        // the popup heading falls back to the subject
-        $this->assertSame('Legacy subject', $this->popupData($this->get('/staff/documents')->getContent())['heading']);
-    }
-
-    public function test_popup_shows_the_document_title_and_subject(): void
-    {
-        $doc = $this->makeDocument('D-9', 'The subject text');
-        $doc->forceFill(['documentTitle' => 'The document title'])->save();
-
-        foreach ([[$this->admin, '/dashboard'], [$this->staff, '/staff/documents']] as [$user, $url]) {
-            $html = $this->actingAs($user)->get($url)->getContent();
-            $data = $this->popupData($html);
-
-            $this->assertSame('The document title', $data['heading']);
-            $this->assertSame('The document title', $data['documentTitle']);
-            $this->assertSame('The subject text', $data['subject']);
-            $this->assertStringContainsString('data-doc-field="documentTitle"', $html);
-            $this->assertStringContainsString('data-doc-field="subject"', $html);
-        }
-    }
-
-    public function test_edit_popup_can_change_the_document_title(): void
-    {
-        $doc = $this->makeDocument('D-1', 'Subject stays');
-
-        $this->actingAs($this->staff)->get('/staff/documents')
-            ->assertSee('name="documentTitle"', false)
-            ->assertSee('id="editDocumentTitle"', false);
-
-        $this->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
-            'documentNo' => 'D-1', 'documentTitle' => 'Renamed title', 'fromOffice' => 'Finance',
-            'documentType' => 'Memo', 'title' => 'Subject stays',
-        ])->assertRedirect('/staff/documents');
-
-        $this->assertSame('Renamed title', $doc->fresh()->documentTitle);
-
-        // and it cannot be blanked out
-        $this->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
-            'documentNo' => 'D-1', 'documentTitle' => '', 'fromOffice' => 'Finance',
-            'documentType' => 'Memo', 'title' => 'Subject stays',
-        ])->assertSessionHasErrorsIn('editDocument', ['documentTitle']);
-        $this->assertSame('Renamed title', $doc->fresh()->documentTitle);
+        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*<th>From Office<\/th>\s*<th>Type<\/th>\s*<th>Subject<\/th>\s*<th>Uploaded By<\/th>\s*<th>Date<\/th>/', $admin));
     }
 
     public function test_document_actions_require_login(): void

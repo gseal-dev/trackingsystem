@@ -56,18 +56,7 @@
         <div class="up-section"><i class="bi bi-file-earmark-text-fill"></i> Document Information</div>
 
         <div class="row g-3">
-          <div class="col-md-6">
-            <label class="up-label" for="documentType">Document Type <span class="req">*</span></label>
-            <input type="text" id="documentType" name="documentType" list="documentTypeList" autocomplete="off"
-                   class="up-input @error('documentType') is-invalid @enderror" placeholder="Select or type a document type"
-                   value="{{ old('documentType') }}" required>
-            <datalist id="documentTypeList">
-              @foreach($documentTypes as $type)
-                <option value="{{ $type }}"></option>
-              @endforeach
-            </datalist>
-            @error('documentType') <div class="up-error">{{ $message }}</div> @enderror
-          </div>
+
 
           <div class="col-md-6">
             <label class="up-label" for="documentNo">Reference Number <span class="req">*</span></label>
@@ -96,14 +85,6 @@
                    class="up-input @error('documentDate') is-invalid @enderror"
                    value="{{ old('documentDate', now()->timezone(\App\Models\Document::DISPLAY_TIMEZONE)->format('Y-m-d')) }}" required>
             @error('documentDate') <div class="up-error">{{ $message }}</div> @else <div class="up-help">The original date this document was created.</div> @enderror
-          </div>
-
-          <div class="col-12">
-            <label class="up-label" for="documentTitle">Document Title <span class="req">*</span></label>
-            <input type="text" id="documentTitle" name="documentTitle" maxlength="255" autocomplete="off"
-                   class="up-input @error('documentTitle') is-invalid @enderror" placeholder="Enter document title"
-                   value="{{ old('documentTitle') }}" required>
-            @error('documentTitle') <div class="up-error">{{ $message }}</div> @enderror
           </div>
 
           <div class="col-12">

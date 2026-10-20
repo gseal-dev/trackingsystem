@@ -175,7 +175,6 @@
         <thead class="bg-light">
           <tr>
             <th>Reference Number</th>
-            <th>Document Title</th>
             <th>From Office</th>
             <th>Type</th>
             <th>Subject</th>
@@ -193,7 +192,6 @@
             @endphp
             <tr>
               <td class="fw-bold">{{ $doc->documentNo }}</td>
-              <td>{{ $doc->documentTitle ?: '-' }}</td>
               <td>{{ $doc->department->depName ?? '-' }}</td>
               <td style="text-transform: uppercase;">{{ $doc->documentType }}</td>
               <td>{{ $doc->title }}</td>

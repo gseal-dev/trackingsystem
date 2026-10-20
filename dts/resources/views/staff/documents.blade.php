@@ -200,7 +200,6 @@
               <thead class="bg-light">
                 <tr>
                   <th>Reference Number</th>
-                  <th>Document Title</th>
                   <th>From Office</th>
                   <th>Type</th>
                   <th>Subject</th>
@@ -212,7 +211,6 @@
               @forelse($documents as $document)
                 <tr>
                   <td class="fw-bold">{{ $document->documentNo }}</td>
-                  <td>{{ $document->documentTitle ?: '-' }}</td>
                   <td>{{ $document->department->depName ?? '-' }}</td>
                   <td style="text-transform: uppercase;">{{ $document->documentType }}</td>
                   <td>{{ $document->title }}</td>
@@ -227,7 +225,7 @@
                 </tr>
               @empty
                 <tr>
-                  <td colspan="7" class="text-center py-5 text-muted">
+                  <td colspan="6" class="text-center py-5 text-muted">
                     <i class="bi bi-folder-x display-4 mb-3 d-block"></i>
                     No records found.
                   </td>

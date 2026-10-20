@@ -171,8 +171,6 @@ class StaffDocumentController extends Controller
         $fullName = trim(($user->firstName ?? '') . ' ' . ($user->lastName ?? ''));
 
         return view('documents.upload', [
-            // suggestions for the type / office boxes (people can still type something new)
-            'documentTypes' => Document::whereNotNull('documentType')->distinct()->orderBy('documentType')->pluck('documentType'),
             'offices' => Department::orderBy('depName')->pluck('depName'),
             'uploadedBy' => $fullName !== '' ? $fullName . ' (' . $user->username . ')' : $user->username,
             'uploadDate' => now()->timezone(Document::DISPLAY_TIMEZONE)->format('Y-m-d H:i'),
@@ -185,10 +183,8 @@ class StaffDocumentController extends Controller
     {
         return [
             'documentNo' => 'reference number',
-            'documentType' => 'document type',
             'fromOffice' => 'from office',
             'documentDate' => 'document date',
-            'documentTitle' => 'document title',
             'title' => 'subject',
             'file' => 'PDF file',
         ];
@@ -204,9 +200,7 @@ class StaffDocumentController extends Controller
     {
         $request->validate([
             'documentNo' => 'required|unique:documents,documentNo',
-            'documentTitle' => 'required|string|max:255',
             'title' => 'required|string|max:255',
-            'documentType' => 'required|string|max:255',
             'fromOffice' => 'required|string|max:255',
             'documentDate' => 'nullable|date',
             'file' => 'required|file|mimes:pdf|max:10240',
@@ -228,10 +222,8 @@ class StaffDocumentController extends Controller
         $newDoc = Document::create([
             'documentId' => (string) Str::uuid(),
             'documentNo' => $request->documentNo,
-            'documentTitle' => trim($request->documentTitle),
             'title' => $request->title,
             'description' => $request->title,
-            'documentType' => $request->documentType,
             'documentDate' => $request->documentDate ?? now()->toDateString(),
             'ownerID' => auth()->user()->userID,
             'currentDepartmentID' => $department->depID,
@@ -257,7 +249,6 @@ class StaffDocumentController extends Controller
         // Own error bag, so the Edit popup's errors don't reopen the Add Document popup
         $request->validateWithBag('editDocument', [
             'documentNo' => 'required|unique:documents,documentNo,' . $document->documentId . ',documentId',
-            'documentTitle' => 'required|string|max:255',
             'title' => 'required|string|max:255',
             'documentType' => 'required|string|max:255',
             'fromOffice' => 'required|string|max:255',
@@ -276,7 +267,6 @@ class StaffDocumentController extends Controller
 
         $updateData = [
             'documentNo' => $request->documentNo,
-            'documentTitle' => trim($request->documentTitle),
             'title' => $request->title,
             'description' => $request->title,
             'documentType' => $request->documentType,

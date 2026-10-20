@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght\@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       :root {
         --brand-dark: #000000;
@@ -35,7 +35,7 @@
         display: flex;
         flex-direction: column;
         margin: 0;
-        padding-top: 124px;
+        padding-top: 56px;
         position: relative;
         overflow-x: hidden;
       }
@@ -69,7 +69,7 @@
         width: 100%;
         background: #ffffff;
         border-bottom: 1px solid #e2e8f0;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
         z-index: 1100;
       }
       .header-inner {
@@ -78,10 +78,10 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.4rem var(--page-gutter);
+        padding: 0.2rem var(--page-gutter);
       }
       .header-dept-name {
-        font-size: clamp(1.2rem, 2.1vw, 1.7rem);
+        font-size: clamp(0.9rem, 1.5vw, 1.25rem);
         font-weight: 900;
         color: #001253;
         letter-spacing: -0.02em;
@@ -89,10 +89,10 @@
         line-height: 1.15;
       }
       .header-slogan {
-        font-size: 0.85rem;
+        font-size: 0.7rem;
         font-style: italic;
         color: #64748b;
-        margin-top: 0.1rem;
+        margin-top: 0rem;
         letter-spacing: 0.03em;
         font-weight: 600;
       }
@@ -103,7 +103,7 @@
       }
       .app-horizontal-navbar {
         position: fixed;
-        top: 70px;
+        top: 105px;
         left: 0;
         width: 100%;
         background: #001253;
@@ -116,15 +116,13 @@
         margin: 0 auto;
         display: flex;
         align-items: center;
-        justify-content: center; /* Changed from space-between to center */
-        gap: 4rem; /* Adds spacing between the links group and user/logout group */
+        justify-content: space-between;
         padding: 0.55rem var(--page-gutter);
-        flex-wrap: wrap;
       }
       .nav-links {
         display: flex;
         align-items: center;
-        gap: 4rem;
+        gap: 1.5rem;
       }
       .nav-links a {
         color: #cbd5e1;
@@ -143,7 +141,7 @@
       .nav-user-area {
         display: flex;
         align-items: center;
-        gap: 4rem;
+        gap: 1rem;
         color: #e2e8f0;
       }
       .table {
@@ -175,12 +173,12 @@
         justify-content: center;
         padding: 1rem var(--page-gutter);
         position: relative;
-        margin-left: 0 !important;
-        width: 100% !important;
       }
       body:not(.login-page) main.main-content {
         align-items: flex-start;
       }
+
+      /* Pagination links (document lists) in the system's navy */
       .pagination {
         --bs-pagination-color: rgb(0, 18, 83);
         --bs-pagination-hover-color: rgb(0, 18, 83);
@@ -236,6 +234,80 @@
       }
       .modal-backdrop { z-index: 1190; }
       .modal { z-index: 1200; }
+      .app-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 58px;
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .app-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        color: var(--brand-dark);
+        font-size: 1.15rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        text-decoration: none;
+      }
+      .app-brand-mark {
+        color: var(--accent-orange);
+        font-size: 1.6rem;
+        line-height: 1;
+      }
+      .app-nav {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-left: 2rem;
+        margin-right: auto;
+      }
+      .app-nav a {
+        color: #374151;
+        font-size: 0.9rem;
+        text-decoration: none;
+      }
+      .app-nav a.active,
+      .app-nav a:hover {
+        color: var(--accent-orange);
+      }
+      .app-user {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: #374151;
+        font-size: 0.9rem;
+      }
+      .app-header .logout-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: auto;
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+        font-size: 0.8rem;
+      }
+      @media (max-width: 640px) {
+        .app-header {
+          flex-wrap: wrap;
+          gap: 0.65rem;
+        }
+        .app-nav {
+          order: 3;
+          width: 100%;
+          margin: 0;
+        }
+        .app-user {
+          margin-left: auto;
+        }
+      }
       .dashboard-container,
       .dashboard-container.wide {
         width: 100%;
@@ -462,6 +534,206 @@
         right: 1.5rem;
         z-index: 10;
       }
+      :root {
+        --sidebar-collapsed-width: 72px;
+        --sidebar-expanded-width: 250px;
+        --sidebar-top: 0px;
+      }
+      .app-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: var(--sidebar-collapsed-width);
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: auto;
+        background: #001253;
+        color: #ffffff;
+        z-index: 1080;
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.08);
+        transition: width 0.25s ease;
+      }
+      body.sidebar-expanded .app-sidebar {
+        width: var(--sidebar-expanded-width);
+      }
+      body:not(.login-page) .official-dpwh-header {
+        left: var(--sidebar-collapsed-width);
+        width: calc(100% - var(--sidebar-collapsed-width));
+        transition: left 0.25s ease, width 0.25s ease;
+      }
+      body.sidebar-expanded:not(.login-page) .official-dpwh-header {
+        left: var(--sidebar-expanded-width);
+        width: calc(100% - var(--sidebar-expanded-width));
+      }
+      .app-sidebar i.bi,
+      .app-sidebar i[class^="bi-"],
+      .app-sidebar i[class*=" bi-"] {
+        display: inline-block;
+        font-family: "bootstrap-icons" !important;
+        font-style: normal;
+        font-weight: normal !important;
+        line-height: 1;
+        speak: none;
+        -webkit-font-smoothing: antialiased;
+      }
+      .sidebar-top {
+        display: flex;
+        align-items: center;
+        min-height: 58px;
+        padding: 0 16px;
+        gap: 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+      }
+      .sidebar-toggle {
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        background: transparent;
+        border: 0;
+        border-radius: 8px;
+        color: #ffffff;
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+      .sidebar-toggle:hover { background: rgba(255,255,255,0.12); }
+      .sidebar-heading,
+      .sidebar-label {
+        white-space: nowrap;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.15s ease;
+      }
+      body.sidebar-expanded .sidebar-heading,
+      body.sidebar-expanded .sidebar-label {
+        opacity: 1;
+        visibility: visible;
+      }
+      .sidebar-heading {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .sidebar-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 16px 10px;
+      }
+      .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-height: 48px;
+        width: 100%;
+        padding: 0 15px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: #cbd5e1;
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-align: left;
+        white-space: nowrap;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+      .sidebar-link > i,
+      .sidebar-user > i {
+        flex: 0 0 22px;
+        width: 22px;
+        text-align: center;
+        font-size: 1.2rem;
+      }
+      .sidebar-link:hover,
+      .sidebar-link.active {
+        color: #ffffff;
+        background: #ea3a14;
+      }
+      .sidebar-footer {
+        margin-top: auto;
+        padding: 12px 10px 18px;
+        border-top: 1px solid rgba(255,255,255,0.12);
+      }
+      .sidebar-user {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-height: 45px;
+        padding: 0 15px;
+        color: #e2e8f0;
+        font-size: 0.85rem;
+        overflow: hidden;
+      }
+      /* profile row (staff): clickable, opens Account Settings */
+      a.sidebar-profile {
+        margin-bottom: 0;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+      a.sidebar-profile:hover,
+      a.sidebar-profile.active {
+        color: #ffffff;
+        background: #ea3a14;
+      }
+      .sidebar-footer form { margin: 6px 0 0; }
+      .sidebar-logout { cursor: pointer; font-family: inherit; }
+      body:not(.login-page) main.main-content {
+        margin-left: var(--sidebar-collapsed-width);
+        width: calc(100% - var(--sidebar-collapsed-width));
+        padding: 1rem;
+        transition: margin-left 0.25s ease, width 0.25s ease;
+      }
+      body.sidebar-expanded:not(.login-page) main.main-content {
+        margin-left: var(--sidebar-expanded-width);
+        width: calc(100% - var(--sidebar-expanded-width));
+      }
+      .dashboard-shell,
+      .dashboard-container,
+      .dashboard-container.wide,
+      .page-card { min-width: 0; }
+      .sidebar-overlay { display: none; }
+      @media (max-width: 767.98px) {
+        body:not(.login-page) .official-dpwh-header,
+        body.sidebar-expanded:not(.login-page) .official-dpwh-header {
+          left: 0;
+          width: 100%;
+        }
+        .app-sidebar {
+          width: var(--sidebar-expanded-width);
+          top: 0;
+          transform: translateX(calc(-1 * var(--sidebar-expanded-width)));
+          transition: transform 0.25s ease;
+        }
+        body.sidebar-expanded .app-sidebar {
+          width: var(--sidebar-expanded-width);
+          transform: translateX(0);
+        }
+        .app-sidebar .sidebar-heading,
+        .app-sidebar .sidebar-label {
+          opacity: 1;
+          visibility: visible;
+        }
+        body:not(.login-page) main.main-content,
+        body.sidebar-expanded:not(.login-page) main.main-content {
+          margin-left: 0;
+          width: 100%;
+          padding: 1rem;
+        }
+        body.sidebar-expanded .sidebar-overlay {
+          display: block;
+          position: fixed;
+          inset: var(--sidebar-top) 0 0;
+          background: rgba(15, 23, 42, 0.45);
+          z-index: 1070;
+        }
+      }
     </style>
     @stack('head')
   </head>
@@ -470,60 +742,84 @@
     <header class="official-dpwh-header">
       <div class="header-inner">
         <div class="header-logo-left">
-          <img src="{{ asset('images/dpwh-logo.png') }}" alt="DPWH Seal" style="height: 52px; width: 52px; object-fit: contain; mix-blend-mode: multiply;">
+          <img src="{{ asset('images/dpwh-logo.png') }}" alt="DPWH Seal" style="height: 38px; width: 38px; object-fit: contain; mix-blend-mode: multiply;">
         </div>
         <div class="header-titles text-center">
           <div class="header-dept-name">RECORDS MANAGEMENT</div>
           <div class="header-slogan">We love others as we love ourselves</div>
         </div>
         <div class="header-logo-right">
-          <img src="{{ asset('images/bagong-pilipinas.webp') }}" alt="Bagong Pilipinas" style="height: 52px; width: 52px; object-fit: contain; mix-blend-mode: multiply;">
+          <img src="{{ asset('images/bagong-pilipinas.webp') }}" alt="Bagong Pilipinas" style="height: 38px; width: 38px; object-fit: contain; mix-blend-mode: multiply;">
         </div>
       </div>
       <div class="header-banner-stripe"></div>
     </header>
+    @auth
+    @php $role = auth()->user()->role?->roleName; @endphp
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-top">
+        <button type="button" class="sidebar-toggle" id="sidebarToggle"
+                aria-label="Expand sidebar" aria-expanded="false" aria-controls="appSidebar">
+          <i class="bi bi-list"></i>
+        </button>
 
-    <!-- Horizontal Navbar -->
-    <nav class="app-horizontal-navbar">
-      <div class="nav-inner">
-        <div class="nav-links">
-          @auth
-          @php $role = auth()->user()->role?->roleName; @endphp
-          @if($role === 'Admin')
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
-            <a href="{{ route('admin.userManagement.admins') }}" class="{{ request()->routeIs('admin.userManagement.*') ? 'active' : '' }}">Users List</a>
-          @elseif($role === 'Staff')
-            <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
-            <a href="{{ route('staff.documents') }}" class="{{ request()->routeIs('staff.documents') ? 'active' : '' }}">Documents List</a>
-            <a href="{{ route('staff.document.create') }}" class="{{ request()->routeIs('staff.document.create') ? 'active' : '' }}">Create Document</a>
-            <a href="{{ route('staff.history') }}" class="{{ request()->routeIs('staff.history') ? 'active' : '' }}">History</a>
-          @endif
-          @endauth
-        </div>
-        <div class="nav-user-area">
-          @auth
-            @php $role = auth()->user()->role?->roleName; @endphp
-            @if($role === 'Staff')
-              <a href="{{ route('staff.settings') }}" class="text-white text-decoration-none {{ request()->routeIs('staff.settings*') ? 'active' : '' }}">
-                <i class="bi bi-person-circle"></i> {{ auth()->user()->username ?? auth()->user()->firstName }}
-              </a>
-            @else
-              <span><i class="bi bi-person-circle"></i> {{ auth()->user()->username ?? auth()->user()->firstName }}</span>
-            @endif
-            <form method="POST" action="{{ route('logout') }}" class="m-0 d-inline">
-              @csrf
-              <button type="submit" class="btn btn-sm btn-outline-light rounded-pill px-3 ms-2">Logout</button>
-            </form>
-          @endauth
-        </div>
       </div>
-    </nav>
+      <div class="sidebar-menu">
+        @if($role === 'Admin')
+          <a href="{{ route('dashboard') }}"
+             class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Dashboard">
+            <i class="bi bi-grid-fill"></i><span class="sidebar-label">Dashboard</span>
+          </a>
+          <a href="{{ route('admin.userManagement.admins') }}"
+             class="sidebar-link {{ request()->routeIs('admin.userManagement.*') ? 'active' : '' }}" title="Users List">
+            <i class="bi bi-people-fill"></i><span class="sidebar-label">Users List</span>
+          </a>
+        @elseif($role === 'Staff')
+          <a href="{{ route('dashboard') }}"
+             class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Dashboard">
+            <i class="bi bi-grid-fill"></i><span class="sidebar-label">Dashboard</span>
+          </a>
+          <a href="{{ route('staff.documents') }}"
+             class="sidebar-link {{ request()->routeIs('staff.documents') ? 'active' : '' }}" title="Documents List">
+            <i class="bi bi-folder2-open"></i><span class="sidebar-label">Documents List</span>
+          </a>
+          <a href="{{ route('staff.document.create') }}"
+             class="sidebar-link {{ request()->routeIs('staff.document.create') ? 'active' : '' }}" title="Add Document">
+            <i class="bi bi-file-earmark-plus"></i><span class="sidebar-label">Add Document</span>
+          </a>
+          <a href="{{ route('staff.history') }}"
+             class="sidebar-link {{ request()->routeIs('staff.history') ? 'active' : '' }}" title="History">
+            <i class="bi bi-clock-history"></i><span class="sidebar-label">History</span>
+          </a>
+        @endif
+      </div>
+      <div class="sidebar-footer">
+        @if($role === 'Staff')
+          <a href="{{ route('staff.settings') }}"
+             class="sidebar-user sidebar-profile {{ request()->routeIs('staff.settings*') ? 'active' : '' }}" title="Account Settings">
+            <i class="bi bi-person-circle"></i>
+            <span class="sidebar-label">{{ auth()->user()->username ?? auth()->user()->firstName }}</span>
+          </a>
+        @else
+          <div class="sidebar-user">
+            <i class="bi bi-person-circle"></i>
+            <span class="sidebar-label">{{ auth()->user()->username ?? auth()->user()->firstName }}</span>
+          </div>
+        @endif
+        <form method="POST" action="{{ route('logout') }}">
+          @csrf
+          <button type="submit" class="sidebar-link sidebar-logout" title="Logout">
+            <i class="bi bi-box-arrow-right"></i><span class="sidebar-label">Logout</span>
+          </button>
+        </form>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    @endauth
     @endif
-
     <main class="main-content">
       @yield('content')
     </main>
-
     @php
       $flashSuccess = session('success');
       $flashError = session('error');
@@ -556,7 +852,6 @@
       </div>
     </div>
     @endif
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @if($flashMessage)
     <script>
@@ -629,6 +924,50 @@
           if (document.hidden) { stop(); } else { refresh(); start(); }
         });
         start();
+      })();
+    </script>
+    <script>
+      (function () {
+        const body = document.body;
+        const sidebar = document.getElementById('appSidebar');
+        const toggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        if (!sidebar || !toggle) return;
+
+        function setSidebarExpanded(expanded, save = true) {
+          body.classList.toggle('sidebar-expanded', expanded);
+          toggle.setAttribute('aria-expanded', String(expanded));
+          toggle.setAttribute('aria-label', expanded ? 'Collapse sidebar' : 'Expand sidebar');
+
+          const icon = toggle.querySelector('i');
+          if (icon) {
+            icon.className = expanded ? 'bi bi-layout-sidebar-inset' : 'bi bi-list';
+          }
+
+          if (save) {
+            localStorage.setItem('sidebar-expanded', String(expanded));
+          }
+        }
+
+        // Check localStorage on load; default to false (collapsed) if not set
+        const savedState = localStorage.getItem('sidebar-expanded') === 'true';
+        setSidebarExpanded(savedState, false);
+
+        toggle.addEventListener('click', function () {
+          const willExpand = !body.classList.contains('sidebar-expanded');
+          setSidebarExpanded(willExpand, true);
+        });
+
+        if (overlay) {
+          overlay.addEventListener('click', function () {
+            setSidebarExpanded(false, true);
+          });
+        }
+
+        document.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') setSidebarExpanded(false, true);
+        });
       })();
     </script>
     @stack('scripts')
