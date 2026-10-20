@@ -125,14 +125,10 @@ class StaffDocumentController extends Controller
             });
         }
 
-        if ($request->filled('year')) {
-            $historiesQuery->whereYear('created_at', $request->year);
-        }
-        if ($request->filled('month')) {
-            $historiesQuery->whereMonth('created_at', $request->month);
-        }
-        if ($request->filled('day')) {
-            $historiesQuery->whereDay('created_at', $request->day);
+        if ($request->filled('year') || $request->filled('month') || $request->filled('day')) {
+            $historiesQuery->whereHas('document', function ($q) use ($request) {
+                $q->dateFilter($request->input('year'), $request->input('month'), $request->input('day'));
+            });
         }
 
         $histories = $historiesQuery
@@ -243,14 +239,10 @@ class StaffDocumentController extends Controller
             });
         }
 
-        if ($request->filled('year')) {
-            $historiesQuery->whereYear('created_at', $request->year);
-        }
-        if ($request->filled('month')) {
-            $historiesQuery->whereMonth('created_at', $request->month);
-        }
-        if ($request->filled('day')) {
-            $historiesQuery->whereDay('created_at', $request->day);
+        if ($request->filled('year') || $request->filled('month') || $request->filled('day')) {
+            $historiesQuery->whereHas('document', function ($q) use ($request) {
+                $q->dateFilter($request->input('year'), $request->input('month'), $request->input('day'));
+            });
         }
 
         $histories = $historiesQuery
