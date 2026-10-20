@@ -44,6 +44,7 @@ Route::middleware(['auth'])->group(function () {
     // Staff
     Route::get('/documents/{document}/download', [StaffDocumentController::class, 'download'])->name('document.download');
     Route::get('/staff/history', [StaffDocumentController::class, 'history'])->name('staff.history');
+    Route::get('/staff/history/export', [StaffDocumentController::class, 'exportHistory'])->name('staff.history.export');
     Route::get('/staff/documents', [StaffDocumentController::class, 'documents'])->name('staff.documents');
     Route::get('/staff/documents/create', [StaffDocumentController::class, 'create'])->name('staff.document.create');
     Route::post('/staff/documents/create', [StaffDocumentController::class, 'store'])->name('staff.document.store');

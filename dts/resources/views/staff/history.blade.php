@@ -184,6 +184,17 @@
               <a href="{{ route('staff.history') }}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 50px;">Reset</a>
             @endif
             @include('partials.per-page-select', ['paginator' => $histories, 'id' => 'history-per-page'])
+
+            <!-- Export buttons -->
+            <div class="dropdown">
+              <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-download"></i> Export
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ route('staff.history.export', array_merge(request()->all(), ['format' => 'csv'])) }}">CSV (Excel)</a></li>
+                <li><a class="dropdown-item" href="{{ route('staff.history.export', array_merge(request()->all(), ['format' => 'excel'])) }}">Excel</a></li>
+              </ul>
+            </div>
           </form>
         </div>
 
@@ -196,7 +207,6 @@
                 <th class="border-0">From Office</th>
                 <th class="border-0">Type</th>
                 <th class="border-0">Subject</th>
-                <th class="border-0">Date</th>
                 <th class="border-0">Action</th>
                 <th class="border-0">User</th>
                 <th class="border-0">Timestamp</th>
@@ -209,7 +219,6 @@
                   <td>{{ $history->document?->department?->depName ?? '-' }}</td>
                   <td><span class="badge bg-light text-dark border">{{ $history->document?->documentType ?? '-' }}</span></td>
                   <td>{{ $history->document?->title ?? '-' }}</td>
-                  <td class="text-muted">{{ $history->document?->documentDate ? \Carbon\Carbon::parse($history->document->documentDate)->format('F d, Y') : $history->created_at?->format('F d, Y') }}</td>
                   <td>{{ $history->action ?? '-' }}</td>
                   <td>
                     @php
@@ -234,7 +243,7 @@
                 </tr>
               @empty
                 <tr>
-                  <td colspan="8" class="text-center py-5 text-muted">
+                  <td colspan="7" class="text-center py-5 text-muted">
                     <i class="bi bi-folder-x display-4 mb-3 d-block"></i>
                     No history records found.
                   </td>

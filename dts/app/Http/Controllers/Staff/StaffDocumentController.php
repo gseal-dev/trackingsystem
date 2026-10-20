@@ -97,6 +97,125 @@ class StaffDocumentController extends Controller
         );
     }
 
+    /** CSV/Excel export of history matching the current filters. */
+    public function exportHistory(Request $request)
+    {
+        $user = auth()->user();
+        $search = $request->input('search');
+        $format = $request->input('format', 'csv'); // csv, excel
+
+        $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department', 'user'])
+            ->when($user->departmentID, function($q) use ($user) {
+                return $q->where(function($sub) use ($user) {
+                    $sub->where('currentDepartmentID', $user->departmentID)
+                        ->orWhere('prevDepartmentID', $user->departmentID)
+                        ->orWhere('userID', $user->userID);
+                });
+            });
+
+        if ($search) {
+            $historiesQuery->whereHas('document', function ($q) use ($search) {
+                $q->where('title', 'LIKE', "%$search%")
+                    ->orWhere('documentTitle', 'LIKE', "%$search%")
+                    ->orWhere('documentNo', 'LIKE', "%$search%")
+                    ->orWhereHas('owner', function ($oq) use ($search) {
+                        $oq->where('username', 'LIKE', "%$search%")
+                            ->orWhere('firstName', 'LIKE', "%$search%")
+                            ->orWhere('lastName', 'LIKE', "%$search%");
+                    });
+            });
+        }
+
+        if ($request->filled('year')) {
+            $historiesQuery->whereYear('created_at', $request->year);
+        }
+        if ($request->filled('month')) {
+            $historiesQuery->whereMonth('created_at', $request->month);
+        }
+        if ($request->filled('day')) {
+            $historiesQuery->whereDay('created_at', $request->day);
+        }
+
+        $histories = $historiesQuery
+            ->orderByDesc('created_at')
+            ->orderByDesc('historyID')
+            ->get(); // Get all records for export, not paginated
+
+        // Prepare data for export
+        $data = [];
+        foreach ($histories as $history) {
+            // Get user name
+            $userName = 'Unknown';
+            if ($history->user) {
+                $firstName = trim($history->user->firstName ?? '');
+                $lastName = trim($history->user->lastName ?? '');
+                if ($firstName || $lastName) {
+                    $userName = trim($firstName . ' ' . $lastName);
+                }
+                if (!$userName) {
+                    $userName = $history->user->username ?? 'Unknown';
+                }
+            }
+
+            // Format timestamp
+            $timestamp = $history->created_at
+                ->timezone(\App\Models\Document::DISPLAY_TIMEZONE)
+                ->format('F d, Y \\a\\t h:i A');
+
+            $data[] = [
+                'Reference Number' => $history->document?->documentNo ?? '-',
+                'From Office' => $history->document?->department?->depName ?? '-',
+                'Type' => $history->document?->documentType ?? '-',
+                'Subject' => $history->document?->title ?? '-',
+                'Action' => $history->action ?? '-',
+                'User' => $userName,
+                'Timestamp' => $timestamp,
+            ];
+        }
+
+        // Generate filename with timestamp
+        $filename = 'document_history_' . now()->format('Y-m-d_H-i-s');
+
+        // Return based on format
+        switch ($format) {
+            case 'excel':
+            case 'xls':
+            case 'xlsx':
+                // For now, we'll return CSV which Excel can open
+                // In a real implementation, you might use Laravel Excel package
+                $extension = 'csv';
+                break;
+            default:
+                $extension = 'csv';
+                break;
+        }
+
+        // CSV export (works in Excel too)
+        $output = fopen('php://output', 'w');
+        // Add BOM for proper UTF-8 in Excel
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        // Add headers
+        fputcsv($output, array_keys($data[0] ?? ['Reference Number', 'From Office', 'Type', 'Subject', 'Action', 'User', 'Timestamp']));
+
+        // Add data rows
+        foreach ($data as $row) {
+            fputcsv($output, $row);
+        }
+        fclose($output);
+
+        return response()->stream(
+            function () use ($output) {
+                // This is handled above
+            },
+            200,
+            [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '.csv"',
+            ]
+        );
+    }
+
 
     public function history(Request $request)
     {
