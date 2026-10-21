@@ -132,6 +132,7 @@ class Document extends Model
                 : '-',
             'viewUrl' => $this->filePath ? asset('storage/' . $this->filePath) : null,
             'downloadUrl' => $this->filePath ? route('document.download', $this->documentId) : null,
+            'uploadVersionUrl' => route('staff.document.uploadVersion', $this->documentId),
             'updateUrl' => route('staff.document.update', $this->documentId),
             'edit' => [
                 'documentNo' => $this->documentNo,

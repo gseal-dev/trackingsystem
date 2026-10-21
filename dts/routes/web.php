@@ -53,6 +53,9 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('role:Staff')->group(function () {
         Route::post('/staff/documents/{document}/edit', [StaffDocumentController::class, 'update'])->name('staff.document.update');
 
+        // Replace just the attached file (upload a new version) without editing metadata.
+        Route::post('/staff/documents/{document}/upload-version', [StaffDocumentController::class, 'uploadVersion'])->name('staff.document.uploadVersion');
+
         // Staff settings: staff can change their own password (nothing else)
         Route::get('/staff/settings', [StaffSettingsController::class, 'show'])->name('staff.settings');
         Route::post('/staff/settings/password', [StaffSettingsController::class, 'updatePassword'])->name('staff.settings.password');

@@ -400,6 +400,34 @@ class StaffDocumentController extends Controller
         return redirect()->to(url()->previous(route('staff.documents')))->with('success', 'Document updated successfully!');
     }
 
+    // Upload a new version of the attached file (replaces the PDF only, no edit mode).
+    public function uploadVersion(Request $request, Document $document)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf|max:10240',
+        ], [], ['file' => 'PDF file']);
+
+        if ($document->filePath && \Storage::disk('public')->exists($document->filePath)) {
+            \Storage::disk('public')->delete($document->filePath);
+        }
+
+        $file = $request->file('file');
+        $fileName = \Illuminate\Support\Str::uuid() . '_' . $file->getClientOriginalName();
+        $document->update(['filePath' => $file->storeAs('documents', $fileName, 'public')]);
+
+        \DB::table('document_histories')->insert([
+            'documentId' => $document->documentId,
+            'prevDepartmentID' => $document->currentDepartmentID,
+            'currentDepartmentID' => $document->currentDepartmentID,
+            'userID' => auth()->user()->userID,
+            'action' => 'Document uploaded new version',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->to(url()->previous(route('staff.documents')))->with('success', 'New version uploaded successfully!');
+    }
+
     public function delete(Document $document)
     {
         $documentId = $document->documentId;

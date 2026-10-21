@@ -40,8 +40,17 @@
         <div class="doc-actions">
           <a href="#" id="documentViewBtn" target="_blank" rel="noopener" class="doc-action-btn doc-action-view"><i class="bi bi-eye-fill"></i> View</a>
           <a href="#" id="documentDownloadBtn" class="doc-action-btn doc-action-download"><i class="bi bi-download"></i> Download</a>
+          @if($canEdit)
+            <button type="button" id="documentUploadVersionBtn" class="doc-action-btn doc-action-upload"><i class="bi bi-cloud-arrow-up"></i> Upload new version</button>
+          @endif
         </div>
         <p class="text-danger small mt-2 mb-0 d-none" id="documentNoFileNote"><i class="bi bi-exclamation-circle me-1"></i> No file is attached to this document.</p>
+
+        {{-- Hidden form for uploading a new file version (submitted normally, redirects back with flash) --}}
+        <form id="documentUploadVersionForm" method="POST" action="#" enctype="multipart/form-data" class="d-none">
+          @csrf
+          <input type="file" id="documentUploadVersionFile" name="file" accept=".pdf">
+        </form>
 
         <hr class="doc-divider">
 
@@ -180,6 +189,8 @@
   #documentViewModal .doc-action-view:hover { background: #cf3010; color: #fff; }
   #documentViewModal .doc-action-download { background: #6c757d; }
   #documentViewModal .doc-action-download:hover { background: #5a6268; color: #fff; }
+  #documentViewModal .doc-action-upload { background: #0d6efd; }
+  #documentViewModal .doc-action-upload:hover { background: #0b5ed7; color: #fff; }
   #documentViewModal .doc-action-btn.disabled { opacity: 0.45; pointer-events: none; }
   #documentViewModal .doc-divider { border: 0; border-top: 1px solid #e5e7eb; opacity: 1; margin: 1.25rem 0; }
 
@@ -323,6 +334,25 @@
       cancelBtn.addEventListener('click', function () {
         if (!currentDoc) return;
         showView();
+      });
+    }
+
+    // Upload a new version of the attached file (no edit mode involved).
+    const uploadBtn = document.getElementById('documentUploadVersionBtn');
+    const uploadForm = document.getElementById('documentUploadVersionForm');
+    const uploadFile = document.getElementById('documentUploadVersionFile');
+
+    if (uploadBtn && uploadForm && uploadFile) {
+      uploadBtn.addEventListener('click', function () {
+        const doc = currentDoc;
+        if (!doc) return;
+        uploadForm.action = doc.uploadVersionUrl || '#';
+        uploadFile.value = '';
+        uploadFile.click();
+      });
+
+      uploadFile.addEventListener('change', function () {
+        if (uploadFile.files.length) uploadForm.submit();
       });
     }
 
