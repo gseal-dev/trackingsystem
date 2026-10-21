@@ -110,6 +110,13 @@
               </div>
             </div>
             <div class="doc-info-row">
+              <div class="doc-info-label">Description</div>
+              <div class="doc-info-value">
+                <textarea name="description" id="editDescription"
+                          class="edit-input edit-textarea" placeholder="DESCRIPTION">{{ old('description') ?? '' }}</textarea>
+              </div>
+            </div>
+            <div class="doc-info-row">
               <div class="doc-info-label">File (PDF)</div>
               <div class="doc-info-value">
                 <input type="file" name="file" id="editFile"
@@ -263,6 +270,8 @@
         fill('editDocumentType', e.documentType);
         fill('editTitle', e.title);
         fill('editDocumentDate', e.documentDate);
+        const descEl = document.getElementById('editDescription');
+        if (descEl) descEl.value = (doc.description && doc.description !== 'No description') ? doc.description : '';
 
         document.getElementById('editFile').value = '';
         const currentFile = document.getElementById('editCurrentFile');

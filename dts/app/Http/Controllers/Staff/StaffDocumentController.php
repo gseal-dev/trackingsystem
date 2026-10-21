@@ -346,6 +346,7 @@ class StaffDocumentController extends Controller
         $request->validateWithBag('editDocument', [
             'documentNo' => 'required|unique:documents,documentNo,' . $document->documentId . ',documentId',
             'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
             'documentType' => 'required|string|max:255',
             'fromOffice' => 'required|string|max:255',
             'documentDate' => 'nullable|date',
@@ -367,7 +368,7 @@ class StaffDocumentController extends Controller
         $updateData = [
             'documentNo' => $request->documentNo,
             'title' => $request->title,
-            'description' => $request->title,
+            'description' => $request->description,
             'documentType' => $request->documentType,
             'documentDate' => $request->documentDate ?? $document->documentDate,
             'currentDepartmentID' => $department->depID,
