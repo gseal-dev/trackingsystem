@@ -125,15 +125,6 @@
                           class="edit-input edit-textarea" placeholder="DESCRIPTION">{{ old('description') ?? '' }}</textarea>
               </div>
             </div>
-            <div class="doc-info-row">
-              <div class="doc-info-label">File (PDF)</div>
-              <div class="doc-info-value">
-                <input type="file" name="file" id="editFile"
-                       class="edit-input edit-file" accept=".pdf">
-                <div class="form-text mt-2" id="editCurrentFile"></div>
-              </div>
-            </div>
-
             {{-- Edit errors, scoped to this popup's own bag --}}
             <div id="editDocumentErrors" class="alert alert-danger rounded-4 mb-3 {{ $editErrors->any() ? '' : 'd-none' }}">
               <ul class="mb-0">
@@ -207,7 +198,6 @@
   #documentViewModal .edit-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #1f2937; font-size: 0.95rem; }
   #documentViewModal .edit-input:focus { border-color: #000; outline: none; box-shadow: 0 0 0 2px rgba(0,0,0,0.12); }
   #documentViewModal .edit-textarea { min-height: 90px; resize: vertical; font-family: inherit; }
-  #documentViewModal .edit-file { padding: 0.4rem 0.75rem; }
 
   @media (max-width: 575.98px) {
     #documentViewModal .doc-actions { flex-direction: column; gap: 0.5rem; }
@@ -283,13 +273,6 @@
         fill('editDocumentDate', e.documentDate);
         const descEl = document.getElementById('editDescription');
         if (descEl) descEl.value = (doc.description && doc.description !== 'No description') ? doc.description : '';
-
-        document.getElementById('editFile').value = '';
-        const currentFile = document.getElementById('editCurrentFile');
-        if (currentFile) currentFile.textContent = doc.fileName ? ' (current file: ' + doc.fileName + ')' : '';
-      } else {
-        const currentFile = document.getElementById('editCurrentFile');
-        if (currentFile) currentFile.textContent = '';
       }
     }
 

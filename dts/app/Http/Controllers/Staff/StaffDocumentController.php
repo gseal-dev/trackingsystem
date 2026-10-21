@@ -350,7 +350,6 @@ class StaffDocumentController extends Controller
             'documentType' => 'required|string|max:255',
             'fromOffice' => 'required|string|max:255',
             'documentDate' => 'nullable|date',
-            'file' => 'nullable|file|mimes:pdf|max:10240',
         ], [], $this->fieldNames());
 
         $officeName = trim($request->fromOffice);
@@ -373,15 +372,6 @@ class StaffDocumentController extends Controller
             'documentDate' => $request->documentDate ?? $document->documentDate,
             'currentDepartmentID' => $department->depID,
         ];
-
-        if ($request->hasFile('file')) {
-            if ($document->filePath && \Storage::disk('public')->exists($document->filePath)) {
-                \Storage::disk('public')->delete($document->filePath);
-            }
-            $file = $request->file('file');
-            $fileName = \Illuminate\Support\Str::uuid() . '_' . $file->getClientOriginalName();
-            $updateData['filePath'] = $file->storeAs('documents', $fileName, 'public');
-        }
 
         $document->update($updateData);
 
