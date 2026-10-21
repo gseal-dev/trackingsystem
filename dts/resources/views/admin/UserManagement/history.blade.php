@@ -47,7 +47,7 @@
         </div>
       </div>
 
-      <div class="table-toolbar">
+      <div class="table-toolbar" style="margin-bottom: 1.5rem;">
         <form method="GET" action="{{ route('admin.userManagement.history') }}" class="d-flex gap-2 flex-wrap align-items-center w-100">
           <div class="search-box flex-grow-1" style="max-width: 250px;">
             <i class="bi bi-search"></i>
@@ -78,7 +78,7 @@
         </form>
       </div>
 
-      <div class="border rounded-2 overflow-hidden">
+      <div class="border rounded-2 overflow-hidden" style="margin-top: 1rem;">
         <div class="table-responsive">
         <table class="table table-hover table-sm align-middle">
           <thead class="bg-light">
