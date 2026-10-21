@@ -24,12 +24,10 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 // User Management - Per Role
 Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::get('/admin/user-management/admins', [UserManagementController::class, 'admins'])->name('admin.userManagement.admins');
-    Route::get('/admin/user-management/staffs', [UserManagementController::class, 'staffs'])->name('admin.userManagement.staffs');
     Route::get('/admin/user-management/export', [UserManagementController::class, 'exportUsers'])->middleware('role:Admin')->name('admin.userManagement.export');
     Route::post('/admin/user-management/{type}/add', [UserManagementController::class, 'add'])
         ->where('type', 'admins')
         ->name('admin.userManagement.add');
-    Route::get('/admin/user-management/{type}/edit/{user}', [UserManagementController::class, 'editForm'])->name('admin.userManagement.editForm');
     Route::post('/admin/user-management/{type}/edit/{user}', [UserManagementController::class, 'edit'])->name('admin.userManagement.edit');
     Route::post('/admin/user-management/{type}/delete/{user}', [UserManagementController::class, 'delete'])->name('admin.userManagement.delete');
 });

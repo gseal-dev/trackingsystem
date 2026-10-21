@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Role;
-use App\Models\Department;
 use Illuminate\Http\Request;
 use App\Support\CsvExport;
 use App\Support\Paging;
@@ -42,19 +41,6 @@ class UserManagementController extends Controller
         );
     }
 
-    public function staffs(Request $request) {
-        $users = User::whereHas('role', fn($q) => $q->where('roleName', 'Staff'))
-            ->orderBy('userID')
-            ->paginate(Paging::perPage($request))
-            ->withQueryString();
-
-        if ($users->isEmpty() && $users->currentPage() > 1) {
-            return redirect()->to($users->url($users->lastPage()));
-        }
-
-        return view('admin.UserManagement.staffs', compact('users'));
-    }
-
     public function add(Request $request, $type) {
         abort_unless($type === 'admins', 404);
 
@@ -77,13 +63,6 @@ class UserManagementController extends Controller
         ]);
         return redirect()->route($type === 'admins' ? 'dashboard' : "admin.userManagement.$type")
             ->with('success', 'User added!');
-    }
-
-    public function editForm($type, User $user) {
-        $roles = Role::whereIn('roleName', ['Admin', 'Staff'])
-            ->orderBy('roleName')
-            ->get();
-        return view('admin.UserManagement.editUser', compact('user', 'type', 'roles'));
     }
 
     public function edit(Request $request, $type, User $user) {
