@@ -55,14 +55,6 @@ class UserManagementController extends Controller
         return view('admin.UserManagement.staffs', compact('users'));
     }
 
-    public function addForm($type) {
-        abort_unless($type === 'admins', 404);
-
-        $departments = Department::all();
-        $roles = Role::whereIn('roleName', ['Admin', 'Staff'])->orderBy('roleName')->get();
-        return view('admin.UserManagement.addUser', compact('type', 'departments', 'roles'));
-    }
-
     public function add(Request $request, $type) {
         abort_unless($type === 'admins', 404);
 

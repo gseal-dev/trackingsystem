@@ -8,7 +8,7 @@
         <h1 class="h3 mb-1">Staff</h1>
         <div class="text-muted">Manage staff users</div>
       </div>
-      <a href="{{ route('admin.userManagement.addForm', ['type' => 'staffs']) }}" class="btn btn-brand"><i class="bi bi-person-plus"></i> Add Staff</a>
+      <a href="{{ route('admin.userManagement.admins') }}" class="btn btn-brand"><i class="bi bi-person-plus"></i> Add Staff</a>
     </div>
     <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary mb-3">
       <i class="bi bi-arrow-left"></i> Back to Dashboard
