@@ -195,7 +195,9 @@
                   <td><span class="text-muted" style="letter-spacing: 0.12em;">********</span></td>
                   <td>
                     <div class="actions-cell justify-content-end">
-                      <a class="btn-action" href="{{ route('admin.userManagement.editForm', ['type' => 'admins', 'user' => $user]) }}" title="Edit user"><i class="bi bi-pencil"></i></a>
+                      <button type="button" class="btn-action"
+                              data-user-edit="{{ json_encode(['id' => $user->userID, 'username' => $user->username, 'email' => $user->email, 'firstName' => $user->firstName, 'lastName' => $user->lastName, 'roleID' => $user->roleID ?? '', 'editUrl' => route('admin.userManagement.edit', ['type' => 'admins', 'user' => $user->userID])]) }}"
+                              title="Edit user"><i class="bi bi-pencil"></i></button>
                       <form action="{{ route('admin.userManagement.delete', ['type' => 'admins', 'user' => $user]) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
                         @csrf
                         <button type="submit" class="btn-action text-danger border-0 bg-transparent" title="Delete user"><i class="bi bi-trash"></i></button>
@@ -222,6 +224,7 @@
   </div>
 
 @include('partials.admin-add-user-modal', ['roles' => $roles])
+@include('partials.admin-edit-user-modal', ['roles' => $roles])
 
 @push('scripts')
 <script>
@@ -238,6 +241,38 @@
       input.setSelectionRange(input.value.length, input.value.length);
     }
   })();
+  // Prefill the Edit User modal from the row's data-user-edit attribute
+  document.addEventListener('click', function (event) {
+    const btn = event.target.closest('[data-user-edit]');
+    if (!btn) return;
+
+    const user = JSON.parse(btn.dataset.userEdit);
+    const form = document.getElementById('editUserForm');
+    const modalEl = document.getElementById('editUserModal');
+
+    if (form) form.action = user.editUrl || '#';
+    const idEl = document.getElementById('editUserId');
+    if (idEl) idEl.value = user.id;
+
+    const fill = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.value = value === null || value === undefined ? '' : value;
+    };
+
+    fill('editUsername', user.username);
+    fill('editEmail', user.email);
+    fill('editFirstName', user.firstName);
+    fill('editLastName', user.lastName);
+    fill('editRoleID', user.roleID);
+    fill('editPassword', '');
+    fill('editPasswordConfirmation', '');
+
+    if (modalEl) {
+      if (modalEl.parentElement !== document.body) document.body.appendChild(modalEl);
+      new bootstrap.Modal(modalEl).show();
+    }
+  });
+
 </script>
 @endpush
 @endsection
