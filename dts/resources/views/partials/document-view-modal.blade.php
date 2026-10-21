@@ -169,26 +169,26 @@
   #documentViewModal .modal-content { border: 0; border-radius: 8px; overflow: hidden; background: #fff; color: #1f2937; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25); }
   #documentViewModal .modal-header { background: #f8f9fa; border-bottom: 1px solid #e5e7eb; padding: 1rem 1.5rem; }
   #documentViewModal .modal-title { display: flex; align-items: center; gap: 0.6rem; font-size: 1.05rem; font-weight: 700; color: #1f2937; word-break: break-word; }
-  #documentViewModal .doc-title-icon { color: #ea3a14; font-size: 1.15rem; }
+  #documentViewModal .doc-title-icon { color: #001253; font-size: 1.15rem; }
   #documentViewModal .modal-body { padding: 1.5rem; background: #fff; }
   #documentViewModal .modal-footer { background: #f8f9fa; border-top: 1px solid #e5e7eb; padding: 0.75rem 1.5rem; gap: 0.5rem; }
 
   /* View / Download: two equal full-width buttons */
   #documentViewModal .doc-actions { display: flex; gap: 1rem; }
   #documentViewModal .doc-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1rem; border-radius: 4px; font-weight: 700; color: #fff; text-decoration: none; transition: background 0.15s; }
-  #documentViewModal .doc-action-view { background: #ea3a14; }
-  #documentViewModal .doc-action-view:hover { background: #cf3010; color: #fff; }
-  #documentViewModal .doc-action-download { background: #6c757d; }
-  #documentViewModal .doc-action-download:hover { background: #5a6268; color: #fff; }
-  #documentViewModal .doc-action-upload { background: #0d6efd; }
-  #documentViewModal .doc-action-upload:hover { background: #0b5ed7; color: #fff; }
+  #documentViewModal .doc-action-view { background: #001253; }
+  #documentViewModal .doc-action-view:hover { background: #284096; color: #fff; }
+  #documentViewModal .doc-action-download { background: #ea3a14; }
+  #documentViewModal .doc-action-download:hover { background: #b83719; color: #fff; }
+  #documentViewModal .doc-action-upload { background: #001253; }
+  #documentViewModal .doc-action-upload:hover { background: #284096; color: #fff; }
   #documentViewModal .doc-action-btn.disabled { opacity: 0.45; pointer-events: none; }
   #documentViewModal .doc-divider { border: 0; border-top: 1px solid #e5e7eb; opacity: 1; margin: 1.25rem 0; }
 
   /* Document Information card */
   #documentViewModal .doc-info-card { background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 1.25rem 1.5rem 0.5rem; }
-  #documentViewModal .doc-info-title { display: flex; align-items: center; gap: 0.6rem; font-size: 1.05rem; font-weight: 700; color: #1f2937; padding-bottom: 0.6rem; margin-bottom: 1rem; border-bottom: 2px solid #ea3a14; }
-  #documentViewModal .doc-info-title i { color: #ea3a14; font-size: 1rem; }
+  #documentViewModal .doc-info-title { display: flex; align-items: center; gap: 0.6rem; font-size: 1.05rem; font-weight: 700; color: #1f2937; padding-bottom: 0.6rem; margin-bottom: 1rem; border-bottom: 2px solid #001253; }
+  #documentViewModal .doc-info-title i { color: #001253; font-size: 1rem; }
   #documentViewModal .doc-info-row { display: grid; grid-template-columns: minmax(130px, 30%) 1fr; border-bottom: 1px solid #e5e7eb; }
   #documentViewModal .doc-info-row:last-child { border-bottom: 0; }
   #documentViewModal .doc-info-label { padding: 0.9rem 1rem; color: #6b7280; font-weight: 600; }
