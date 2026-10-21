@@ -244,7 +244,6 @@
   </div>
 
 @include('partials.document-view-modal', ['canEdit' => true])
-@include('partials.document-edit-modal')
 
 @push('scripts')
 <script>
