@@ -24,6 +24,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard
 // User Management - Per Role
 Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::get('/admin/user-management/admins', [UserManagementController::class, 'admins'])->name('admin.userManagement.admins');
+    Route::get('/admin/user-management/history', [UserManagementController::class, 'adminHistory'])->name('admin.userManagement.history');
     Route::get('/admin/user-management/export', [UserManagementController::class, 'exportUsers'])->middleware('role:Admin')->name('admin.userManagement.export');
     Route::post('/admin/user-management/{type}/add', [UserManagementController::class, 'add'])
         ->where('type', 'admins')

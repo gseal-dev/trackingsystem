@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use App\Support\CsvExport;
+use App\Support\DocumentList;
 use App\Support\Paging;
 
 class UserManagementController extends Controller
@@ -30,6 +31,47 @@ class UserManagementController extends Controller
         $roles = Role::whereIn('roleName', ['Admin', 'Staff'])->orderBy('roleName')->get();
         return view('admin.UserManagement.admins', compact('users', 'roles'));
     }
+
+    /** Admin sees every document transaction history (not department-scoped). */
+    public function adminHistory(Request $request)
+    {
+        $search = $request->input('search');
+
+        $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department', 'user']);
+
+        if ($search) {
+            $historiesQuery->whereHas('document', function ($q) use ($search) {
+                $q->where('title', 'LIKE', "%$search%")
+                    ->orWhere('documentTitle', 'LIKE', "%$search%")
+                    ->orWhere('documentNo', 'LIKE', "%$search%")
+                    ->orWhereHas('owner', function ($oq) use ($search) {
+                        $oq->where('username', 'LIKE', "%$search%")
+                            ->orWhere('firstName', 'LIKE', "%$search%")
+                            ->orWhere('lastName', 'LIKE', "%$search%");
+                    });
+            });
+        }
+
+        if ($request->filled('year') || $request->filled('month') || $request->filled('day')) {
+            $historiesQuery->whereHas('document', function ($q) use ($request) {
+                $q->dateFilter($request->input('year'), $request->input('month'), $request->input('day'));
+            });
+        }
+
+        $histories = $historiesQuery
+            ->orderByDesc('created_at')
+            ->orderByDesc('historyID')
+            ->paginate(DocumentList::perPage($request))
+            ->withQueryString();
+
+        // e.g. the last page emptied out: go to the new last page
+        if ($histories->isEmpty() && $histories->currentPage() > 1) {
+            return redirect()->to($histories->url($histories->lastPage()));
+        }
+
+        return view('admin.UserManagement.history', compact('histories'));
+    }
+
 
     /** CSV of every user matching the search (not only the page on screen). */
     public function exportUsers(Request $request) {

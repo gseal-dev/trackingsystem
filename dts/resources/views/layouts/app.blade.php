@@ -771,8 +771,12 @@
             <i class="bi bi-grid-fill"></i><span class="sidebar-label">Dashboard</span>
           </a>
           <a href="{{ route('admin.userManagement.admins') }}"
-             class="sidebar-link {{ request()->routeIs('admin.userManagement.*') ? 'active' : '' }}" title="Users List">
+             class="sidebar-link {{ request()->routeIs('admin.userManagement.admins') ? 'active' : '' }}" title="Users List">
             <i class="bi bi-people-fill"></i><span class="sidebar-label">Users List</span>
+          </a>
+          <a href="{{ route('admin.userManagement.history') }}"
+             class="sidebar-link {{ request()->routeIs('admin.userManagement.history') ? 'active' : '' }}" title="History">
+            <i class="bi bi-clock-history"></i><span class="sidebar-label">History</span>
           </a>
         @elseif($role === 'Staff')
           <a href="{{ route('dashboard') }}"
