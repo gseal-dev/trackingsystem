@@ -549,11 +549,12 @@
         flex-direction: column;
         overflow-x: hidden;
         overflow-y: auto;
-        background: #001253;
-        color: #ffffff;
+        background: #ffffff;
+        color: #001253;
         z-index: 1080;
         box-shadow: 4px 0 15px rgba(0, 0, 0, 0.08);
         transition: width 0.25s ease;
+        border-right: 1px solid #e2e8f0; 
       }
       body.sidebar-expanded .app-sidebar {
         width: var(--sidebar-expanded-width);
@@ -584,7 +585,7 @@
         min-height: 58px;
         padding: 0 16px;
         gap: 14px;
-        border-bottom: 1px solid rgba(255,255,255,0.12);
+        border-bottom: 1px solid rgba(0,18,83,0.12);
       }
       .sidebar-toggle {
         flex: 0 0 40px;
@@ -595,11 +596,11 @@
         background: transparent;
         border: 0;
         border-radius: 8px;
-        color: #ffffff;
+        color: #001253;
         font-size: 1.5rem;
         cursor: pointer;
       }
-      .sidebar-toggle:hover { background: rgba(255,255,255,0.12); }
+      .sidebar-toggle:hover { background: rgba(0,18,83,0.12); }
       .sidebar-heading,
       .sidebar-label {
         white-space: nowrap;
@@ -634,7 +635,7 @@
         border: 0;
         border-radius: 8px;
         background: transparent;
-        color: #cbd5e1;
+        color: #475569;
         text-decoration: none;
         font-size: 0.88rem;
         font-weight: 600;
@@ -648,16 +649,18 @@
         width: 22px;
         text-align: center;
         font-size: 1.2rem;
+        color: #001253;
       }
+      
       .sidebar-link:hover,
       .sidebar-link.active {
-        color: #ffffff;
+        color: #fcfcff;
         background: #ea3a14;
       }
       .sidebar-footer {
         margin-top: auto;
         padding: 12px 10px 18px;
-        border-top: 1px solid rgba(255,255,255,0.12);
+        border-top: 1px solid rgba(0,18,83,0.12);
       }
       .sidebar-user {
         display: flex;
@@ -665,7 +668,7 @@
         gap: 16px;
         min-height: 45px;
         padding: 0 15px;
-        color: #e2e8f0;
+        color: #001253;
         font-size: 0.85rem;
         overflow: hidden;
       }
