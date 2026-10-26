@@ -186,16 +186,6 @@
               </div>
 
               <div class="col-md-3">
-                <label class="form-label fw-bold small text-muted mb-1"><i class="bi bi-folder me-1"></i> Classification</label>
-                <select name="document_type" class="form-select">
-                  <option value="">All Classifications</option>
-                  @foreach($documentTypes as $type)
-                    <option value="{{ $type }}" {{ request('document_type') == $type ? 'selected' : '' }}>{{ $type }}</option>
-                  @endforeach
-                </select>
-              </div>
-
-              <div class="col-md-3">
                 <label class="form-label fw-bold small text-muted mb-1"><i class="bi bi-building me-1"></i> Department</label>
                 <select name="department" class="form-select">
                   <option value="">All Departments</option>

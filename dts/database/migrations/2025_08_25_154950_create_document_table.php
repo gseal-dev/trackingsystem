@@ -15,7 +15,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('documentType')->nullable();
             $table->unsignedBigInteger('ownerID');
-            $table->unsignedBigInteger('currentStatus');
+            $table->unsignedBigInteger('currentStatus')->nullable();
             $table->unsignedBigInteger('currentDepartmentID')->default(1);
             $table->string('filePath')->nullable(); 
             $table->timestamps();

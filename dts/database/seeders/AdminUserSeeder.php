@@ -18,7 +18,6 @@ class AdminUserSeeder extends Seeder
                 'middleName' => '',
                 'lastName' => '',
                 'roleID' => 1,
-                'departmentID' => 1,
                 'phoneNo' => '',
                 'created_at' => now(),
                 'updated_at' => now(),
