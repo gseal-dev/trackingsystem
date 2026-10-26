@@ -771,13 +771,17 @@
                 aria-label="Expand sidebar" aria-expanded="false" aria-controls="appSidebar">
           <i class="bi bi-list"></i>
         </button>
-        <span class="sidebar-label" style="font-weight: 600;">Records Management</span>
+        <span class="sidebar-label" style="font-weight: 600;">DPWH</span>
       </div>
       <div class="sidebar-menu">
         @if($role === 'Admin')
           <a href="{{ route('dashboard') }}"
              class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Dashboard">
             <i class="bi bi-grid-fill"></i><span class="sidebar-label">Dashboard</span>
+          </a>
+          <a href="{{ route('admin.documents') }}"
+             class="sidebar-link {{ request()->routeIs('admin.documents*') ? 'active' : '' }}" title="Documents List">
+            <i class="bi bi-folder2-open"></i><span class="sidebar-label">Documents List</span>
           </a>
           <a href="{{ route('admin.userManagement.admins') }}"
              class="sidebar-link {{ request()->routeIs('admin.userManagement.admins') ? 'active' : '' }}" title="Users List">
@@ -787,6 +791,7 @@
              class="sidebar-link {{ request()->routeIs('admin.userManagement.history') ? 'active' : '' }}" title="History">
             <i class="bi bi-clock-history"></i><span class="sidebar-label">History</span>
           </a>
+          
         @elseif($role === 'Staff')
           <a href="{{ route('dashboard') }}"
              class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Dashboard">

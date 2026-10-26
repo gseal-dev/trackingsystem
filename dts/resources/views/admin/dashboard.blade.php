@@ -156,6 +156,57 @@
     margin: auto;
   }
 
+  /* Quick access buttons */
+  .quick-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.9rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+  .quick-title i { color: rgb(0, 18, 83); }
+
+  .quick-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    color: #0f172a;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .quick-btn:hover {
+    color: #0f172a;
+    border-color: rgb(0, 18, 83);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  }
+  .quick-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    font-size: 1.3rem;
+    color: rgb(0, 18, 83);
+    background: rgba(0, 18, 83, 0.08);
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .quick-btn:hover .quick-icon { color: #ffffff; background: rgb(0, 18, 83); }
+
   @media (max-width: 1024px) {
     .staff-layout {
       grid-template-columns: 1fr;
@@ -214,8 +265,7 @@
           </div>
         </div>
 
-        <!-- Documents by Department Chart Card -->
-        <div class="col-12 col-md-4 d-flex">
+         <div class="col-12 col-md-4 d-flex">
           <div class="p-4 border rounded-4 bg-white shadow-sm chart-card w-100">
             <h5 class="fw-bold mb-3 text-dark">
               <i class="bi bi-pie-chart-fill me-2 text-success"></i> Documents by Department
@@ -226,8 +276,36 @@
           </div>
         </div>
       </div>
+     
 
-      @include('admin._documents')
+        <!-- Quick Access -->
+      <div class="mb-4">
+        <h5 class="quick-title"><i class="bi bi-lightning-charge-fill"></i> Quick Access</h5>
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <a href="{{ route('admin.documents') }}" class="quick-btn" id="quickDocuments">
+              <span class="quick-icon"><i class="bi bi-folder2-open"></i></span>
+              <span>Documents</span>
+            </a>
+          </div>
+          <div class="col-12 col-md-4">
+            <a href="{{ route('admin.userManagement.admins') }}" class="quick-btn" id="quickUsers">
+              <span class="quick-icon"><i class="bi bi-people-fill"></i></span>
+              <span>Users</span>
+            </a>
+          </div>
+          <div class="col-12 col-md-4">
+            <a href="{{ route('admin.userManagement.history') }}" class="quick-btn" id="quickHistory">
+              <span class="quick-icon"><i class="bi bi-clock-history"></i></span>
+              <span>History</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents by Department Chart Card -->
+       
+
     </div>
   </div>
 </div>

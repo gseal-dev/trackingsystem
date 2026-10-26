@@ -28,18 +28,7 @@ class DashboardController extends Controller
                     return $u->role->roleName ?? 'Unassigned';
                 })->map->count();
 
-                // Document list under the stats: every document, newest first, 25 per page by default
-                $documents = $this->adminDocumentsQuery($request)
-                    ->paginate(DocumentList::perPage($request))
-                    ->withQueryString()
-                    ->fragment('documents');
-
-                // e.g. the last page emptied out after deletions: go to the new last page
-                if ($documents->isEmpty() && $documents->currentPage() > 1) {
-                    return redirect()->to($documents->url($documents->lastPage()));
-                }
-
-                return view('admin.dashboard', compact('totalDocuments', 'totalUsers', 'documentsByDept', 'usersByRole', 'documents'));
+                return view('admin.dashboard', compact('totalDocuments', 'totalUsers', 'documentsByDept', 'usersByRole'));
             case 'Staff':
                 return app(StaffDocumentController::class)->index(request());
             default:
@@ -56,6 +45,21 @@ class DashboardController extends Controller
             ->orderByDesc('documentDate')
             ->orderByDesc('created_at')
             ->orderByDesc('documentId');
+    }
+
+    /** Admin documents page: every document, filtered and searched, newest first. */
+    public function documents(Request $request)
+    {
+        $documents = $this->adminDocumentsQuery($request)
+            ->paginate(DocumentList::perPage($request))
+            ->withQueryString();
+
+        // e.g. the last page emptied out after deletions: go to the new last page
+        if ($documents->isEmpty() && $documents->currentPage() > 1) {
+            return redirect()->to($documents->url($documents->lastPage()));
+        }
+
+        return view('admin.documents', compact('documents'));
     }
 
     /** CSV of every document matching the current filters (not only the page on screen). */

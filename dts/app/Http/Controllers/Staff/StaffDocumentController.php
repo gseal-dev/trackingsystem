@@ -289,7 +289,7 @@ class StaffDocumentController extends Controller
     // Where each role goes to see the document list
     private function listRouteFor($user): string
     {
-        return $user->role?->roleName === 'Admin' ? 'dashboard' : 'staff.documents';
+        return $user->role?->roleName === 'Admin' ? 'admin.documents' : 'staff.documents';
     }
 
     public function store(Request $request)

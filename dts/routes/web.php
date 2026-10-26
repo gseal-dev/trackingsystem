@@ -31,6 +31,9 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
         ->name('admin.userManagement.add');
     Route::post('/admin/user-management/{type}/edit/{user}', [UserManagementController::class, 'edit'])->name('admin.userManagement.edit');
     Route::post('/admin/user-management/{type}/delete/{user}', [UserManagementController::class, 'delete'])->name('admin.userManagement.delete');
+
+    // Documents list (admin-only page)
+    Route::get('/admin/documents', [DashboardController::class, 'documents'])->name('admin.documents');
 });
 
 // Document routes (login required)
