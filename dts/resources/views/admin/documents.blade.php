@@ -111,12 +111,14 @@
   <div class="dashboard-container wide">
       <div class="page-card">
         <div class="page-card-header"><i class="bi bi-folder2-open"></i> Admin Documents List</div>
-        <div class="section-header align-items-center">
+        
+        <!-- Updated section header layout to align heading and export button horizontally -->
+        <div class="section-header d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
           <div class="d-flex flex-column gap-1">
             <h2 class="section-subtitle mb-1">Documents</h2>
             <p class="text-muted mb-0 small">Add and delete documents</p>
           </div>
-          <div class="d-flex gap-2 align-items-center flex-wrap">
+          <div class="d-flex gap-2 align-items-center">
             <a href="{{ route('admin.documents.export', request()->only(['year', 'month', 'day', 'q'])) }}" class="btn btn-outline-success fw-bold px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;" title="Exports every document matching the current filters">
               <i class="bi bi-file-earmark-spreadsheet"></i>
               <span>Export Excel</span>
