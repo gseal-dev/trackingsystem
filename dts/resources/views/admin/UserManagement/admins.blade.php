@@ -171,6 +171,7 @@
           <div class="d-flex gap-2">
             <a href="{{ route('admin.userManagement.export', request()->only('q')) }}" class="btn btn-outline-secondary px-3 py-2" id="export-users" style="border-radius: 50px;" title="Exports every user matching the search"><i class="bi bi-download me-1"></i> Export Excel</a>
             <button type="button" class="btn btn-dark px-4 py-2" style="background-color: #ea3a14; color: #ffffff; border-radius: 50px; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#addUserModal" title="Add user"><i class="bi bi-person-plus me-1"></i> Add User</button>
+            <button type="button" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 50px; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#defaultPasswordModal" title="Set default password for new users"><i class="bi bi-key me-1"></i> Default Password</button>
           </div>
         </div>
 
@@ -225,6 +226,7 @@
 
 @include('partials.admin-add-user-modal', ['roles' => $roles])
 @include('partials.admin-edit-user-modal', ['roles' => $roles])
+@include('partials.admin-default-password-modal')
 
 @push('scripts')
 <script>

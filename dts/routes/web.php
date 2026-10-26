@@ -41,6 +41,9 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
 
     // Documents list (admin-only page)
     Route::get('/admin/documents', [DashboardController::class, 'documents'])->name('admin.documents');
+
+    // Save the default password applied to newly created users
+    Route::post('/admin/user-management/default-password', [UserManagementController::class, 'saveDefaultPassword'])->name('admin.userManagement.defaultPassword.save');
 });
 
 // Document routes (login required)

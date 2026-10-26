@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use App\Support\CsvExport;
 use App\Support\DocumentList;
@@ -29,7 +30,8 @@ class UserManagementController extends Controller
         }
 
         $roles = Role::whereIn('roleName', ['Admin', 'Staff'])->orderBy('roleName')->get();
-        return view('admin.UserManagement.admins', compact('users', 'roles'));
+        $defaultPassword = Setting::value('default_password');
+        return view('admin.UserManagement.admins', compact('users', 'roles', 'defaultPassword'));
     }
 
     /** Admin sees every document transaction history (not department-scoped). */
@@ -86,14 +88,24 @@ class UserManagementController extends Controller
     public function add(Request $request, $type) {
         abort_unless($type === 'admins', 404);
 
+        // If no default password is configured yet, require the admin to type one.
+        $defaultPassword = Setting::value('default_password');
+        $passwordRule = $defaultPassword ? 'nullable|string|min:8|max:72' : 'required|string|min:8|max:72';
+
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
             'email' => 'required|email|unique:users,email',
             'firstName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
             'roleID' => 'required|exists:roles,roleID',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => $passwordRule,
         ]);
+
+        $password = $request->input('password');
+        if (!$password) {
+            $password = $defaultPassword;
+        }
+
         $roleID = $request->input('roleID');
         User::create([
             'username' => $request->username,
@@ -101,11 +113,37 @@ class UserManagementController extends Controller
             'firstName' => $request->firstName,
             'lastName' => $request->lastName,
             'roleID' => $roleID,
-            'password' => \Hash::make($request->password),
+            'password' => \Hash::make($password),
         ]);
+
+        $isStaff = \App\Models\Role::where('roleID', $roleID)->value('roleName') === 'Staff';
+
         return redirect()->route($type === 'admins' ? 'dashboard' : "admin.userManagement.$type")
-            ->with('success', 'User added!');
+            ->with('success', $isStaff
+                ? 'User added! Give them the password - they can change it in Settings after logging in.'
+                : 'User added!');
     }
+
+    /** Save the default password applied to newly created users. */
+    public function saveDefaultPassword(Request $request)
+    {
+        $request->validate([
+            'default_password' => 'nullable|string|min:8|max:72',
+        ]);
+
+        Setting::updateOrCreate(
+            ['key' => 'default_password'],
+            ['value' => $request->input('default_password')]
+        );
+
+        $hasPassword = (bool) $request->input('default_password');
+
+        return redirect()->route('admin.userManagement.admins')
+            ->with('success', $hasPassword
+                ? 'Default password saved. New users will be created with this password.'
+                : 'Default password cleared. You must set a password when adding each user.');
+    }
+
 
     public function edit(Request $request, $type, User $user) {
         $request->validate([
