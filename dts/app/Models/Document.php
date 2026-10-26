@@ -35,6 +35,33 @@ class Document extends Model
     }
 
     /**
+     * Filter by a date range (inclusive) of the document date.
+     * Falls back to the upload date for documents that have no document date.
+     */
+    public function scopeDateRange(Builder $query, ?string $from = null, ?string $to = null): Builder
+    {
+        if ($from) {
+            $query->where(function ($q) use ($from) {
+                $q->where('documentDate', '>=', $from)
+                  ->orWhere(function ($sub) use ($from) {
+                      $sub->whereNull('documentDate')->where('created_at', '>=', $from);
+                  });
+            });
+        }
+
+        if ($to) {
+            $query->where(function ($q) use ($to) {
+                $q->where('documentDate', '<=', $to)
+                  ->orWhere(function ($sub) use ($to) {
+                      $sub->whereNull('documentDate')->where('created_at', '<=', $to);
+                  });
+            });
+        }
+
+        return $query;
+    }
+
+    /**
      * Filter by year / month / day of the document date
      * (falls back to the upload date for documents that have no document date).
      */

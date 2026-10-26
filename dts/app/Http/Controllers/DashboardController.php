@@ -50,7 +50,18 @@ class DashboardController extends Controller
     /** Admin documents page: every document, filtered and searched, newest first. */
     public function documents(Request $request)
     {
-        $documents = $this->adminDocumentsQuery($request)
+        $query = $this->adminDocumentsQuery($request)
+            ->dateRange($request->input('date_from'), $request->input('date_to'));
+
+        if ($request->filled('document_type')) {
+            $query->where('documentType', $request->input('document_type'));
+        }
+
+        if ($request->filled('department')) {
+            $query->where('currentDepartmentID', $request->input('department'));
+        }
+
+        $documents = $query
             ->paginate(DocumentList::perPage($request))
             ->withQueryString();
 
@@ -59,7 +70,10 @@ class DashboardController extends Controller
             return redirect()->to($documents->url($documents->lastPage()));
         }
 
-        return view('admin.documents', compact('documents'));
+        $documentTypes = \App\Models\Document::distinct()->pluck('documentType')->sort()->values();
+        $departments = \App\Models\Department::orderBy('depName')->get();
+
+        return view('admin.documents', compact('documents', 'documentTypes', 'departments'));
     }
 
     /** CSV of every document matching the current filters (not only the page on screen). */
