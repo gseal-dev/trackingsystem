@@ -584,7 +584,7 @@
         align-items: center;
         min-height: 58px;
         padding: 0 16px;
-        gap: 14px;
+        gap: 1px;
         border-bottom: 1px solid rgba(0,18,83,0.12);
       }
       .sidebar-toggle {
@@ -650,6 +650,12 @@
         text-align: center;
         font-size: 1.2rem;
         color: #001253;
+      }
+
+      .sidebar-link:hover > i,
+      .sidebar-link.active > i,
+      .sidebar-user > i {
+        color: #ffffff;
       }
       
       .sidebar-link:hover,
@@ -765,7 +771,7 @@
                 aria-label="Expand sidebar" aria-expanded="false" aria-controls="appSidebar">
           <i class="bi bi-list"></i>
         </button>
-
+        <span class="sidebar-label" style="font-weight: 600;">Records Management</span>
       </div>
       <div class="sidebar-menu">
         @if($role === 'Admin')
