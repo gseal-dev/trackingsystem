@@ -65,7 +65,7 @@
             <div class="doc-info-row"><div class="doc-info-label">Reference No.</div><div class="doc-info-value" data-doc-field="referenceNo"></div></div>
             <div class="doc-info-row"><div class="doc-info-label">Subject</div><div class="doc-info-value" data-doc-field="subject"></div></div>
             <div class="doc-info-row"><div class="doc-info-label">From Office</div><div class="doc-info-value" data-doc-field="office"></div></div>
-            <div class="doc-info-row"><div class="doc-info-label">Type</div><div class="doc-info-value text-uppercase" data-doc-field="type"></div></div>
+            <!-- <div class="doc-info-row"><div class="doc-info-label">Type</div><div class="doc-info-value text-uppercase" data-doc-field="type"></div></div> -->
             <div class="doc-info-row"><div class="doc-info-label">Document Date</div><div class="doc-info-value" data-doc-field="date"></div></div>
             <div class="doc-info-row"><div class="doc-info-label">Description</div><div class="doc-info-value" data-doc-field="description"></div></div>
           </div>
@@ -94,14 +94,14 @@
                        value="{{ old('fromOffice') ?? '' }}" required>
               </div>
             </div>
-            <div class="doc-info-row">
+            <!-- <div class="doc-info-row">
               <div class="doc-info-label">Type</div>
               <div class="doc-info-value">
                 <input type="text" name="documentType" id="editDocumentType"
                        class="edit-input text-uppercase" placeholder="TYPE"
                        value="{{ old('documentType') ?? '' }}" required>
               </div>
-            </div>
+            </div> -->
             <div class="doc-info-row">
               <div class="doc-info-label">Subject</div>
               <div class="doc-info-value">

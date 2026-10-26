@@ -114,7 +114,7 @@
             <p class="text-muted mb-0 small">Add and delete documents</p>
           </div>
           <div class="d-flex gap-2 align-items-center">
-            <a href="{{ route('admin.documents.export', request()->only(['year', 'month', 'day', 'q', 'date_from', 'date_to', 'document_type', 'department'])) }}" class="btn btn-outline-success fw-bold px-3 py-2 rounded-2 d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;" title="Exports every document matching the current filters">
+            <a href="{{ route('admin.documents.export', request()->only(['year', 'month', 'day', 'q', 'date_from', 'date_to', 'department'])) }}" class="btn btn-outline-success fw-bold px-3 py-2 rounded-2 d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;" title="Exports every document matching the current filters">
               <i class="bi bi-file-earmark-spreadsheet"></i>
               <span>Export Excel</span>
             </a>
@@ -228,7 +228,7 @@
                 <tr>
                   <th>Reference Number</th>
                   <th>From Office</th>
-                  <th>Type</th>
+                  <!-- <th>Type</th> -->
                   <th>Subject</th>
                   <th>Uploaded By</th>
                   <th>Date</th>
@@ -245,7 +245,7 @@
                   <tr>
                     <td class="fw-bold">{{ $doc->documentNo }}</td>
                     <td>{{ $doc->department->depName ?? '-' }}</td>
-                    <td style="text-transform: uppercase;">{{ $doc->documentType }}</td>
+                    <!-- <td style="text-transform: uppercase;">{{ $doc->documentType }}</td> -->
                     <td>{{ $doc->title }}</td>
                     <td>{{ $uploader }}</td>
                     <td class="text-muted">{{ $doc->documentDate ? \Carbon\Carbon::parse($doc->documentDate)->format('F d, Y') : $doc->created_at?->format('F d, Y') }}</td>

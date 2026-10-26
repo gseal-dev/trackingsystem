@@ -201,7 +201,7 @@
                 <tr>
                   <th>Reference Number</th>
                   <th>From Office</th>
-                  <th>Type</th>
+                  <!-- <th>Type</th> -->
                   <th>Subject</th>
                   <th>Date</th>
                   <th class="text-end">Actions</th>
@@ -212,7 +212,7 @@
                 <tr>
                   <td class="fw-bold">{{ $document->documentNo }}</td>
                   <td>{{ $document->department->depName ?? '-' }}</td>
-                  <td style="text-transform: uppercase;">{{ $document->documentType }}</td>
+                  <!-- <td style="text-transform: uppercase;">{{ $document->documentType }}</td> -->  
                   <td>{{ $document->title }}</td>
                   <td class="text-muted">{{ $document->documentDate ? \Carbon\Carbon::parse($document->documentDate)->format('F d, Y') : $document->created_at?->format('F d, Y') }}</td>
                   <td>
