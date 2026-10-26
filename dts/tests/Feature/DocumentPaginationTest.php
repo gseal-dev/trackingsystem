@@ -45,8 +45,7 @@ class DocumentPaginationTest extends TestCase
             $no = sprintf('%s-%03d', $prefix, $i);
             Document::create([
                 'documentId' => (string) Str::uuid(), 'documentNo' => $no, 'documentTitle' => "Title $no",
-                'title' => "Subject $no", 'description' => "Subject $no", 'documentType' => 'Memo',
-                'documentDate' => Carbon::parse($start)->addDays($i)->toDateString(),
+                'title' => "Subject $no", 'description' => "Subject $no", 'documentDate' => Carbon::parse($start)->addDays($i)->toDateString(),
                 'ownerID' => ($owner ?? $this->staff)->userID, 'currentDepartmentID' => $dep->depID,
                 'filePath' => "documents/$no.pdf",
             ]);

@@ -85,7 +85,6 @@
             <tr>
               <th class="border-0">Reference Number</th>
               <th class="border-0">From Office</th>
-              <th class="border-0">Type</th>
               <th class="border-0">Subject</th>
               <th class="border-0">Action</th>
               <th class="border-0">User</th>
@@ -97,7 +96,6 @@
               <tr>
                 <td class="fw-bold">{{ $history->document?->documentNo ?? '-' }}</td>
                 <td>{{ $history->document?->department?->depName ?? '-' }}</td>
-                <td><span class="badge bg-light text-dark border">{{ $history->document?->documentType ?? '-' }}</span></td>
                 <td>{{ $history->document?->title ?? '-' }}</td>
                 <td>{{ $history->action ?? '-' }}</td>
                 <td>

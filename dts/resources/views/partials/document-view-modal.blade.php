@@ -94,14 +94,6 @@
                        value="{{ old('fromOffice') ?? '' }}" required>
               </div>
             </div>
-            <!-- <div class="doc-info-row">
-              <div class="doc-info-label">Type</div>
-              <div class="doc-info-value">
-                <input type="text" name="documentType" id="editDocumentType"
-                       class="edit-input text-uppercase" placeholder="TYPE"
-                       value="{{ old('documentType') ?? '' }}" required>
-              </div>
-            </div> -->
             <div class="doc-info-row">
               <div class="doc-info-label">Subject</div>
               <div class="doc-info-value">
@@ -268,7 +260,6 @@
         const e = doc.edit || {};
         fill('editDocumentNo', e.documentNo);
         fill('editFromOffice', e.fromOffice);
-        fill('editDocumentType', e.documentType);
         fill('editTitle', e.title);
         fill('editDocumentDate', e.documentDate);
         const descEl = document.getElementById('editDescription');

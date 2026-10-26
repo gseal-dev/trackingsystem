@@ -123,7 +123,7 @@
 
         {{-- Active filter chips --}}
         @php
-          $hasFilters = request()->filled(['q', 'date_from', 'date_to', 'document_type', 'department']);
+          $hasFilters = request()->filled(['q', 'date_from', 'date_to', 'department']);
         @endphp
 
         @if($hasFilters)
@@ -139,12 +139,6 @@
               @if(request('date_from') || request('date_to'))
                 <a href="{{ route('admin.documents', array_filter(array_merge(request()->query(), ['date_from' => null, 'date_to' => null]))) }}" class="badge bg-light text-dark border d-inline-flex align-items-center gap-2 text-decoration-none small">
                   <span>{{ request('date_from') ?? 'Any' }} → {{ request('date_to') ?? 'Any' }}</span>
-                  <i class="bi bi-x-circle fw-bold" style="font-size: 0.65rem;"></i>
-                </a>
-              @endif
-              @if(request('document_type'))
-                <a href="{{ route('admin.documents', array_filter(array_merge(request()->query(), ['document_type' => null]))) }}" class="badge bg-light text-dark border d-inline-flex align-items-center gap-2 text-decoration-none small">
-                  <span>{{ e(request('document_type')) }}</span>
                   <i class="bi bi-x-circle fw-bold" style="font-size: 0.65rem;"></i>
                 </a>
               @endif
@@ -245,7 +239,6 @@
                   <tr>
                     <td class="fw-bold">{{ $doc->documentNo }}</td>
                     <td>{{ $doc->department->depName ?? '-' }}</td>
-                    <!-- <td style="text-transform: uppercase;">{{ $doc->documentType }}</td> -->
                     <td>{{ $doc->title }}</td>
                     <td>{{ $uploader }}</td>
                     <td class="text-muted">{{ $doc->documentDate ? \Carbon\Carbon::parse($doc->documentDate)->format('F d, Y') : $doc->created_at?->format('F d, Y') }}</td>

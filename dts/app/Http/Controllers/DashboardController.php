@@ -53,10 +53,6 @@ class DashboardController extends Controller
         $query = $this->adminDocumentsQuery($request)
             ->dateRange($request->input('date_from'), $request->input('date_to'));
 
-        if ($request->filled('document_type')) {
-            $query->where('documentType', $request->input('document_type'));
-        }
-
         if ($request->filled('department')) {
             $query->where('currentDepartmentID', $request->input('department'));
         }
@@ -70,10 +66,9 @@ class DashboardController extends Controller
             return redirect()->to($documents->url($documents->lastPage()));
         }
 
-        $documentTypes = \App\Models\Document::distinct()->pluck('documentType')->sort()->values();
         $departments = \App\Models\Department::orderBy('depName')->get();
 
-        return view('admin.documents', compact('documents', 'documentTypes', 'departments'));
+        return view('admin.documents', compact('documents', 'departments'));
     }
 
     /** CSV of every document matching the current filters (not only the page on screen). */
@@ -81,7 +76,7 @@ class DashboardController extends Controller
     {
         return DocumentList::csv(
             $this->adminDocumentsQuery($request),
-            ['Reference Number', 'Document Title', 'From Office', 'Type', 'Subject', 'Uploaded By', 'Date'],
+            ['Reference Number', 'Document Title', 'From Office', 'Subject', 'Uploaded By', 'Date'],
             function ($d) {
                 $uploader = $d->owner
                     ? ($d->owner->username ?: trim(($d->owner->firstName ?? '') . ' ' . ($d->owner->lastName ?? '')))
@@ -91,7 +86,6 @@ class DashboardController extends Controller
                     $d->documentNo,
                     $d->documentTitle,
                     $d->department->depName ?? '',
-                    strtoupper((string) $d->documentType),
                     $d->title,
                     $uploader,
                     $d->documentDate ? \Carbon\Carbon::parse($d->documentDate)->format('F d, Y') : $d->created_at?->format('F d, Y'),

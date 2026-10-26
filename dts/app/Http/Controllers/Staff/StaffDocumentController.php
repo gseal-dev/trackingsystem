@@ -57,7 +57,11 @@ class StaffDocumentController extends Controller
             ->when($user->departmentID, function ($q) use ($user) {
                 return $q->where('currentDepartmentID', $user->departmentID);
             })
+            ->dateRange($request->input('date_from'), $request->input('date_to'))
             ->dateFilter($request->input('year'), $request->input('month'), $request->input('day'))
+            ->when($request->filled('department'), function ($q) use ($request) {
+                return $q->where('currentDepartmentID', $request->input('department'));
+            })
             ->search($request->input('q'))
             ->orderByDesc('documentDate')
             ->orderByDesc('created_at')
@@ -85,12 +89,11 @@ class StaffDocumentController extends Controller
     {
         return DocumentList::csv(
             $this->staffDocumentsQuery($request),
-            ['Reference Number', 'Document Title', 'From Office', 'Type', 'Subject', 'Date'],
+            ['Reference Number', 'Document Title', 'From Office', 'Subject', 'Date'],
             fn ($d) => [
                 $d->documentNo,
                 $d->documentTitle,
                 $d->department->depName ?? '',
-                strtoupper((string) $d->documentType),
                 $d->title,
                 $d->documentDate ? \Carbon\Carbon::parse($d->documentDate)->format('F d, Y') : $d->created_at?->format('F d, Y'),
             ]
@@ -160,7 +163,6 @@ class StaffDocumentController extends Controller
             $data[] = [
                 'Reference Number' => $history->document?->documentNo ?? '-',
                 'From Office' => $history->document?->department?->depName ?? '-',
-                'Type' => $history->document?->documentType ?? '-',
                 'Subject' => $history->document?->title ?? '-',
                 'Action' => $history->action ?? '-',
                 'User' => $userName,
@@ -177,7 +179,7 @@ class StaffDocumentController extends Controller
         fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
 
         // Add headers
-        fputcsv($output, array_keys($data[0] ?? ['Reference Number', 'From Office', 'Type', 'Subject', 'Action', 'User', 'Timestamp']));
+        fputcsv($output, array_keys($data[0] ?? ['Reference Number', 'From Office', 'Subject', 'Action', 'User', 'Timestamp']));
 
         // Add data rows
         foreach ($data as $row) {
@@ -347,7 +349,6 @@ class StaffDocumentController extends Controller
             'documentNo' => 'required|unique:documents,documentNo,' . $document->documentId . ',documentId',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'documentType' => 'required|string|max:255',
             'fromOffice' => 'required|string|max:255',
             'documentDate' => 'nullable|date',
         ], [], $this->fieldNames());
@@ -368,7 +369,6 @@ class StaffDocumentController extends Controller
             'documentNo' => $request->documentNo,
             'title' => $request->title,
             'description' => $request->description,
-            'documentType' => $request->documentType,
             'documentDate' => $request->documentDate ?? $document->documentDate,
             'currentDepartmentID' => $department->depID,
         ];
@@ -481,7 +481,7 @@ class StaffDocumentController extends Controller
 
         while (($row = fgetcsv($handle)) !== false) {
             if (count($row) < 5) continue;
-            [$documentNo, $fromOffice, $documentType, $title, $documentDate] = array_pad($row, 5, '');
+            [$documentNo, $fromOffice, $title, $documentDate] = array_pad($row, 4, '');
 
             $documentNo = trim($documentNo);
             if (empty($documentNo)) continue;
@@ -504,7 +504,6 @@ class StaffDocumentController extends Controller
                 'documentNo' => $documentNo,
                 'title' => trim($title) ?: 'Untitled Document',
                 'description' => trim($title) ?: 'Untitled Document',
-                'documentType' => trim($documentType) ?: 'Memo',
                 'documentDate' => !empty($documentDate) ? date('Y-m-d', strtotime($documentDate)) : now()->toDateString(),
                 'ownerID' => auth()->user()->userID,
                 'currentDepartmentID' => $department->depID,
@@ -536,8 +535,8 @@ class StaffDocumentController extends Controller
         
         $callback = function() {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Reference Number', 'From Office', 'Type', 'Subject', 'Date']);
-            fputcsv($handle, ['DOC-2026-001', 'Engineering Division', 'Memo', 'Bridge Inspection Report', '2026-10-07']);
+            fputcsv($handle, ['Reference Number', 'From Office', 'Subject', 'Date']);
+            fputcsv($handle, ['DOC-2026-001', 'Engineering Division', 'Bridge Inspection Report', '2026-10-07']);
             fclose($handle);
         };
 

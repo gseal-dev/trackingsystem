@@ -20,7 +20,7 @@ class Document extends Model
     }
 
     protected $fillable = [
-        'documentId', 'documentNo', 'documentTitle', 'title', 'description', 'documentType', 'documentDate',
+        'documentId', 'documentNo', 'documentTitle', 'title', 'description', 'documentDate',
         'ownerID', 'currentDepartmentID', 'filePath'
     ];
 
@@ -97,7 +97,6 @@ class Document extends Model
                 $q->where('documentNo', 'like', $like)
                   ->orWhere('documentTitle', 'like', $like)
                   ->orWhere('title', 'like', $like)
-                  ->orWhere('documentType', 'like', $like)
                   ->orWhereHas('department', fn ($d) => $d->where('depName', 'like', $like));
 
                 if ($withUploader) {
@@ -149,7 +148,6 @@ class Document extends Model
             'documentTitle' => $this->documentTitle,
             'subject' => $this->title,
             'description' => $this->description ?: 'No description',
-            'type' => $this->documentType,
             'office' => $this->department->depName ?? '-',
             'date' => $date ? \Carbon\Carbon::parse($date)->format('F d, Y') : '-',
             'fileName' => $this->displayFileName(),
@@ -165,7 +163,6 @@ class Document extends Model
                 'documentNo' => $this->documentNo,
                 'documentTitle' => $this->documentTitle,
                 'fromOffice' => $this->department->depName ?? '',
-                'documentType' => $this->documentType,
                 'title' => $this->title,
                 'documentDate' => $date ? \Carbon\Carbon::parse($date)->format('Y-m-d') : '',
             ],

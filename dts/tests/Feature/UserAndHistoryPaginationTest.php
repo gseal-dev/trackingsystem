@@ -194,7 +194,7 @@ class UserAndHistoryPaginationTest extends TestCase
             $id = (string) Str::uuid();
             Document::create([
                 'documentId' => $id, 'documentNo' => $no, 'documentTitle' => "Title $no", 'title' => "Subject $no",
-                'description' => "Subject $no", 'documentType' => 'Memo', 'documentDate' => '2026-01-01',
+                'description' => "Subject $no", 'documentDate' => '2026-01-01',
                 'ownerID' => $this->staff->userID, 'currentDepartmentID' => $dep->depID, 'filePath' => "documents/$no.pdf",
             ]);
             DB::table('documents')->where('documentId', $id)->update(['created_at' => Carbon::parse('2026-02-01')->addMinutes($i)]);
