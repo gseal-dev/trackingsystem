@@ -653,8 +653,7 @@
       }
 
       .sidebar-link:hover > i,
-      .sidebar-link.active > i,
-      .sidebar-user > i {
+      .sidebar-link.active > i {
         color: #ffffff;
       }
       

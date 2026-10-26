@@ -226,6 +226,7 @@
                   <th>Subject</th>
                   <th>Uploaded By</th>
                   <th>Date</th>
+                  <th>Upload Date</th>
                   <th class="text-end">Actions</th>
                 </tr>
               </thead>
@@ -242,6 +243,7 @@
                     <td>{{ $doc->title }}</td>
                     <td>{{ $uploader }}</td>
                     <td class="text-muted">{{ $doc->documentDate ? \Carbon\Carbon::parse($doc->documentDate)->format('F d, Y') : $doc->created_at?->format('F d, Y') }}</td>
+                    <td class="text-muted">{{ $doc->created_at ? \Carbon\Carbon::parse($doc->created_at)->format('F d, Y') : '-' }}</td>
                     <td>
                       <div class="actions-cell justify-content-end">
                         <button type="button" class="btn-action" title="View details" data-doc-view="{{ json_encode($doc->viewData()) }}">
@@ -252,7 +254,7 @@
                   </tr>
                 @empty
                   <tr>
-                    <td colspan="8" class="text-center py-5 text-muted">
+                    <td colspan="9" class="text-center py-5 text-muted">
                       <i class="bi bi-folder-x display-4 mb-3 d-block"></i>
                       No documents found.
                     </td>
