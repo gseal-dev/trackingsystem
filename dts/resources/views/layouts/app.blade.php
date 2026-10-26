@@ -745,8 +745,8 @@
     </style>
     @stack('head')
   </head>
-  <body class="{{ (request()->is('/') || request()->routeIs('login')) ? 'login-page' : '' }}">
-    @if(!request()->is('/') && !request()->routeIs('login'))
+  <body class="{{ (request()->is('/') || request()->routeIs('login') || request()->routeIs('setup')) ? 'login-page' : '' }}">
+    @if(!request()->is('/') && !request()->routeIs('login') && !request()->routeIs('setup'))
     <header class="official-dpwh-header">
       <div class="header-inner">
         <div class="header-logo-left">

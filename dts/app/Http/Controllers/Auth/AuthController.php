@@ -11,6 +11,12 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
+        // On a fresh deploy with no accounts, the admin must set up
+        // their first account via /setup instead of logging in.
+        if (User::count() === 0) {
+            return redirect()->route('setup');
+        }
+
         return view('auth.login');
     }
 

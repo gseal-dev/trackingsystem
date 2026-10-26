@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\SetupController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Staff\StaffDocumentController;
 use App\Http\Controllers\Staff\StaffSettingsController;
@@ -19,6 +20,12 @@ Route::get('/', function () {
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// One-time setup: create the first admin account on a fresh deploy.
+Route::middleware('guest')->group(function () {
+    Route::get('/setup', [SetupController::class, 'showSetup'])->name('setup');
+    Route::post('/setup', [SetupController::class, 'createAdmin'])->name('setup.store');
+});
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
 
 // User Management - Per Role
