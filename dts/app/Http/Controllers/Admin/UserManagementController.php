@@ -184,4 +184,38 @@ class UserManagementController extends Controller
             ];
         }));
     }
+
+    /** Lock a user account so they cannot log in. */
+    public function lock(Request $request, $type, User $user) {
+        $user->update(['is_locked' => true, 'locked_at' => now()]);
+        return back()->with('success', $user->firstName . ' ' . $user->lastName . ' has been locked.');
+    }
+
+    /** Unlock a user account so they can log in again. */
+    public function unlock(Request $request, $type, User $user) {
+        $user->update(['is_locked' => false, 'locked_at' => null]);
+        return back()->with('success', $user->firstName . ' ' . $user->lastName . ' has been unlocked.');
+    }
+
+    /** Reset a user's password. Falls back to the default password when none is typed. */
+    public function resetPassword(Request $request, $type, User $user) {
+        $defaultPassword = Setting::value('default_password');
+        $passwordRule = $defaultPassword ? 'nullable|string|min:8|max:72' : 'required|string|min:8|max:72';
+
+        $request->validate([
+            'password' => $passwordRule,
+        ]);
+
+        $password = $request->input('password');
+        if (!$password) {
+            if (!$defaultPassword) {
+                return back()->withErrors(['password' => 'No default password is configured. Please type a new password.']);
+            }
+            $password = $defaultPassword;
+        }
+
+        $user->update(['password' => \Hash::make($password)]);
+
+        return back()->with('success', 'Password reset for ' . $user->firstName . ' ' . $user->lastName . '.');
+    }
 }

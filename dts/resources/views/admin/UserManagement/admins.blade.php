@@ -199,6 +199,12 @@
                       <button type="button" class="btn-action"
                               data-user-edit="{{ json_encode(['id' => $user->userID, 'username' => $user->username, 'email' => $user->email, 'firstName' => $user->firstName, 'lastName' => $user->lastName, 'roleID' => $user->roleID ?? '', 'editUrl' => route('admin.userManagement.edit', ['type' => 'admins', 'user' => $user->userID])]) }}"
                               title="Edit user"><i class="bi bi-pencil"></i></button>
+                      @php $isLocked = (bool) ($user->is_locked ?? false); @endphp
+                      <form action="{{ $isLocked ? route('admin.userManagement.unlock', ['type' => 'admins', 'user' => $user]) : route('admin.userManagement.lock', ['type' => 'admins', 'user' => $user]) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn-action {{ $isLocked ? 'text-success' : 'text-warning' }}" title="{{ $isLocked ? 'Unlock user' : 'Lock user' }}"><i class="bi {{ $isLocked ? 'bi-unlock' : 'bi-lock-fill' }}"></i></button>
+                      </form>
+                      <button type="button" class="btn-action" data-reset-password="{{ $user->userID }}" data-reset-url="{{ route('admin.userManagement.resetPassword', ['type' => 'admins', 'user' => $user]) }}" title="Reset password"><i class="bi bi-key"></i></button>
                       <form action="{{ route('admin.userManagement.delete', ['type' => 'admins', 'user' => $user]) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
                         @csrf
                         <button type="submit" class="btn-action text-danger border-0 bg-transparent" title="Delete user"><i class="bi bi-trash"></i></button>
@@ -227,6 +233,7 @@
 @include('partials.admin-add-user-modal', ['roles' => $roles])
 @include('partials.admin-edit-user-modal', ['roles' => $roles])
 @include('partials.admin-default-password-modal')
+@include('partials.admin-reset-password-modal')
 
 @push('scripts')
 <script>

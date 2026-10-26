@@ -38,6 +38,9 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
         ->name('admin.userManagement.add');
     Route::post('/admin/user-management/{type}/edit/{user}', [UserManagementController::class, 'edit'])->name('admin.userManagement.edit');
     Route::post('/admin/user-management/{type}/delete/{user}', [UserManagementController::class, 'delete'])->name('admin.userManagement.delete');
+    Route::post('/admin/user-management/{type}/lock/{user}', [UserManagementController::class, 'lock'])->name('admin.userManagement.lock');
+    Route::post('/admin/user-management/{type}/unlock/{user}', [UserManagementController::class, 'unlock'])->name('admin.userManagement.unlock');
+    Route::post('/admin/user-management/{type}/reset-password/{user}', [UserManagementController::class, 'resetPassword'])->name('admin.userManagement.resetPassword');
 
     // Documents list (admin-only page)
     Route::get('/admin/documents', [DashboardController::class, 'documents'])->name('admin.documents');
