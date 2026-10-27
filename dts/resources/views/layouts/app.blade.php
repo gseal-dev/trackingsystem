@@ -943,6 +943,102 @@
         start();
       })();
     </script>
+
+    {{-- Session idle-timeout warning modal --}}
+    <div class="modal fade" id="sessionIdleTimeoutModal" tabindex="-1" aria-labelledby="sessionIdleTimeoutModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 20px; background-color: #ffffff; color: #1e293b;">
+          <div class="modal-body p-4">
+            <div class="mb-2" style="font-size: 2.75rem; line-height: 1; color: #ea3a14;">
+              <i class="bi bi-clock"></i>
+            </div>
+            <p id="sessionIdleTimeoutText" class="fw-semibold mb-3">Your session will expire due to inactivity.</p>
+            <p id="sessionIdleCountdown" class="text-muted small mb-4">Logging off in <span id="sessionIdleSeconds">30</span> seconds...</p>
+            <div class="d-flex justify-content-center gap-2">
+              <button type="button" class="btn rounded-pill px-4" style="background-color: #001253; color: #ffffff;" id="sessionIdleStaySignedIn">Stay signed in</button>
+              <button type="button" class="btn rounded-pill px-4" id="sessionIdleLogoutNow" style="background-color: #ea3a14; color: #ffffff; border: none;">Log out now</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const IDLE_MS = 15 * 60 * 1000;  // 15 minutes of inactivity
+        const WARN_MS = IDLE_MS - 60 * 1000; // warn 1 minute before logging off
+
+        let lastActivity = Date.now();
+        let idleTimer = null;
+        let warnTimer = null;
+        let warnSeconds = 60;
+
+        const modalEl = document.getElementById('sessionIdleTimeoutModal');
+        if (!modalEl) return;
+        const modal = new bootstrap.Modal(modalEl);
+
+        const textEl = document.getElementById('sessionIdleTimeoutText');
+        const counterEl = document.getElementById('sessionIdleSeconds');
+        const stayBtn = document.getElementById('sessionIdleStaySignedIn');
+        const logoutBtn = document.getElementById('sessionIdleLogoutNow');
+
+        function resetIdle() {
+          lastActivity = Date.now();
+          clearTimeout(idleTimer);
+          clearInterval(warnTimer);
+          warnSeconds = 30;
+          if (counterEl) counterEl.textContent = warnSeconds;
+          idleTimer = setTimeout(warnIdle, WARN_MS);
+        }
+
+        function warnIdle() {
+          if (textEl) textEl.textContent = 'Your session will expire due to inactivity.';
+          modal.show();
+          warnTimer = setInterval(function () {
+            warnSeconds--;
+            if (counterEl) counterEl.textContent = warnSeconds;
+            if (warnSeconds <= 0) {
+              clearInterval(warnTimer);
+              modal.hide();
+              window.location.href = '{{ route('login') }}';
+            }
+          }, 1000);
+        }
+
+        stayBtn.addEventListener('click', function () {
+          modal.hide();
+          clearInterval(warnTimer);
+          // Keep the server-side session alive (non-AJAX request extends the timer).
+          fetch(window.location.href, { credentials: 'same-origin' }).then(resetIdle);
+          resetIdle();
+        });
+
+        logoutBtn.addEventListener('click', function () {
+          clearInterval(warnTimer);
+          modal.hide();
+          window.location.href = '{{ route('login') }}';
+        });
+
+        // Any user activity resets the inactivity clock.
+        // AJAX poller requests do NOT reset this timer (only DOM interactions count).
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(function (evt) {
+          document.addEventListener(evt, resetIdle, { passive: true });
+        });
+
+        // Pause while the tab is hidden; resume when visible again.
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) {
+            clearTimeout(idleTimer);
+            clearInterval(warnTimer);
+          } else {
+            lastActivity = Date.now();
+            idleTimer = setTimeout(warnIdle, WARN_MS);
+          }
+        });
+
+        resetIdle();
+      })();
+    </script>
     <script>
       (function () {
         const body = document.body;
