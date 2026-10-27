@@ -6,18 +6,28 @@
 <style>
   .search-box {
     position: relative;
-    max-width: 320px;
     width: 100%;
   }
 
+  /* Remove rounded pill borders and make fields standard/square */
+  .search-box input, .form-select, .form-control {
+    border-radius: 4px !important;
+    border-color: #cbd5e1;
+  }
+
   .search-box input {
-    padding-left: 2.5rem;
-    height: 44px;
+    padding-left: 2.75rem;
+    height: 48px;
+  }
+
+  .form-select, .form-control {
+    height: 48px;
+    padding-left: 1rem;
   }
 
   .search-box i {
     position: absolute;
-    left: 1rem;
+    left: 1.25rem;
     top: 50%;
     transform: translateY(-50%);
     color: #9ca3af;
@@ -41,40 +51,105 @@
   <div class="dashboard-container wide">
     <div class="page-card">
       <div class="page-card-header"><i class="bi bi-clock-history"></i> Document History</div>
-      <div class="section-header">
-        <div>
-          <p class="text-muted">View document transaction history</p>
+
+      <div class="section-header d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div class="d-flex flex-column gap-1">
+          <h2 class="section-subtitle mb-1">Document History</h2>
+          <p class="text-muted mb-0 small">View document transaction history</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+          <a href="{{ route('admin.userManagement.history.export', request()->only(['q', 'date_from', 'date_to', 'department'])) }}" class="btn btn-outline-success fw-bold px-3 py-2 rounded-2 d-inline-flex align-items-center gap-2" id="export-history-btn" style="border-width: 2px;" title="Exports every history record matching the current filters">
+            <i class="bi bi-file-earmark-spreadsheet"></i>
+            <span>Export CSV</span>
+          </a>
         </div>
       </div>
 
-      <div class="table-toolbar" style="margin-bottom: 1.5rem;">
-        <form method="GET" action="{{ route('admin.userManagement.history') }}" class="d-flex gap-2 flex-wrap align-items-center w-100">
-          <div class="search-box flex-grow-1" style="max-width: 250px;">
-            <i class="bi bi-search"></i>
-            <input type="text" name="search" class="form-control" placeholder="Search history..." value="{{ request('search') }}">
+      {{-- Active filter chips --}}
+      @php
+        $hasFilters = request()->filled(['q', 'date_from', 'date_to', 'department']);
+      @endphp
+
+      @if($hasFilters)
+        <div class="mb-3">
+          <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="text-muted small fw-semibold">Active filters:</span>
+            @if(request('q'))
+              <a href="{{ route('admin.userManagement.history', array_filter(array_merge(request()->query(), ['q' => null]))) }}" class="badge bg-light text-dark border d-inline-flex align-items-center gap-2 text-decoration-none small">
+                <span>{{ e(request('q')) }}</span>
+                <i class="bi bi-x-circle fw-bold" style="font-size: 0.65rem;"></i>
+              </a>
+            @endif
+            @if(request('date_from') || request('date_to'))
+              <a href="{{ route('admin.userManagement.history', array_filter(array_merge(request()->query(), ['date_from' => null, 'date_to' => null]))) }}" class="badge bg-light text-dark border d-inline-flex align-items-center gap-2 text-decoration-none small">
+                <span>{{ request('date_from') ?? 'Any' }} → {{ request('date_to') ?? 'Any' }}</span>
+                <i class="bi bi-x-circle fw-bold" style="font-size: 0.65rem;"></i>
+              </a>
+            @endif
+            @if(request('department'))
+              @php $deptName = \App\Models\Department::where('depID', request('department'))->value('depName') ?? request('department'); @endphp
+              <a href="{{ route('admin.userManagement.history', array_filter(array_merge(request()->query(), ['department' => null]))) }}" class="badge bg-light text-dark border d-inline-flex align-items-center gap-2 text-decoration-none small">
+                <span>{{ e($deptName) }}</span>
+                <i class="bi bi-x-circle fw-bold" style="font-size: 0.65rem;"></i>
+              </a>
+            @endif
+            <a href="{{ route('admin.userManagement.history') }}" class="btn btn-outline-secondary btn-sm text-decoration-none">Clear all</a>
           </div>
-          <select name="year" class="form-select" style="width: 120px;" onchange="this.form.submit()">
-            <option value="">All Years</option>
-            @for($y = 2017; $y <= 2026; $y++)
-              <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
-            @endfor
-          </select>
-          <select name="month" class="form-select" style="width: 140px;" onchange="this.form.submit()">
-            <option value="">All Months</option>
-            @for($m = 1; $m <= 12; $m++)
-              <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
-            @endfor
-          </select>
-          <select name="day" class="form-select" style="width: 110px;" onchange="this.form.submit()">
-            <option value="">All Days</option>
-            @for($d = 1; $d <= 31; $d++)
-              <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>Day {{ $d }}</option>
-            @endfor
-          </select>
-          @if(request('search') || request('year') || request('month') || request('day'))
-            <a href="{{ route('admin.userManagement.history') }}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 50px;">Reset</a>
-          @endif
-          @include('partials.per-page-select', ['paginator' => $histories, 'id' => 'history-per-page'])
+        </div>
+      @endif
+
+      <div class="table-toolbar">
+        <form method="GET" action="{{ route('admin.userManagement.history') }}" class="w-100" id="admin-history-filter">
+          <!-- Search bar on top, full width -->
+          <div class="mb-3">
+            <label class="form-label fw-bold text-uppercase small text-secondary mb-1">
+              <i class="bi bi-search me-1"></i> Search History
+            </label>
+            <div class="search-box w-100">
+              <i class="bi bi-search"></i>
+              <input type="search" id="admin-history-search" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search reference number, subject, office, user..." autocomplete="off">
+            </div>
+          </div>
+
+          <!-- Other filters below the search bar with labels on top -->
+          <div class="row g-3 align-items-end">
+            <div class="col-md-2">
+              <label class="form-label fw-bold small text-muted mb-1"><i class="bi bi-calendar-event me-1"></i> Doc. Date From</label>
+              <input type="date" name="date_from" value="{{ request('date_from') }}" class="form-control form-control-sm">
+            </div>
+
+            <div class="col-md-2">
+              <label class="form-label fw-bold small text-muted mb-1"><i class="bi bi-calendar-event me-1"></i> Doc. Date To</label>
+              <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control form-control-sm">
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label fw-bold small text-muted mb-1"><i class="bi bi-building me-1"></i> Department</label>
+              <select name="department" class="form-select">
+                <option value="">All Departments</option>
+                @foreach($departments as $dept)
+                  <option value="{{ $dept->depID }}" {{ request('department') == $dept->depID ? 'selected' : '' }}>{{ $dept->depName }}</option>
+                @endforeach
+              </select>
+            </div>
+
+            <div class="col-md-2 d-flex gap-2">
+              <button type="submit" class="btn btn-outline-secondary w-50" style="height: 48px; border-radius: 4px;">Apply</button>
+              <a href="{{ route('admin.userManagement.history') }}" class="btn btn-outline-danger w-50 d-inline-flex align-items-center justify-content-center" style="height: 48px; border-radius: 4px;">Reset</a>
+            </div>
+          </div>
+
+          <!-- Rows per page helper bar -->
+          <div class="d-flex align-items-center justify-content-end mt-3">
+            <div class="d-flex align-items-center gap-2">
+              <label for="admin-history-per-page" class="small text-muted mb-0">Rows per page</label>
+              <select name="per_page" id="admin-history-per-page" class="form-select form-select-sm" style="width: 80px; height: 38px;" onchange="this.form.submit()">
+                @foreach(\App\Support\DocumentList::PER_PAGE_OPTIONS as $n)
+                  <option value="{{ $n }}" {{ $histories->perPage() == $n ? 'selected' : '' }}>{{ $n }}</option>
+                @endforeach
+              </select>
+            </div>
+          </div>
         </form>
       </div>
 
@@ -124,9 +199,10 @@
                 <td colspan="7" class="text-center py-5 text-muted">
                   <i class="bi bi-folder-x display-4 mb-3 d-block"></i>
                   No history records found.
-                </tr>
-              @endforelse
-          </tbody>
+                </td>
+              </tr>
+            @endforelse
+        </tbody>
         </table>
         </div>
       </div>
@@ -136,3 +212,21 @@
   </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+  // Search runs on the server (it has to look through every page, not just the 25 rows on screen)
+  (function () {
+    const input = document.getElementById('admin-history-search');
+    let timer = null;
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { input.form.submit(); }, 450);
+    });
+    if (input.value) {
+      input.focus({ preventScroll: true });
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  })();
+</script>
+@endpush

@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Department;
 use App\Models\Role;
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Support\CsvExport;
 use App\Support\DocumentList;
@@ -37,7 +38,7 @@ class UserManagementController extends Controller
     /** Admin sees every document transaction history (not department-scoped). */
     public function adminHistory(Request $request)
     {
-        $search = $request->input('search');
+        $search = $request->input('q');
 
         $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department', 'user']);
 
@@ -54,9 +55,15 @@ class UserManagementController extends Controller
             });
         }
 
-        if ($request->filled('year') || $request->filled('month') || $request->filled('day')) {
+        if ($request->filled('date_from') || $request->filled('date_to')) {
             $historiesQuery->whereHas('document', function ($q) use ($request) {
-                $q->dateFilter($request->input('year'), $request->input('month'), $request->input('day'));
+                $q->dateRange($request->input('date_from'), $request->input('date_to'));
+            });
+        }
+
+        if ($request->filled('department')) {
+            $historiesQuery->whereHas('document', function ($q) use ($request) {
+                $q->where('currentDepartmentID', $request->input('department'));
             });
         }
 
@@ -71,7 +78,59 @@ class UserManagementController extends Controller
             return redirect()->to($histories->url($histories->lastPage()));
         }
 
-        return view('admin.UserManagement.history', compact('histories'));
+        $departments = Department::all();
+
+        return view('admin.UserManagement.history', compact('histories', 'departments'));
+    }
+
+
+    /** CSV export of admin history matching the current filters. */
+    public function exportHistory(Request $request)
+    {
+        $search = $request->input('q');
+
+        $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department', 'user']);
+
+        if ($search) {
+            $historiesQuery->whereHas('document', function ($q) use ($search) {
+                $q->where('title', 'LIKE', "%$search%")
+                    ->orWhere('documentTitle', 'LIKE', "%$search%")
+                    ->orWhere('documentNo', 'LIKE', "%$search%")
+                    ->orWhereHas('owner', function ($oq) use ($search) {
+                        $oq->where('username', 'LIKE', "%$search%")
+                            ->orWhere('firstName', 'LIKE', "%$search%")
+                            ->orWhere('lastName', 'LIKE', "%$search%");
+                    });
+            });
+        }
+
+        if ($request->filled('date_from') || $request->filled('date_to')) {
+            $historiesQuery->whereHas('document', function ($q) use ($request) {
+                $q->dateRange($request->input('date_from'), $request->input('date_to'));
+            });
+        }
+
+        if ($request->filled('department')) {
+            $historiesQuery->whereHas('document', function ($q) use ($request) {
+                $q->where('currentDepartmentID', $request->input('department'));
+            });
+        }
+
+        return CsvExport::stream(
+            $historiesQuery->orderByDesc('created_at')->orderByDesc('historyID'),
+            ['Reference Number', 'From Office', 'Subject', 'Action', 'User', 'Timestamp'],
+            fn ($h) => [
+                $h->document?->documentNo ?? '-',
+                $h->document?->department?->depName ?? '-',
+                $h->document?->title ?? '-',
+                $h->action ?? '-',
+                self::formatHistoryUserName($h->user ?? null),
+                $h->created_at
+                    ->timezone(\App\Models\Document::DISPLAY_TIMEZONE)
+                    ->format('F d, Y \\a\\t h:i A'),
+            ],
+            'admin-document-history.csv'
+        );
     }
 
 
@@ -217,5 +276,18 @@ class UserManagementController extends Controller
         $user->update(['password' => \Hash::make($password)]);
 
         return back()->with('success', 'Password reset for ' . $user->firstName . ' ' . $user->lastName . '.');
+    }
+
+    /** Format a history record's user for CSV export. */
+    private static function formatHistoryUserName(?User $user): string
+    {
+        if (! $user) {
+            return 'Unknown';
+        }
+        $firstName = trim($user->firstName ?? '');
+        $lastName = trim($user->lastName ?? '');
+        $name = trim($firstName . ' ' . $lastName);
+
+        return $name ?: ($user->username ?? 'Unknown');
     }
 }

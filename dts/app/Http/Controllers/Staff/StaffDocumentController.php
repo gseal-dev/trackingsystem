@@ -104,7 +104,7 @@ class StaffDocumentController extends Controller
     public function exportHistory(Request $request)
     {
         $user = auth()->user();
-        $search = $request->input('search');
+        $search = $request->input('q');
 
         $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department', 'user'])
             ->when($user->departmentID, function($q) use ($user) {
@@ -128,9 +128,15 @@ class StaffDocumentController extends Controller
             });
         }
 
-        if ($request->filled('year') || $request->filled('month') || $request->filled('day')) {
+        if ($request->filled('date_from') || $request->filled('date_to')) {
             $historiesQuery->whereHas('document', function ($q) use ($request) {
-                $q->dateFilter($request->input('year'), $request->input('month'), $request->input('day'));
+                $q->dateRange($request->input('date_from'), $request->input('date_to'));
+            });
+        }
+
+        if ($request->filled('department')) {
+            $historiesQuery->whereHas('document', function ($q) use ($request) {
+                $q->where('currentDepartmentID', $request->input('department'));
             });
         }
 
@@ -203,7 +209,7 @@ class StaffDocumentController extends Controller
     public function history(Request $request)
     {
         $user = auth()->user();
-        $search = $request->input('search');
+        $search = $request->input('q');
 
         foreach (\App\Models\Document::all() as $doc) {
             \DB::table('document_histories')->updateOrInsert(
@@ -241,9 +247,15 @@ class StaffDocumentController extends Controller
             });
         }
 
-        if ($request->filled('year') || $request->filled('month') || $request->filled('day')) {
+        if ($request->filled('date_from') || $request->filled('date_to')) {
             $historiesQuery->whereHas('document', function ($q) use ($request) {
-                $q->dateFilter($request->input('year'), $request->input('month'), $request->input('day'));
+                $q->dateRange($request->input('date_from'), $request->input('date_to'));
+            });
+        }
+
+        if ($request->filled('department')) {
+            $historiesQuery->whereHas('document', function ($q) use ($request) {
+                $q->where('currentDepartmentID', $request->input('department'));
             });
         }
 
@@ -258,7 +270,9 @@ class StaffDocumentController extends Controller
             return redirect()->to($histories->url($histories->lastPage()));
         }
 
-        return view('staff.history', compact('histories'));
+        $departments = Department::all();
+
+        return view('staff.history', compact('histories', 'departments'));
     }
 
 
