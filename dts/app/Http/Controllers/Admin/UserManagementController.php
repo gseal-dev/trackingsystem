@@ -244,8 +244,16 @@ class UserManagementController extends Controller
         }));
     }
 
-    /** Lock a user account so they cannot log in. */
+    /** Lock a user account so they cannot log in. Requires the admin's own password. */
     public function lock(Request $request, $type, User $user) {
+        $request->validate([
+            'confirm_password' => 'required|string',
+        ]);
+
+        if (! \Hash::check($request->input('confirm_password'), auth()->user()->password)) {
+            return back()->with('error', 'Incorrect password. The account was not locked.');
+        }
+
         $user->update(['is_locked' => true, 'locked_at' => now()]);
         return back()->with('success', $user->firstName . ' ' . $user->lastName . ' has been locked.');
     }
