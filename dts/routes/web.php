@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Models\User;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\SetupController;
@@ -11,6 +12,12 @@ use App\Http\Controllers\Staff\StaffSettingsController;
 Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
+    }
+
+    // On a fresh deploy with no accounts yet, the admin must set up
+    // their first account via /setup instead of logging in.
+    if (User::count() === 0) {
+        return redirect()->route('setup');
     }
 
     return view('auth.login');

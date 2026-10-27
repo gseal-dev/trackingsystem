@@ -44,6 +44,12 @@ class AuthController extends Controller
             ])->withInput(['login' => $credentials['login']]);
         }
 
+        if ($user->is_locked) {
+            return back()->withErrors([
+                'login' => 'Your account is locked. Please contact an administrator to unlock it.',
+            ])->withInput(['login' => $credentials['login']]);
+        }
+
         Auth::login($user);
         $request->session()->regenerate();
         return redirect()->route('dashboard');
