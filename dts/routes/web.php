@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\SetupController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Auth\FirstPasswordChangeController;
 use App\Http\Controllers\Staff\StaffDocumentController;
 use App\Http\Controllers\Staff\StaffSettingsController;
 
@@ -33,7 +34,14 @@ Route::middleware('guest')->group(function () {
     Route::get('/setup', [SetupController::class, 'showSetup'])->name('setup');
     Route::post('/setup', [SetupController::class, 'createAdmin'])->name('setup.store');
 });
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+// First password change page: reachable by any logged-in user, but exempt
+// from the ensure-password-changed middleware (it is the destination).
+Route::middleware(['auth'])->group(function () {
+    Route::get('/staff/first-password-change', [FirstPasswordChangeController::class, 'show'])->name('staff.first-password-change');
+    Route::post('/staff/first-password-change', [FirstPasswordChangeController::class, 'update'])->name('staff.first-password-change.update');
+});
+
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware(['auth', 'ensure-password-changed']);
 
 // User Management - Per Role
 Route::middleware(['auth', 'role:Admin'])->group(function () {
@@ -57,8 +65,9 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::post('/admin/user-management/default-password', [UserManagementController::class, 'saveDefaultPassword'])->name('admin.userManagement.defaultPassword.save');
 });
 
-// Document routes (login required)
-Route::middleware(['auth'])->group(function () {
+// Document routes (login required) — every page here requires the password
+// to have been changed first (except the first-password-change page above).
+Route::middleware(['auth', 'ensure-password-changed'])->group(function () {
     Route::get('/admin/user-search', [UserManagementController::class, 'searchUser'])->name('admin.userSearch');
 
     // Staff

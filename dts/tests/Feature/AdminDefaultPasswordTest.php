@@ -92,7 +92,30 @@ class AdminDefaultPasswordTest extends TestCase
         $this->assertSame(1 + 1, User::count(), 'only the admin and the first new user exist');
     }
 
-    public function test_the_success_message_tells_the_admin_to_hand_the_password_over(): void
+    public function test_adding_a_staff_user_with_default_password_sets_must_change_password(): void
+{
+    \App\Models\Setting::updateOrCreate(
+        ['key' => 'default_password'],
+        ['value' => 'Default-Pass-1']
+    );
+
+    // No password typed -> falls back to default -> Staff user is forced to change.
+    $this->addUser(['password' => null])->assertSessionHasNoErrors()->assertRedirect(route('dashboard'));
+
+    $user = User::where('username', 'newstaff')->firstOrFail();
+    $this->assertTrue((bool) $user->must_change_password);
+
+    // A new admin typed a custom password, so no force change.
+    $this->addUser([
+        'username' => 'newadmin', 'email' => 'newadmin@example.com',
+        'roleID' => $this->roleId('Admin'), 'password' => 'Admin-Pass-999',
+    ]);
+
+    $adminUser = User::where('username', 'newadmin')->firstOrFail();
+    $this->assertFalse((bool) $adminUser->must_change_password);
+}
+
+public function test_the_success_message_tells_the_admin_to_hand_the_password_over(): void
     {
         $this->addUser()->assertSessionHas('success', fn ($m) => str_contains($m, 'default password') && str_contains($m, 'Settings'));
 

@@ -746,8 +746,8 @@
     </style>
     @stack('head')
   </head>
-  <body class="{{ (request()->is('/') || request()->routeIs('login') || request()->routeIs('setup')) ? 'login-page' : '' }}">
-    @if(!request()->is('/') && !request()->routeIs('login') && !request()->routeIs('setup'))
+  <body class="{{ (request()->is('/') || request()->routeIs('login') || request()->routeIs('setup') || request()->routeIs('staff.first-password-change') || request()->routeIs('staff.first-password-change.update')) ? 'login-page' : '' }}">
+    @if(!request()->is('/') && !request()->routeIs('login') && !request()->routeIs('setup') && !request()->routeIs('staff.first-password-change') && !request()->routeIs('staff.first-password-change.update'))
     <header class="official-dpwh-header">
       <div class="header-inner">
         <div class="header-logo-left">

@@ -89,6 +89,13 @@ class AuthController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+
+        // Force a password change on first login before allowing any other action.
+        if ($user->must_change_password) {
+            return redirect()->route('staff.first-password-change')
+                ->with('info', 'You must change your password before accessing any other page.');
+        }
+
         return redirect()->route('dashboard');
     }
 

@@ -43,7 +43,18 @@ class StaffSettingsController extends Controller
         ]);
 
         // The User model hashes the password automatically ('hashed' cast).
-        $request->user()->update(['password' => $validated['password']]);
+        $user = $request->user();
+        $wasForced = (bool) $user->must_change_password;
+        $user->update([
+            'password' => $validated['password'],
+            'must_change_password' => false,
+        ]);
+
+        // If they were forced to change it at first login, send them to the
+        // dashboard; otherwise return to the settings page.
+        if ($wasForced) {
+            return redirect()->route('dashboard')->with('success', 'Your password has been updated.');
+        }
 
         return redirect()->route('staff.settings')->with('success', 'Your password has been updated.');
     }

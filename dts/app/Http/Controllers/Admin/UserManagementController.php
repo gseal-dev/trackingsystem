@@ -166,6 +166,13 @@ class UserManagementController extends Controller
         }
 
         $roleID = $request->input('roleID');
+        // When a default/admin-assigned password is used, force the user to
+        // change it at first login so the plain-text default never persists.
+        // Only Staff users can reach the password-change page (staff.settings),
+        // so only they are forced to change it.
+        $isStaffRole = \App\Models\Role::where('roleID', $roleID)->value('roleName') === 'Staff';
+        $mustChange = $isStaffRole && !$request->filled('password');
+
         User::create([
             'username' => $request->username,
             'email' => $request->email,
@@ -173,13 +180,14 @@ class UserManagementController extends Controller
             'lastName' => $request->lastName,
             'roleID' => $roleID,
             'password' => \Hash::make($password),
+            'must_change_password' => $mustChange,
         ]);
 
         $isStaff = \App\Models\Role::where('roleID', $roleID)->value('roleName') === 'Staff';
 
         return redirect()->route($type === 'admins' ? 'dashboard' : "admin.userManagement.$type")
             ->with('success', $isStaff
-                ? 'User added! Give them the password - they can change it in Settings after logging in.'
+                ? 'User added! Give them the password - they must change it at first login.'
                 : 'User added!');
     }
 
@@ -274,14 +282,23 @@ class UserManagementController extends Controller
         ]);
 
         $password = $request->input('password');
-        if (!$password) {
+        $usingDefault = !$password;
+        if ($usingDefault) {
             if (!$defaultPassword) {
                 return back()->withErrors(['password' => 'No default password is configured. Please type a new password.']);
             }
             $password = $defaultPassword;
         }
 
-        $user->update(['password' => \Hash::make($password)]);
+        // Only Staff users can reach the password-change page (staff.settings),
+        // so only they are forced to change a default password at next login.
+        $isStaffRole = $user->role?->roleName === 'Staff';
+        $mustChange = $isStaffRole && $usingDefault;
+
+        $user->update([
+            'password' => \Hash::make($password),
+            'must_change_password' => $mustChange,
+        ]);
 
         return back()->with('success', 'Password reset for ' . $user->firstName . ' ' . $user->lastName . '.');
     }

@@ -41,6 +41,7 @@ class User extends Authenticatable
         'locked_at',
         'failed_login_attempts',
         'locked_until',
+        'must_change_password',
     ];
 
     /**
