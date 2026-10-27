@@ -232,7 +232,16 @@ class UserManagementController extends Controller
             ->with('success', 'User updated!');
     }
 
+    /** Delete a user account. */
     public function delete($type, User $user) {
+        if ($user->getKey() === auth()->id()) {
+            return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        if ($this->isLastActiveAdmin($user)) {
+            return back()->with('error', 'At least one administrator must remain active. The account was not deleted.');
+        }
+
         $user->delete();
         $redirectType = $type;
         return redirect()->route($redirectType === 'admins' || $redirectType === 'staffs' || $redirectType === 'dashboard' ? 'dashboard' : "admin.userManagement.$redirectType")
@@ -262,6 +271,14 @@ class UserManagementController extends Controller
             return back()->with('error', 'Incorrect password. The account was not locked.');
         }
 
+        if ($user->getKey() === auth()->id()) {
+            return back()->with('error', 'You cannot lock your own account.');
+        }
+
+        if ($this->isLastActiveAdmin($user)) {
+            return back()->with('error', 'At least one administrator must remain active. The account was not locked.');
+        }
+
         $user->update(['is_locked' => true, 'locked_at' => now()]);
         return back()->with('success', $user->firstName . ' ' . $user->lastName . ' has been locked.');
     }
@@ -270,6 +287,17 @@ class UserManagementController extends Controller
     public function unlock(Request $request, $type, User $user) {
         $user->update(['is_locked' => false, 'locked_at' => null]);
         return back()->with('success', $user->firstName . ' ' . $user->lastName . ' has been unlocked.');
+    }
+
+    /** Whether removing/locking this admin would leave zero active administrators. */
+    private function isLastActiveAdmin(User $user): bool {
+        if ($user->role?->roleName !== 'Admin') {
+            return false;
+        }
+
+        return User::where('roleID', $user->roleID)
+            ->where('is_locked', false)
+            ->count() <= 1;
     }
 
     /** Reset a user's password. Falls back to the default password when none is typed. */
