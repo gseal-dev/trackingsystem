@@ -173,6 +173,38 @@ class UserManagementTest extends TestCase
         $this->assertTrue((bool) User::find($staff->userID)->is_locked);
     }
 
+    /** Staff users cannot search usernames via the admin user-search endpoint. */
+    public function test_staff_cannot_use_admin_user_search(): void
+    {
+        $staff = $this->createStaff();
+
+        $this->actingAs($staff)
+            ->get(route('admin.userSearch', ['q' => 'boss']))
+            ->assertForbidden();
+    }
+
+    /** Staff users cannot search usernames via the staff user-search endpoint. */
+    public function test_staff_cannot_use_staff_user_search(): void
+    {
+        $staff = $this->createStaff();
+
+        $this->actingAs($staff)
+            ->get(route('staff.userSearch', ['q' => 'boss']))
+            ->assertForbidden();
+    }
+
+    /** Admin users can search usernames via both user-search endpoints. */
+    public function test_admin_can_use_user_search_endpoints(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('admin.userSearch', ['q' => 'boss']))
+            ->assertOk();
+
+        $this->actingAs($this->admin)
+            ->get(route('staff.userSearch', ['q' => 'boss']))
+            ->assertOk();
+    }
+
     /** Locking requires the correct admin password. */
     public function test_lock_requires_correct_password(): void
     {

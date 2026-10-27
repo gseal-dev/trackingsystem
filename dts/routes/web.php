@@ -68,7 +68,9 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
 // Document routes (login required) — every page here requires the password
 // to have been changed first (except the first-password-change page above).
 Route::middleware(['auth', 'ensure-password-changed'])->group(function () {
-    Route::get('/admin/user-search', [UserManagementController::class, 'searchUser'])->name('admin.userSearch');
+    Route::get('/admin/user-search', [UserManagementController::class, 'searchUser'])
+        ->middleware('role:Admin')
+        ->name('admin.userSearch');
 
     // Staff
     Route::get('/documents/{document}/download', [StaffDocumentController::class, 'download'])->name('document.download');
@@ -100,5 +102,7 @@ Route::middleware(['auth', 'ensure-password-changed'])->group(function () {
     Route::post('/staff/documents/import', [StaffDocumentController::class, 'import'])->name('staff.document.import');
     Route::get('/staff/documents/template', [StaffDocumentController::class, 'downloadTemplate'])->name('staff.document.template');
     Route::get('/staff/documents/export', [StaffDocumentController::class, 'exportDocuments'])->name('staff.documents.export');
-    Route::get('/staff/user-search', [UserManagementController::class, 'searchUser'])->name('staff.userSearch');
+    Route::get('/staff/user-search', [UserManagementController::class, 'searchUser'])
+        ->middleware('role:Admin')
+        ->name('staff.userSearch');
 });
