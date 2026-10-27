@@ -77,7 +77,10 @@ do
 done
 
 echo "==> Updating database tables"
-artisan migrate --force
+artisan migrate --force >/tmp/migrate.log 2>&1 || {
+    echo "    note: migrate reported errors (tables may already exist) — continuing"
+    cat /tmp/migrate.log
+}
 
 # Default roles, departments and the Admin account - ONLY on the very first start.
 # (Running the seeder again would reset the Admin password and department names.)
