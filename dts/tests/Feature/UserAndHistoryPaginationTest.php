@@ -194,7 +194,7 @@ class UserAndHistoryPaginationTest extends TestCase
             $id = (string) Str::uuid();
             Document::create([
                 'documentId' => $id, 'documentNo' => $no, 'documentTitle' => "Title $no", 'title' => "Subject $no",
-                'description' => "Subject $no", 'documentType' => 'Memo', 'documentDate' => '2026-01-01',
+                'description' => "Subject $no", 'documentDate' => '2026-01-01',
                 'ownerID' => $this->staff->userID, 'currentDepartmentID' => $dep->depID, 'filePath' => "documents/$no.pdf",
             ]);
             DB::table('documents')->where('documentId', $id)->update(['created_at' => Carbon::parse('2026-02-01')->addMinutes($i)]);
@@ -235,15 +235,15 @@ class UserAndHistoryPaginationTest extends TestCase
         $this->makeHistoryDocuments();
         Document::where('documentNo', 'HIS-001')->update(['title' => 'Quarterly zebra inspection']);
 
-        $this->actingAs($this->staff)->get(route('staff.history', ['search' => 'zebra']))
+        $this->actingAs($this->staff)->get(route('staff.history', ['q' => 'zebra']))
             ->assertSee('Showing 1&ndash;1 of 1 records', false)->assertSee('Quarterly zebra inspection')->assertDontSee('HIS-030');
 
-        $this->get(route('staff.history', ['year' => 2026, 'month' => 2]))->assertSee('of 30 records', false);
-        $this->get(route('staff.history', ['year' => 2020]))->assertSee('No history records found.');
+        $this->get(route('staff.history', ['date_from' => '2026-01-01', 'date_to' => '2026-01-31']))->assertSee('of 30 records', false);
+        $this->get(route('staff.history', ['date_from' => '2020-01-01', 'date_to' => '2020-12-31']))->assertSee('No history records found.');
 
-        $html = $this->get(route('staff.history', ['search' => 'HIS', 'year' => 2026, 'per_page' => 10]))->getContent();
-        $this->assertStringContainsString('year=2026', $html);
-        $this->assertMatchesRegularExpression('/href="[^"]*search=HIS[^"]*"/', $html);
+        $html = $this->get(route('staff.history', ['q' => 'HIS', 'date_from' => '2026-01-01', 'per_page' => 10]))->getContent();
+        $this->assertStringContainsString('date_from=2026-01-01', $html);
+        $this->assertMatchesRegularExpression('/href="[^"]*q=HIS[^"]*"/', $html);
         $this->assertMatchesRegularExpression('/href="[^"]*per_page=10[^"]*page=2|href="[^"]*page=2[^"]*per_page=10/', $html);
     }
 
@@ -259,7 +259,7 @@ class UserAndHistoryPaginationTest extends TestCase
     {
         $html = $this->actingAs($this->staff)->get(route('staff.history', ['per_page' => 50]))->getContent();
 
-        $this->assertMatchesRegularExpression('/<select name="per_page" id="history-per-page"/', $html);
+        $this->assertMatchesRegularExpression('/<select name="per_page" id="staff-history-per-page"/', $html);
         $this->assertMatchesRegularExpression('/<option value="50" selected>50<\/option>/', $html);
     }
 }

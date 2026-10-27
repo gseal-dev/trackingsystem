@@ -57,7 +57,11 @@ class StaffDocumentController extends Controller
             ->when($user->departmentID, function ($q) use ($user) {
                 return $q->where('currentDepartmentID', $user->departmentID);
             })
+            ->dateRange($request->input('date_from'), $request->input('date_to'))
             ->dateFilter($request->input('year'), $request->input('month'), $request->input('day'))
+            ->when($request->filled('department'), function ($q) use ($request) {
+                return $q->where('currentDepartmentID', $request->input('department'));
+            })
             ->search($request->input('q'))
             ->orderByDesc('documentDate')
             ->orderByDesc('created_at')
@@ -85,14 +89,118 @@ class StaffDocumentController extends Controller
     {
         return DocumentList::csv(
             $this->staffDocumentsQuery($request),
-            ['Reference Number', 'Document Title', 'From Office', 'Type', 'Subject', 'Date'],
+            ['Reference Number', 'Document Title', 'From Office', 'Subject', 'Date'],
             fn ($d) => [
                 $d->documentNo,
                 $d->documentTitle,
                 $d->department->depName ?? '',
-                strtoupper((string) $d->documentType),
                 $d->title,
                 $d->documentDate ? \Carbon\Carbon::parse($d->documentDate)->format('F d, Y') : $d->created_at?->format('F d, Y'),
+            ]
+        );
+    }
+
+    /** CSV export of history matching the current filters. */
+    public function exportHistory(Request $request)
+    {
+        $user = auth()->user();
+        $search = $request->input('q');
+
+        $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department', 'user'])
+            ->when($user->departmentID, function($q) use ($user) {
+                return $q->where(function($sub) use ($user) {
+                    $sub->where('currentDepartmentID', $user->departmentID)
+                        ->orWhere('prevDepartmentID', $user->departmentID)
+                        ->orWhere('userID', $user->userID);
+                });
+            });
+
+        if ($search) {
+            $historiesQuery->whereHas('document', function ($q) use ($search) {
+                $q->where('title', 'LIKE', "%$search%")
+                    ->orWhere('documentTitle', 'LIKE', "%$search%")
+                    ->orWhere('documentNo', 'LIKE', "%$search%")
+                    ->orWhereHas('owner', function ($oq) use ($search) {
+                        $oq->where('username', 'LIKE', "%$search%")
+                            ->orWhere('firstName', 'LIKE', "%$search%")
+                            ->orWhere('lastName', 'LIKE', "%$search%");
+                    });
+            });
+        }
+
+        if ($request->filled('date_from') || $request->filled('date_to')) {
+            $historiesQuery->whereHas('document', function ($q) use ($request) {
+                $q->dateRange($request->input('date_from'), $request->input('date_to'));
+            });
+        }
+
+        if ($request->filled('department')) {
+            $historiesQuery->whereHas('document', function ($q) use ($request) {
+                $q->where('currentDepartmentID', $request->input('department'));
+            });
+        }
+
+        $histories = $historiesQuery
+            ->orderByDesc('created_at')
+            ->orderByDesc('historyID')
+            ->get(); // Get all records for export, not paginated
+
+        // Prepare data for export
+        $data = [];
+        foreach ($histories as $history) {
+            // Get user name
+            $userName = 'Unknown';
+            if ($history->user) {
+                $firstName = trim($history->user->firstName ?? '');
+                $lastName = trim($history->user->lastName ?? '');
+                if ($firstName || $lastName) {
+                    $userName = trim($firstName . ' ' . $lastName);
+                }
+                if (!$userName) {
+                    $userName = $history->user->username ?? 'Unknown';
+                }
+            }
+
+            // Format timestamp
+            $timestamp = $history->created_at
+                ->timezone(\App\Models\Document::DISPLAY_TIMEZONE)
+                ->format('F d, Y \\a\\t h:i A');
+
+            $data[] = [
+                'Reference Number' => $history->document?->documentNo ?? '-',
+                'From Office' => $history->document?->department?->depName ?? '-',
+                'Subject' => $history->document?->title ?? '-',
+                'Action' => $history->action ?? '-',
+                'User' => $userName,
+                'Timestamp' => $timestamp,
+            ];
+        }
+
+        // Generate filename with timestamp
+        $filename = 'document_history_' . now()->format('Y-m-d_H-i-s');
+
+        // CSV export (works in Excel too)
+        $output = fopen('php://output', 'w');
+        // Add BOM for proper UTF-8 in Excel
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        // Add headers
+        fputcsv($output, array_keys($data[0] ?? ['Reference Number', 'From Office', 'Subject', 'Action', 'User', 'Timestamp']));
+
+        // Add data rows
+        foreach ($data as $row) {
+            fputcsv($output, $row);
+        }
+        fclose($output);
+
+        return response()->stream(
+            function () use ($output) {
+                // This is handled above
+            },
+            200,
+            [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '.csv"',
             ]
         );
     }
@@ -101,7 +209,7 @@ class StaffDocumentController extends Controller
     public function history(Request $request)
     {
         $user = auth()->user();
-        $search = $request->input('search');
+        $search = $request->input('q');
 
         foreach (\App\Models\Document::all() as $doc) {
             \DB::table('document_histories')->updateOrInsert(
@@ -117,7 +225,7 @@ class StaffDocumentController extends Controller
             );
         }
 
-        $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department'])
+        $historiesQuery = \App\Models\DocumentHistory::with(['document.owner', 'document.department', 'user'])
             ->when($user->departmentID, function($q) use ($user) {
                 return $q->where(function($sub) use ($user) {
                     $sub->where('currentDepartmentID', $user->departmentID)
@@ -139,14 +247,16 @@ class StaffDocumentController extends Controller
             });
         }
 
-        if ($request->filled('year')) {
-            $historiesQuery->whereYear('created_at', $request->year);
+        if ($request->filled('date_from') || $request->filled('date_to')) {
+            $historiesQuery->whereHas('document', function ($q) use ($request) {
+                $q->dateRange($request->input('date_from'), $request->input('date_to'));
+            });
         }
-        if ($request->filled('month')) {
-            $historiesQuery->whereMonth('created_at', $request->month);
-        }
-        if ($request->filled('day')) {
-            $historiesQuery->whereDay('created_at', $request->day);
+
+        if ($request->filled('department')) {
+            $historiesQuery->whereHas('document', function ($q) use ($request) {
+                $q->where('currentDepartmentID', $request->input('department'));
+            });
         }
 
         $histories = $historiesQuery
@@ -160,7 +270,9 @@ class StaffDocumentController extends Controller
             return redirect()->to($histories->url($histories->lastPage()));
         }
 
-        return view('staff.history', compact('histories'));
+        $departments = Department::all();
+
+        return view('staff.history', compact('histories', 'departments'));
     }
 
 
@@ -193,7 +305,7 @@ class StaffDocumentController extends Controller
     // Where each role goes to see the document list
     private function listRouteFor($user): string
     {
-        return $user->role?->roleName === 'Admin' ? 'dashboard' : 'staff.documents';
+        return $user->role?->roleName === 'Admin' ? 'admin.documents' : 'staff.documents';
     }
 
     public function store(Request $request)
@@ -250,10 +362,9 @@ class StaffDocumentController extends Controller
         $request->validateWithBag('editDocument', [
             'documentNo' => 'required|unique:documents,documentNo,' . $document->documentId . ',documentId',
             'title' => 'required|string|max:255',
-            'documentType' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
             'fromOffice' => 'required|string|max:255',
             'documentDate' => 'nullable|date',
-            'file' => 'nullable|file|mimes:pdf|max:10240',
         ], [], $this->fieldNames());
 
         $officeName = trim($request->fromOffice);
@@ -265,34 +376,77 @@ class StaffDocumentController extends Controller
             ]);
         }
 
+        // Capture the original department ID for history tracking
+        $originalDepartmentID = $document->currentDepartmentID;
+
         $updateData = [
             'documentNo' => $request->documentNo,
             'title' => $request->title,
-            'description' => $request->title,
-            'documentType' => $request->documentType,
+            'description' => $request->description,
             'documentDate' => $request->documentDate ?? $document->documentDate,
             'currentDepartmentID' => $department->depID,
         ];
 
-        if ($request->hasFile('file')) {
-            if ($document->filePath && \Storage::disk('public')->exists($document->filePath)) {
-                \Storage::disk('public')->delete($document->filePath);
-            }
-            $file = $request->file('file');
-            $fileName = \Illuminate\Support\Str::uuid() . '_' . $file->getClientOriginalName();
-            $updateData['filePath'] = $file->storeAs('documents', $fileName, 'public');
-        }
-
         $document->update($updateData);
+
+        // Create history record for the update
+        \DB::table('document_histories')->insert([
+            'documentId' => $document->documentId,
+            'prevDepartmentID' => $originalDepartmentID,
+            'currentDepartmentID' => $department->depID,
+            'userID' => auth()->user()->userID,
+            'action' => 'Document updated',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         // Stay on the list the user was looking at (keeps their year/month/day filters)
         return redirect()->to(url()->previous(route('staff.documents')))->with('success', 'Document updated successfully!');
+    }
+
+    // Upload a new version of the attached file (replaces the PDF only, no edit mode).
+    public function uploadVersion(Request $request, Document $document)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf|max:10240',
+        ], [], ['file' => 'PDF file']);
+
+        if ($document->filePath && \Storage::disk('public')->exists($document->filePath)) {
+            \Storage::disk('public')->delete($document->filePath);
+        }
+
+        $file = $request->file('file');
+        $fileName = \Illuminate\Support\Str::uuid() . '_' . $file->getClientOriginalName();
+        $document->update(['filePath' => $file->storeAs('documents', $fileName, 'public')]);
+
+        \DB::table('document_histories')->insert([
+            'documentId' => $document->documentId,
+            'prevDepartmentID' => $document->currentDepartmentID,
+            'currentDepartmentID' => $document->currentDepartmentID,
+            'userID' => auth()->user()->userID,
+            'action' => 'Document uploaded new version',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->to(url()->previous(route('staff.documents')))->with('success', 'New version uploaded successfully!');
     }
 
     public function delete(Document $document)
     {
         $documentId = $document->documentId;
         $documentTitle = $document->title;
+
+        // Create history record for the deletion before soft deleting
+        \DB::table('document_histories')->insert([
+            'documentId' => $document->documentId,
+            'prevDepartmentID' => $document->currentDepartmentID,
+            'currentDepartmentID' => $document->currentDepartmentID,
+            'userID' => auth()->user()->userID,
+            'action' => 'Document deleted',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         $document->delete();
 
@@ -307,6 +461,17 @@ class StaffDocumentController extends Controller
     {
         $document = Document::withTrashed()->where('documentId', $id)->firstOrFail();
         $document->restore();
+
+        // Create history record for the restoration
+        \DB::table('document_histories')->insert([
+            'documentId' => $document->documentId,
+            'prevDepartmentID' => $document->currentDepartmentID,
+            'currentDepartmentID' => $document->currentDepartmentID,
+            'userID' => auth()->user()->userID,
+            'action' => 'Document restored',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         return back()->with('success', 'Document retrieved successfully!');
     }
@@ -330,7 +495,7 @@ class StaffDocumentController extends Controller
 
         while (($row = fgetcsv($handle)) !== false) {
             if (count($row) < 5) continue;
-            [$documentNo, $fromOffice, $documentType, $title, $documentDate] = array_pad($row, 5, '');
+            [$documentNo, $fromOffice, $title, $documentDate] = array_pad($row, 4, '');
 
             $documentNo = trim($documentNo);
             if (empty($documentNo)) continue;
@@ -353,7 +518,6 @@ class StaffDocumentController extends Controller
                 'documentNo' => $documentNo,
                 'title' => trim($title) ?: 'Untitled Document',
                 'description' => trim($title) ?: 'Untitled Document',
-                'documentType' => trim($documentType) ?: 'Memo',
                 'documentDate' => !empty($documentDate) ? date('Y-m-d', strtotime($documentDate)) : now()->toDateString(),
                 'ownerID' => auth()->user()->userID,
                 'currentDepartmentID' => $department->depID,
@@ -385,8 +549,8 @@ class StaffDocumentController extends Controller
         
         $callback = function() {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Reference Number', 'From Office', 'Type', 'Subject', 'Date']);
-            fputcsv($handle, ['DOC-2026-001', 'Engineering Division', 'Memo', 'Bridge Inspection Report', '2026-10-07']);
+            fputcsv($handle, ['Reference Number', 'From Office', 'Subject', 'Date']);
+            fputcsv($handle, ['DOC-2026-001', 'Engineering Division', 'Bridge Inspection Report', '2026-10-07']);
             fclose($handle);
         };
 

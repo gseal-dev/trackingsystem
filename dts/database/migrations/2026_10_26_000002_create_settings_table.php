@@ -8,16 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('document_statuses', function (Blueprint $table) {
-            $table->id('statusID');
-            $table->string('statusName');
-            $table->text('description')->nullable();
+        Schema::create('settings', function (Blueprint $table) {
+            $table->id();
+            $table->string('key')->unique();
+            $table->text('value')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('document_statuses');
+        Schema::dropIfExists('settings');
     }
 };

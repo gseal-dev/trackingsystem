@@ -13,15 +13,7 @@
         <div class="dash-title">Admins</div>
         <div class="dash-subtitle">Manage admin users</div>
         <div class="d-flex gap-2 mt-3">
-          <a href="{{ route('admin.userManagement.addForm', ['type' => 'admins']) }}" class="btn btn-success"><i class="bi bi-person-plus"></i> Add</a>
-        </div>
-      </div>
-      <div class="dash-card">
-        <div class="dash-icon"><i class="bi bi-people"></i></div>
-        <div class="dash-title">Staff</div>
-        <div class="dash-subtitle">Manage staff users</div>
-        <div class="d-flex gap-2 mt-3">
-          <a href="{{ route('admin.userManagement.staffs') }}" class="btn btn-brand"><i class="bi bi-arrow-right-circle"></i> View</a>
+          <a href="{{ route('admin.userManagement.admins') }}" class="btn btn-success"><i class="bi bi-person-plus"></i> Add</a>
         </div>
       </div>
     </div>

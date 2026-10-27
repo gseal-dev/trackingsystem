@@ -549,11 +549,12 @@
         flex-direction: column;
         overflow-x: hidden;
         overflow-y: auto;
-        background: #001253;
-        color: #ffffff;
+        background: #ffffff;
+        color: #001253;
         z-index: 1080;
         box-shadow: 4px 0 15px rgba(0, 0, 0, 0.08);
         transition: width 0.25s ease;
+        border-right: 1px solid #e2e8f0; 
       }
       body.sidebar-expanded .app-sidebar {
         width: var(--sidebar-expanded-width);
@@ -583,8 +584,8 @@
         align-items: center;
         min-height: 58px;
         padding: 0 16px;
-        gap: 14px;
-        border-bottom: 1px solid rgba(255,255,255,0.12);
+        gap: 1px;
+        border-bottom: 1px solid rgba(0,18,83,0.12);
       }
       .sidebar-toggle {
         flex: 0 0 40px;
@@ -595,11 +596,11 @@
         background: transparent;
         border: 0;
         border-radius: 8px;
-        color: #ffffff;
+        color: #001253;
         font-size: 1.5rem;
         cursor: pointer;
       }
-      .sidebar-toggle:hover { background: rgba(255,255,255,0.12); }
+      .sidebar-toggle:hover { background: rgba(0,18,83,0.12); }
       .sidebar-heading,
       .sidebar-label {
         white-space: nowrap;
@@ -634,7 +635,7 @@
         border: 0;
         border-radius: 8px;
         background: transparent;
-        color: #cbd5e1;
+        color: #475569;
         text-decoration: none;
         font-size: 0.88rem;
         font-weight: 600;
@@ -648,16 +649,23 @@
         width: 22px;
         text-align: center;
         font-size: 1.2rem;
+        color: #001253;
       }
+
+      .sidebar-link:hover > i,
+      .sidebar-link.active > i {
+        color: #ffffff;
+      }
+      
       .sidebar-link:hover,
       .sidebar-link.active {
-        color: #ffffff;
+        color: #fcfcff;
         background: #ea3a14;
       }
       .sidebar-footer {
         margin-top: auto;
         padding: 12px 10px 18px;
-        border-top: 1px solid rgba(255,255,255,0.12);
+        border-top: 1px solid rgba(0,18,83,0.12);
       }
       .sidebar-user {
         display: flex;
@@ -665,7 +673,7 @@
         gap: 16px;
         min-height: 45px;
         padding: 0 15px;
-        color: #e2e8f0;
+        color: #001253;
         font-size: 0.85rem;
         overflow: hidden;
       }
@@ -737,8 +745,8 @@
     </style>
     @stack('head')
   </head>
-  <body class="{{ (request()->is('/') || request()->routeIs('login')) ? 'login-page' : '' }}">
-    @if(!request()->is('/') && !request()->routeIs('login'))
+  <body class="{{ (request()->is('/') || request()->routeIs('login') || request()->routeIs('setup')) ? 'login-page' : '' }}">
+    @if(!request()->is('/') && !request()->routeIs('login') && !request()->routeIs('setup'))
     <header class="official-dpwh-header">
       <div class="header-inner">
         <div class="header-logo-left">
@@ -762,7 +770,7 @@
                 aria-label="Expand sidebar" aria-expanded="false" aria-controls="appSidebar">
           <i class="bi bi-list"></i>
         </button>
-
+        <span class="sidebar-label" style="font-weight: 600;">DPWH</span>
       </div>
       <div class="sidebar-menu">
         @if($role === 'Admin')
@@ -770,10 +778,19 @@
              class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Dashboard">
             <i class="bi bi-grid-fill"></i><span class="sidebar-label">Dashboard</span>
           </a>
+          <a href="{{ route('admin.documents') }}"
+             class="sidebar-link {{ request()->routeIs('admin.documents*') ? 'active' : '' }}" title="Documents List">
+            <i class="bi bi-folder2-open"></i><span class="sidebar-label">Documents List</span>
+          </a>
           <a href="{{ route('admin.userManagement.admins') }}"
-             class="sidebar-link {{ request()->routeIs('admin.userManagement.*') ? 'active' : '' }}" title="Users List">
+             class="sidebar-link {{ request()->routeIs('admin.userManagement.admins') ? 'active' : '' }}" title="Users List">
             <i class="bi bi-people-fill"></i><span class="sidebar-label">Users List</span>
           </a>
+          <a href="{{ route('admin.userManagement.history') }}"
+             class="sidebar-link {{ request()->routeIs('admin.userManagement.history') ? 'active' : '' }}" title="History">
+            <i class="bi bi-clock-history"></i><span class="sidebar-label">History</span>
+          </a>
+          
         @elseif($role === 'Staff')
           <a href="{{ route('dashboard') }}"
              class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Dashboard">
@@ -815,6 +832,102 @@
       </div>
     </aside>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    {{-- Session idle-timeout warning modal --}}
+    <div class="modal fade" id="sessionIdleTimeoutModal" tabindex="-1" aria-labelledby="sessionIdleTimeoutModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 20px; background-color: #ffffff; color: #1e293b;">
+          <div class="modal-body p-4">
+            <div class="mb-2" style="font-size: 2.75rem; line-height: 1; color: #ea3a14;">
+              <i class="bi bi-clock"></i>
+            </div>
+            <p id="sessionIdleTimeoutText" class="fw-semibold mb-3">Your session will expire due to inactivity.</p>
+            <p id="sessionIdleCountdown" class="text-muted small mb-4">Logging off in <span id="sessionIdleSeconds">30</span> seconds...</p>
+            <div class="d-flex justify-content-center gap-2">
+              <button type="button" class="btn rounded-pill px-4" style="background-color: #001253; color: #ffffff;" id="sessionIdleStaySignedIn">Stay signed in</button>
+              <button type="button" class="btn rounded-pill px-4" id="sessionIdleLogoutNow" style="background-color: #ea3a14; color: #ffffff; border: none;">Log out now</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const IDLE_MS = 15 * 60 * 1000;  // 15 minutes of inactivity
+        const WARN_MS = IDLE_MS - 60 * 1000; // warn 1 minute before logging off
+
+        let lastActivity = Date.now();
+        let idleTimer = null;
+        let warnTimer = null;
+        let warnSeconds = 60;
+
+        const modalEl = document.getElementById('sessionIdleTimeoutModal');
+        if (!modalEl) return;
+        const modal = new bootstrap.Modal(modalEl);
+
+        const textEl = document.getElementById('sessionIdleTimeoutText');
+        const counterEl = document.getElementById('sessionIdleSeconds');
+        const stayBtn = document.getElementById('sessionIdleStaySignedIn');
+        const logoutBtn = document.getElementById('sessionIdleLogoutNow');
+
+        function resetIdle() {
+          lastActivity = Date.now();
+          clearTimeout(idleTimer);
+          clearInterval(warnTimer);
+          warnSeconds = 60;
+          if (counterEl) counterEl.textContent = warnSeconds;
+          idleTimer = setTimeout(warnIdle, WARN_MS);
+        }
+
+        function warnIdle() {
+          if (textEl) textEl.textContent = 'Your session will expire due to inactivity.';
+          modal.show();
+          warnTimer = setInterval(function () {
+            warnSeconds--;
+            if (counterEl) counterEl.textContent = warnSeconds;
+            if (warnSeconds <= 0) {
+              clearInterval(warnTimer);
+              modal.hide();
+              window.location.href = '{{ route('login') }}';
+            }
+          }, 1000);
+        }
+
+        stayBtn.addEventListener('click', function () {
+          modal.hide();
+          clearInterval(warnTimer);
+          // Keep the server-side session alive (non-AJAX request extends the timer).
+          fetch(window.location.href, { credentials: 'same-origin' }).then(resetIdle);
+          resetIdle();
+        });
+
+        logoutBtn.addEventListener('click', function () {
+          clearInterval(warnTimer);
+          modal.hide();
+          window.location.href = '{{ route('login') }}';
+        });
+
+        // Any user activity resets the inactivity clock.
+        // AJAX poller requests do NOT reset this timer (only DOM interactions count).
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(function (evt) {
+          document.addEventListener(evt, resetIdle, { passive: true });
+        });
+
+        // Pause while the tab is hidden; resume when visible again.
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) {
+            clearTimeout(idleTimer);
+            clearInterval(warnTimer);
+          } else {
+            lastActivity = Date.now();
+            idleTimer = setTimeout(warnIdle, WARN_MS);
+          }
+        });
+
+        resetIdle();
+      })();
+    </script>
     @endauth
     @endif
     <main class="main-content">

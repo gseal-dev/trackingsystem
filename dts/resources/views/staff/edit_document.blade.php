@@ -98,14 +98,6 @@
           </div>
         </div>
 
-        <!-- Document Type -->
-        <div class="d-flex align-items-center gap-3">
-          <div class="field-icon"><i class="bi bi-file-earmark-text"></i></div>
-          <div class="flex-grow-1">
-            <input type="text" id="documentType" name="documentType" class="form-control custom-input" placeholder="document type" value="{{ old('documentType', $document->documentType) }}" required>
-          </div>
-        </div>
-
         <!-- Subject -->
         <div class="d-flex align-items-center gap-3">
           <div class="field-icon"><i class="bi bi-card-heading"></i></div>

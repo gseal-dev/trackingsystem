@@ -20,7 +20,7 @@ class Document extends Model
     }
 
     protected $fillable = [
-        'documentId', 'documentNo', 'documentTitle', 'title', 'description', 'documentType', 'documentDate',
+        'documentId', 'documentNo', 'documentTitle', 'title', 'description', 'documentDate',
         'ownerID', 'currentDepartmentID', 'filePath'
     ];
 
@@ -32,6 +32,33 @@ class Document extends Model
     public function department()
     {
         return $this->belongsTo(Department::class, 'currentDepartmentID', 'depID');
+    }
+
+    /**
+     * Filter by a date range (inclusive) of the document date.
+     * Falls back to the upload date for documents that have no document date.
+     */
+    public function scopeDateRange(Builder $query, ?string $from = null, ?string $to = null): Builder
+    {
+        if ($from) {
+            $query->where(function ($q) use ($from) {
+                $q->where('documentDate', '>=', $from)
+                  ->orWhere(function ($sub) use ($from) {
+                      $sub->whereNull('documentDate')->where('created_at', '>=', $from);
+                  });
+            });
+        }
+
+        if ($to) {
+            $query->where(function ($q) use ($to) {
+                $q->where('documentDate', '<=', $to)
+                  ->orWhere(function ($sub) use ($to) {
+                      $sub->whereNull('documentDate')->where('created_at', '<=', $to);
+                  });
+            });
+        }
+
+        return $query;
     }
 
     /**
@@ -70,7 +97,6 @@ class Document extends Model
                 $q->where('documentNo', 'like', $like)
                   ->orWhere('documentTitle', 'like', $like)
                   ->orWhere('title', 'like', $like)
-                  ->orWhere('documentType', 'like', $like)
                   ->orWhereHas('department', fn ($d) => $d->where('depName', 'like', $like));
 
                 if ($withUploader) {
@@ -122,7 +148,6 @@ class Document extends Model
             'documentTitle' => $this->documentTitle,
             'subject' => $this->title,
             'description' => $this->description ?: 'No description',
-            'type' => $this->documentType,
             'office' => $this->department->depName ?? '-',
             'date' => $date ? \Carbon\Carbon::parse($date)->format('F d, Y') : '-',
             'fileName' => $this->displayFileName(),
@@ -132,12 +157,12 @@ class Document extends Model
                 : '-',
             'viewUrl' => $this->filePath ? asset('storage/' . $this->filePath) : null,
             'downloadUrl' => $this->filePath ? route('document.download', $this->documentId) : null,
+            'uploadVersionUrl' => route('staff.document.uploadVersion', $this->documentId),
             'updateUrl' => route('staff.document.update', $this->documentId),
             'edit' => [
                 'documentNo' => $this->documentNo,
                 'documentTitle' => $this->documentTitle,
                 'fromOffice' => $this->department->depName ?? '',
-                'documentType' => $this->documentType,
                 'title' => $this->title,
                 'documentDate' => $date ? \Carbon\Carbon::parse($date)->format('Y-m-d') : '',
             ],

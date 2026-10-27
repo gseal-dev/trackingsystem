@@ -13,6 +13,11 @@ class DocumentHistory extends Model
 
     public function document()
     {
-        return $this->belongsTo(Document::class, 'documentId', 'documentId');
+        return $this->belongsTo(Document::class, 'documentId', 'documentId')->withTrashed();
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'userID', 'userID');
     }
 }

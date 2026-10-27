@@ -37,6 +37,8 @@ class User extends Authenticatable
         'roleID',
         'departmentID',
         'phoneNo',
+        'is_locked',
+        'locked_at',
     ];
 
     /**

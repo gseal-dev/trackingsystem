@@ -5,8 +5,6 @@
 @push('head')
 <style>
 
-
-
   .section-header {
     display: flex;
     justify-content: space-between;
@@ -24,22 +22,17 @@
   }
 
   .table-toolbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 1.5rem;
-    gap: 1rem;
-    flex-wrap: wrap;
   }
 
   .search-box {
     position: relative;
-    max-width: 400px;
     width: 100%;
   }
 
-  .search-box input, .form-select {
-    border-radius: 50px !important;
+  /* Remove rounded pill borders and make fields standard/square */
+  .search-box input, .form-select, .form-control {
+    border-radius: 4px !important;
     border-color: #cbd5e1;
   }
 
@@ -48,9 +41,9 @@
     height: 48px;
   }
 
-  .form-select {
+  .form-select, .form-control {
     height: 48px;
-    padding-left: 1.25rem;
+    padding-left: 1rem;
   }
 
   .search-box i {
@@ -134,49 +127,100 @@
   <div class="dashboard-container wide">
       <div class="page-card">
         <div class="page-card-header"><i class="bi bi-folder2-open"></i> Documents List</div>
-        <div class="section-header">
-          <div>
-            <p class="text-muted">Manage and track all registered documents</p>
+
+        <!-- Section Header with Title and Export Button -->
+        <div class="section-header d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+          <div class="d-flex flex-column gap-1">
+            <h2 class="section-subtitle mb-1">Documents</h2>
+            <p class="text-muted mb-0 small">Add and delete documents</p>
           </div>
-          <div class="d-flex gap-2 align-items-center flex-wrap">
-            <a href="{{ route('staff.documents.export', request()->only(['year', 'month', 'day', 'q'])) }}" class="btn btn-outline-success fw-bold px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;" title="Exports every document matching the current filters">
+          <div class="d-flex gap-2 align-items-center">
+            <a href="{{ route('staff.documents.export', request()->only(['q', 'date_from', 'date_to', 'department'])) }}" class="btn btn-outline-success fw-bold px-3 py-2 rounded-2 d-inline-flex align-items-center gap-2" id="export-documents-btn" style="border-width: 2px;" title="Exports every document matching the current filters">
               <i class="bi bi-file-earmark-spreadsheet"></i>
               <span>Export Excel</span>
             </a>
           </div>
         </div>
 
-        <div class="table-toolbar">
-          <form method="GET" action="{{ route('staff.documents') }}" class="w-100">
-            <div class="search-box w-100 mb-3" style="max-width: 100%;">
-              <i class="bi bi-search"></i>
-              <input type="text" id="staff-record-search" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search by reference number, subject, etc..." style="max-width: 100%;" autocomplete="off">
-            </div>
-            <div class="d-flex gap-2 flex-wrap align-items-center">
-              <select name="year" class="form-select" style="width: 160px;" onchange="this.form.submit()">
-                <option value="">Year: All</option>
-                @for($y = 2017; $y <= 2026; $y++)
-                  <option value="{{ $y }}" {{ request('year') == $y ? 'selected' : '' }}>{{ $y }}</option>
-                @endfor
-              </select>
-              <select name="month" class="form-select" style="width: 160px;" onchange="this.form.submit()">
-                <option value="">Month: All</option>
-                @for($m = 1; $m <= 12; $m++)
-                  <option value="{{ $m }}" {{ request('month') == $m ? 'selected' : '' }}>{{ date('F', mktime(0, 0, 0, $m, 1)) }}</option>
-                @endfor
-              </select>
-              <select name="day" class="form-select" style="width: 140px;" onchange="this.form.submit()">
-                <option value="">Day: All</option>
-                @for($d = 1; $d <= 31; $d++)
-                  <option value="{{ $d }}" {{ request('day') == $d ? 'selected' : '' }}>Day {{ $d }}</option>
-                @endfor
-              </select>
-              @if(request('year') || request('month') || request('day') || request('q'))
-                <a href="{{ route('staff.documents') }}" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 50px;">Reset</a>
+        {{-- Active filter chips --}}
+        @php
+          $hasFilters = request()->filled(['q', 'date_from', 'date_to', 'department']);
+        @endphp
+
+        @if($hasFilters)
+          <div class="mb-3">
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+              <span class="text-muted small fw-semibold">Active filters:</span>
+              @if(request('q'))
+                <a href="{{ route('staff.documents', array_filter(array_merge(request()->query(), ['q' => null]))) }}" class="badge bg-light text-dark border d-inline-flex align-items-center gap-2 text-decoration-none small">
+                  <span>{{ e(request('q')) }}</span>
+                  <i class="bi bi-x-circle fw-bold" style="font-size: 0.65rem;"></i>
+                </a>
               @endif
-              <div class="ms-auto d-flex align-items-center gap-2">
-                <label for="per-page" class="small text-muted mb-0">Rows per page</label>
-                <select name="per_page" id="per-page" class="form-select" style="width: 90px;" onchange="this.form.submit()">
+              @if(request('date_from') || request('date_to'))
+                <a href="{{ route('staff.documents', array_filter(array_merge(request()->query(), ['date_from' => null, 'date_to' => null]))) }}" class="badge bg-light text-dark border d-inline-flex align-items-center gap-2 text-decoration-none small">
+                  <span>{{ request('date_from') ?? 'Any' }} → {{ request('date_to') ?? 'Any' }}</span>
+                  <i class="bi bi-x-circle fw-bold" style="font-size: 0.65rem;"></i>
+                </a>
+              @endif
+              @if(request('department'))
+                @php $deptName = \App\Models\Department::where('depID', request('department'))->value('depName') ?? request('department'); @endphp
+                <a href="{{ route('staff.documents', array_filter(array_merge(request()->query(), ['department' => null]))) }}" class="badge bg-light text-dark border d-inline-flex align-items-center gap-2 text-decoration-none small">
+                  <span>{{ e($deptName) }}</span>
+                  <i class="bi bi-x-circle fw-bold" style="font-size: 0.65rem;"></i>
+                </a>
+              @endif
+              <a href="{{ route('staff.documents') }}" class="btn btn-outline-secondary btn-sm text-decoration-none">Clear all</a>
+            </div>
+          </div>
+        @endif
+
+        <div class="table-toolbar">
+          <form method="GET" action="{{ route('staff.documents') }}" class="w-100" id="staff-docs-filter">
+            <!-- Search bar on top, full width -->
+            <div class="mb-3">
+              <label class="form-label fw-bold text-uppercase small text-secondary mb-1">
+                <i class="bi bi-search me-1"></i> Search Everything You Have Access To
+              </label>
+              <div class="search-box w-100">
+                <i class="bi bi-search"></i>
+                <input type="search" id="staff-doc-search" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search reference number, subject, office, type..." autocomplete="off">
+              </div>
+            </div>
+
+            <!-- Other filters below the search bar with labels on top -->
+            <div class="row g-3 align-items-end">
+              <div class="col-md-2">
+                <label class="form-label fw-bold small text-muted mb-1"><i class="bi bi-calendar-event me-1"></i> Doc. Date From</label>
+                <input type="date" name="date_from" value="{{ request('date_from') }}" class="form-control form-control-sm">
+              </div>
+
+              <div class="col-md-2">
+                <label class="form-label fw-bold small text-muted mb-1"><i class="bi bi-calendar-event me-1"></i> Doc. Date To</label>
+                <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control form-control-sm">
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-bold small text-muted mb-1"><i class="bi bi-building me-1"></i> Department</label>
+                <select name="department" class="form-select">
+                  <option value="">All Departments</option>
+                  @foreach($departments as $dept)
+                    <option value="{{ $dept->depID }}" {{ request('department') == $dept->depID ? 'selected' : '' }}>{{ $dept->depName }}</option>
+                  @endforeach
+                </select>
+              </div>
+
+              <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-secondary w-50" style="height: 48px; border-radius: 4px;">Apply</button>
+                <a href="{{ route('staff.documents') }}" class="btn btn-outline-danger w-50 d-inline-flex align-items-center justify-content-center" style="height: 48px; border-radius: 4px;">Reset</a>
+              </div>
+            </div>
+
+            <!-- Rows per page helper bar -->
+            <div class="d-flex align-items-center justify-content-end mt-3">
+              <div class="d-flex align-items-center gap-2">
+                <label for="staff-per-page" class="small text-muted mb-0">Rows per page</label>
+                <select name="per_page" id="staff-per-page" class="form-select form-select-sm" style="width: 80px; height: 38px;" onchange="this.form.submit()">
                   @foreach(\App\Support\DocumentList::PER_PAGE_OPTIONS as $n)
                     <option value="{{ $n }}" {{ $documents->perPage() == $n ? 'selected' : '' }}>{{ $n }}</option>
                   @endforeach
@@ -186,54 +230,60 @@
           </form>
         </div>
 
-        <p class="text-muted small fst-italic mb-3">*Project information, documents, and records are continuously being tracked. Thank you for your patience.*</p>
-
         <div class="mb-3" id="staff-docs-count" data-live-refresh>
-          <div class="d-inline-flex align-items-center px-4 py-2 text-white fw-bold shadow-sm" style="background-color: #ea3a14; border-radius: 50px; font-size: 0.9rem;">
+          <div class="d-inline-flex align-items-center px-4 py-2 text-white fw-bold shadow-sm" style="background-color: #ea3a14; border-radius: 4px; font-size: 0.9rem;">
             <i class="bi bi-file-earmark-text-fill me-2"></i> {{ number_format($documents->total()) }} Documents Found
           </div>
         </div>
 
-        <div class="border rounded-2 overflow-hidden">
+        <div class="card border rounded-4 bg-white shadow-sm overflow-hidden p-3">
           <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
               <thead class="bg-light">
                 <tr>
                   <th>Reference Number</th>
                   <th>From Office</th>
-                  <th>Type</th>
+                  <!-- <th>Type</th> -->
                   <th>Subject</th>
+                  <th>Uploaded by</th>
                   <th>Date</th>
+                  <th>Upload Date</th>
                   <th class="text-end">Actions</th>
                 </tr>
               </thead>
-            <tbody id="staff-records-body" data-live-refresh>
-              @forelse($documents as $document)
-                <tr>
-                  <td class="fw-bold">{{ $document->documentNo }}</td>
-                  <td>{{ $document->department->depName ?? '-' }}</td>
-                  <td style="text-transform: uppercase;">{{ $document->documentType }}</td>
-                  <td>{{ $document->title }}</td>
-                  <td class="text-muted">{{ $document->documentDate ? \Carbon\Carbon::parse($document->documentDate)->format('F d, Y') : $document->created_at?->format('F d, Y') }}</td>
-                  <td>
-                    <div class="actions-cell justify-content-end">
-                      <button type="button" class="btn-action" title="View details" data-doc-view="{{ json_encode($document->viewData()) }}">
-                    <i class="bi bi-eye"></i>
-                  </button>
-                    </div>
-                  </td>
-                </tr>
-              @empty
-                <tr>
-                  <td colspan="6" class="text-center py-5 text-muted">
-                    <i class="bi bi-folder-x display-4 mb-3 d-block"></i>
-                    No records found.
-                  </td>
-                </tr>
-              @endforelse
-            </tbody>
-          </table>
-        </div>
+              <tbody id="staff-docs-body" data-live-refresh>
+                @forelse($documents as $document)
+                  @php
+                    $uploader = $document->owner
+                      ? ($document->owner->username ?: trim(($document->owner->firstName ?? '') . ' ' . ($document->owner->lastName ?? '')))
+                      : 'Unknown';
+                  @endphp
+                  <tr>
+                    <td class="fw-bold">{{ $document->documentNo }}</td>
+                    <td>{{ $document->department->depName ?? '-' }}</td>
+                    <td>{{ $document->title }}</td>
+                    <td>{{ $uploader }}</td>
+                    <td class="text-muted">{{ $document->documentDate ? \Carbon\Carbon::parse($document->documentDate)->format('F d, Y') : $document->created_at?->format('F d, Y') }}</td>
+                    <td class="text-muted">{{ $document->created_at ? \Carbon\Carbon::parse($document->created_at)->format('F d, Y') : '-' }}</td>
+                    <td>
+                      <div class="actions-cell justify-content-end">
+                        <button type="button" class="btn-action" title="View details" data-doc-view="{{ json_encode($document->viewData()) }}">
+                          <i class="bi bi-eye"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                @empty
+                  <tr>
+                    <td colspan="9" class="text-center py-5 text-muted">
+                      <i class="bi bi-folder-x display-4 mb-3 d-block"></i>
+                      No documents found.
+                    </td>
+                  </tr>
+                @endforelse
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div id="staff-docs-pager" data-live-refresh>
@@ -244,13 +294,12 @@
   </div>
 
 @include('partials.document-view-modal', ['canEdit' => true])
-@include('partials.document-edit-modal')
 
 @push('scripts')
 <script>
   // Search runs on the server (it has to look through every page, not just the 25 rows on screen)
   (function () {
-    const input = document.getElementById('staff-record-search');
+    const input = document.getElementById('staff-doc-search');
     let timer = null;
     input.addEventListener('input', function () {
       clearTimeout(timer);
@@ -263,4 +312,5 @@
   })();
 </script>
 @endpush
+
 @endsection

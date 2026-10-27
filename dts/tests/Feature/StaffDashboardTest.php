@@ -55,7 +55,7 @@ class StaffDashboardTest extends TestCase
 
         $doc = Document::create([
             'documentId' => (string) Str::uuid(), 'documentNo' => "DOC-$n", 'documentTitle' => "Title $n",
-            'title' => "Subject $n", 'description' => "Subject $n", 'documentType' => 'Memo',
+            'title' => "Subject $n", 'description' => "Subject $n",
             'documentDate' => '2026-10-01', 'ownerID' => $owner->userID,
             'currentDepartmentID' => $dep->depID, 'filePath' => "documents/f$n.pdf",
         ]);

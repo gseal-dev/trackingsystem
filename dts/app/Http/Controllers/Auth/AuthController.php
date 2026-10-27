@@ -11,6 +11,12 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
+        // On a fresh deploy with no accounts, the admin must set up
+        // their first account via /setup instead of logging in.
+        if (User::count() === 0) {
+            return redirect()->route('setup');
+        }
+
         return view('auth.login');
     }
 
@@ -35,6 +41,12 @@ class AuthController extends Controller
         if (!Hash::check($credentials['password'], $user->password)) {
             return back()->withErrors([
                 'password' => 'Incorrect password.',
+            ])->withInput(['login' => $credentials['login']]);
+        }
+
+        if ($user->is_locked) {
+            return back()->withErrors([
+                'login' => 'Your account is locked. Please contact an administrator to unlock it.',
             ])->withInput(['login' => $credentials['login']]);
         }
 

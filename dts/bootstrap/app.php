@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,
         ]);
+
+        // Log users off after 15 minutes of inactivity.
+        $middleware->append(\App\Http\Middleware\CheckSessionIdleTimeout::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

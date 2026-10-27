@@ -50,7 +50,6 @@ class AdminDashboardDocumentsTest extends TestCase
             'documentTitle' => 'Title for ' . $no,
             'title' => $title,
             'description' => $title,
-            'documentType' => 'Memo',
             'documentDate' => $date,
             'ownerID' => $this->staff->userID,
             'currentDepartmentID' => $dep->depID,
@@ -109,7 +108,6 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->actingAs($this->admin)->post(route('staff.document.store'), [
             'documentNo' => 'ADM-001', 'documentTitle' => 'A document title',
             'fromOffice' => 'Legal Office',
-            'documentType' => 'Letter',
             'title' => 'Added by admin',
             'documentDate' => '2026-10-07',
             'file' => UploadedFile::fake()->create('letter.pdf', 50, 'application/pdf'),
@@ -182,7 +180,7 @@ class AdminDashboardDocumentsTest extends TestCase
         Storage::fake('public');
 
         $this->actingAs($this->staff)->from(route('staff.document.create'))->post(route('staff.document.store'), [
-            'documentNo' => 'UP-001', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'documentType' => 'Letter',
+            'documentNo' => 'UP-001', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance',
             'title' => 'Uploaded from the page', 'documentDate' => '2026-10-12',
             'file' => UploadedFile::fake()->create('letter.pdf', 50, 'application/pdf'),
         ])->assertRedirect(route('staff.documents'));
@@ -201,7 +199,7 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->makeDocument('TAKEN-1', 'Existing');
 
         $this->actingAs($this->staff)->from(route('staff.document.create'))->post(route('staff.document.store'), [
-            'documentNo' => 'TAKEN-1', 'documentTitle' => 'A document title', 'fromOffice' => '', 'documentType' => 'Letter', 'title' => 'Typed subject',
+            'documentNo' => 'TAKEN-1', 'documentTitle' => 'A document title', 'fromOffice' => '', 'title' => 'Typed subject',
             'file' => UploadedFile::fake()->create('notes.txt', 10, 'text/plain'),
         ])->assertRedirect(route('staff.document.create'))
           ->assertSessionHasErrors(['documentNo', 'fromOffice', 'file']);
@@ -234,21 +232,19 @@ class AdminDashboardDocumentsTest extends TestCase
         $data = $this->popupData($html);
         $this->assertSame(route('staff.document.update', $doc->documentId), $data['updateUrl']);
         $this->assertSame(
-            ['documentNo' => 'D-1', 'documentTitle' => 'Title for D-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Old title', 'documentDate' => '2026-10-01'],
+            ['documentNo' => 'D-1', 'documentTitle' => 'Title for D-1', 'fromOffice' => 'Finance', 'title' => 'Old title', 'documentDate' => '2026-10-01'],
             $data['edit']
         );
 
         $this->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
             'documentNo' => 'D-1', 'documentTitle' => 'A document title',
             'fromOffice' => 'Legal Office',
-            'documentType' => 'Report',
             'title' => 'New title',
             'documentDate' => '2026-10-03',
         ])->assertRedirect('/staff/documents')->assertSessionHas('success', 'Document updated successfully!');
 
         $doc->refresh();
         $this->assertSame('New title', $doc->title);
-        $this->assertSame('Report', $doc->documentType);
         $this->assertSame('Legal Office', $doc->department->depName);
     }
 
@@ -266,7 +262,7 @@ class AdminDashboardDocumentsTest extends TestCase
 
         $this->actingAs($this->staff)->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
             '_editing_id' => $doc->documentId,
-            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => '', 'documentType' => 'Report', 'title' => 'Typed but invalid',
+            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => '', 'title' => 'Typed but invalid',
         ])->assertRedirect('/staff/documents')
           ->assertSessionHasErrorsIn('editDocument', ['fromOffice']);
 
@@ -288,7 +284,7 @@ class AdminDashboardDocumentsTest extends TestCase
         Storage::disk('public')->put($doc->filePath, 'old');
 
         $this->actingAs($this->staff)->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
-            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'With file',
+            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'title' => 'With file',
             'file' => UploadedFile::fake()->create('new.pdf', 20, 'application/pdf'),
         ])->assertRedirect('/staff/documents');
 
@@ -319,7 +315,7 @@ class AdminDashboardDocumentsTest extends TestCase
         $doc = $this->makeDocument('D-1', 'Editable');
 
         $this->actingAs($this->staff)->from('/staff/documents')->post(route('staff.document.update', $doc->documentId), [
-            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Edited',
+            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'title' => 'Edited',
         ])->assertRedirect('/staff/documents');
 
         $this->get('/staff/documents')
@@ -434,7 +430,6 @@ class AdminDashboardDocumentsTest extends TestCase
             $this->assertSame('Road widening permit', $data['subject']);
             $this->assertSame('Permit for the road widening project', $data['description']);
             $this->assertSame('Finance', $data['office']);
-            $this->assertSame('Memo', $data['type']);
             $this->assertSame('Road Permit.pdf', $data['fileName']);          // uuid prefix removed
             $this->assertSame('Worker Tester (worker)', $data['uploadedBy']);
             $this->assertSame('October 01, 2026 at 10:30 AM', $data['uploadedAt']);
@@ -487,7 +482,7 @@ class AdminDashboardDocumentsTest extends TestCase
         $doc = $this->makeDocument('D-1', 'Staff cannot delete');
 
         $this->actingAs($this->staff)->post(route('staff.document.update', $doc->documentId), [
-            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Staff edit',
+            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'title' => 'Staff edit',
         ])->assertRedirect();
         $this->assertSame('Staff edit', $doc->fresh()->title);
         $this->delete(route('staff.document.delete', $doc->documentId))->assertForbidden();
@@ -500,7 +495,7 @@ class AdminDashboardDocumentsTest extends TestCase
         $doc = $this->makeDocument('D-1', 'Admin cannot edit');
 
         $this->actingAs($this->admin)->post(route('staff.document.update', $doc->documentId), [
-            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Hacked title',
+            'documentNo' => 'D-1', 'documentTitle' => 'A document title', 'fromOffice' => 'Finance', 'title' => 'Hacked title',
         ])->assertForbidden();
         $this->assertSame('Admin cannot edit', $doc->fresh()->title);
 
@@ -541,7 +536,7 @@ class AdminDashboardDocumentsTest extends TestCase
 
         $this->actingAs($this->staff)->post(route('staff.document.store'), [
             'documentNo' => 'NS-1', 'documentTitle' => 'No status title', 'fromOffice' => 'Finance',
-            'documentType' => 'Memo', 'title' => 'No status subject',
+            'title' => 'No status subject',
             'file' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf'),
         ])->assertSessionDoesntHaveErrors();
 
@@ -565,7 +560,7 @@ class AdminDashboardDocumentsTest extends TestCase
         Storage::fake('public');
 
         $this->actingAs($this->staff)->post(route('staff.document.store'), [
-            'documentNo' => 'NT-1', 'fromOffice' => 'Finance', 'documentType' => 'Memo', 'title' => 'Subject only',
+            'documentNo' => 'NT-1', 'fromOffice' => 'Finance', 'title' => 'Subject only',
             'file' => UploadedFile::fake()->create('a.pdf', 10, 'application/pdf'),
         ])->assertSessionDoesntHaveErrors();
 
@@ -577,10 +572,10 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->makeDocument('D-1', 'x');
 
         $staff = $this->actingAs($this->staff)->get('/staff/documents')->getContent();
-        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*<th>From Office<\/th>\s*<th>Type<\/th>\s*<th>Subject<\/th>\s*<th>Date<\/th>/', $staff));
+        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*<th>From Office<\/th>\s*<th>Subject<\/th>\s*<th>Date<\/th>/', $staff));
 
         $admin = $this->actingAs($this->admin)->get('/dashboard')->getContent();
-        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*<th>From Office<\/th>\s*<th>Type<\/th>\s*<th>Subject<\/th>\s*<th>Uploaded By<\/th>\s*<th>Date<\/th>/', $admin));
+        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*<th>From Office<\/th>\s*<th>Subject<\/th>\s*<th>Date<\/th>/', $admin));
     }
 
     public function test_document_actions_require_login(): void
