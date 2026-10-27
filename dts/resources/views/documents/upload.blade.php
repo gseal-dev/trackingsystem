@@ -13,7 +13,7 @@
 
   .up-label { display: block; margin-bottom: 0.3rem; color: #1f2937; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; }
   .up-label .req { color: rgb(0, 18, 83)); }
-  .up-input { width: 100%; padding: 0.5rem 0.75rem; font-size: 0.85rem; color: #1f2937; background: #ffffff; border: 1px solid #d5dbe2; border-radius: 3px; box-shadow: none; }
+  .up-input { width: 100%; padding: 0.5rem 0.75rem; font-size: 0.85rem; color: #1f2937; background: #ffffff; border: 1px solid #d5dbe2; border-radius: 3px; box-shadow: none; text-transform: uppercase; }
   .up-input:focus { border-color: rgb(0, 18, 83); box-shadow: 0 0 0 3px rgba(232, 57, 45, 0.12); outline: 0; }
   .up-input[readonly] { background: #f3f4f6; color: #374151; cursor: default; }
   .up-input.is-invalid { border-color: rgb(0, 18, 83); background-image: none; }
@@ -186,6 +186,19 @@
       const btn = document.getElementById('submitBtn');
       btn.disabled = true;
       btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Uploading...';
+    });
+
+    // Auto-capslock text inputs
+    ['documentNo', 'fromOffice', 'title'].forEach(function (id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', function () {
+          const start = el.selectionStart;
+          const end = el.selectionEnd;
+          el.value = el.value.toUpperCase();
+          el.setSelectionRange(start, end);
+        });
+      }
     });
   })();
 </script>
