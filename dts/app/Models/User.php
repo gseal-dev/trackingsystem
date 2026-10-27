@@ -39,6 +39,8 @@ class User extends Authenticatable
         'phoneNo',
         'is_locked',
         'locked_at',
+        'failed_login_attempts',
+        'locked_until',
     ];
 
     /**
