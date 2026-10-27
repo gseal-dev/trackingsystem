@@ -22,15 +22,15 @@
           <div style="border-bottom: 1px solid #cbd5e1; padding-bottom: 0.75rem;">
             <label for="defaultPassword" style="display: block; margin-bottom: 0.45rem; color: #64748b; font-size: 0.875rem; font-weight: 600;">Default Password</label>
             <div class="position-relative">
-              <input type="password" id="defaultPassword" name="default_password" class="form-control add-user-input" minlength="8" maxlength="72" value="{{ old('default_password', $currentDefault) }}" placeholder="Leave blank to clear" style="min-height: 44px; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.5rem 0.75rem; font-size: 0.925rem; width: 100%;">
+              <input type="password" id="defaultPassword" name="default_password" class="form-control add-user-input" minlength="8" maxlength="72" value="{{ old('default_password', $currentDefault) }}" placeholder="Leave blank to clear" style="min-height: 44px; border: 1px solid #cbd5e1; border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.925rem; width: 100%;">
               <button type="button" id="toggleDefaultPasswordBtn" class="btn btn-outline-secondary position-absolute top-50 end-0 translate-middle-y me-2" style="z-index: 10;" title="Show or hide"><i class="bi bi-eye"></i></button>
             </div>
             <div class="form-text mt-1" style="font-size: 0.875rem; color: #64748b;">Leave blank to remove the default. Users created without a typed password will need a password set manually.</div>
           </div>
         </div>
         <div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e5e7eb; padding: 0.75rem 1.5rem; gap: 0.5rem;">
-          <button type="button" class="btn" style="min-height: 46px; border-radius: 6px; border: 1px solid #cbd5e1; color: #475569; background: #ffffff; font-weight: 600;" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn" style="min-height: 46px; border-radius: 6px; background-color: #ea3a14; color: #fff; border: none; font-weight: 600;">Save Default Password</button>
+          <button type="button" class="btn" style="min-height: 46px; border-radius: 4px; border: 1px solid #cbd5e1; color: #475569; background: #ffffff; font-weight: 600;" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn" style="min-height: 46px; border-radius: 4px; background-color: #ea3a14; color: #fff; border: none; font-weight: 600;">Save Default Password</button>
         </div>
       </form>
     </div>
@@ -38,7 +38,7 @@
 </div>
 <style scoped>
   #defaultPasswordModal .modal-content .form-control {
-    border-radius: 6px !important;
+    border-radius: 4px !important;
     border: 1px solid #cbd5e1 !important;
     background: #fff !important;
     color: #000 !important;

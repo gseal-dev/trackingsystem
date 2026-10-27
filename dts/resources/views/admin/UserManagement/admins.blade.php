@@ -86,14 +86,19 @@
     width: 100%;
   }
 
+  .search-box input, .form-select, .form-control {
+    border-radius: 4px !important;
+    border-color: #cbd5e1;
+  }
+
   .search-box input {
-    padding-left: 2.5rem;
-    height: 44px;
+    padding-left: 2.75rem;
+    height: 48px;
   }
 
   .search-box i {
     position: absolute;
-    left: 1rem;
+    left: 1.25rem;
     top: 50%;
     transform: translateY(-50%);
     color: #9ca3af;
@@ -164,18 +169,18 @@
               <input type="text" id="admin-user-search" name="q" value="{{ request('q') }}" class="form-control" placeholder="Search users..." autocomplete="off">
             </div>
             @if(request('q'))
-              <a href="{{ route('admin.userManagement.admins') }}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 50px;">Reset</a>
+              <a href="{{ route('admin.userManagement.admins') }}" class="btn btn-outline-secondary px-3 py-2" style="border-radius: 4px;">Reset</a>
             @endif
             @include('partials.per-page-select', ['paginator' => $users, 'id' => 'users-per-page'])
           </form>
           <div class="d-flex gap-2">
-            <a href="{{ route('admin.userManagement.export', request()->only('q')) }}" class="btn btn-outline-secondary px-3 py-2" id="export-users" style="border-radius: 50px;" title="Exports every user matching the search"><i class="bi bi-download me-1"></i> Export Excel</a>
-            <button type="button" class="btn btn-dark px-4 py-2" style="background-color: #ea3a14; color: #ffffff; border-radius: 50px; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#addUserModal" title="Add user"><i class="bi bi-person-plus me-1"></i> Add User</button>
-            <button type="button" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 50px; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#defaultPasswordModal" title="Set default password for new users"><i class="bi bi-key me-1"></i> Default Password</button>
+            <a href="{{ route('admin.userManagement.export', request()->only('q')) }}" class="btn btn-outline-secondary px-3 py-2" id="export-users" style="border-radius: 4px;" title="Exports every user matching the search"><i class="bi bi-download me-1"></i> Export Excel</a>
+            <button type="button" class="btn btn-dark px-4 py-2" style="background-color: #ea3a14; color: #ffffff; border-radius: 4px; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#addUserModal" title="Add user"><i class="bi bi-person-plus me-1"></i> Add User</button>
+            <button type="button" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 4px; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#defaultPasswordModal" title="Set default password for new users"><i class="bi bi-key me-1"></i> Default Password</button>
           </div>
         </div>
 
-        <div class="border rounded-2 overflow-hidden">
+        <div class="border overflow-hidden">
           <div class="table-responsive">
           <table class="table table-hover table-sm align-middle">
             <thead class="bg-light">
