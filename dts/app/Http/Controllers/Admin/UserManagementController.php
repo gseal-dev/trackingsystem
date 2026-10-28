@@ -183,7 +183,7 @@ class UserManagementController extends Controller
 
         $isStaff = \App\Models\Role::where('roleID', $roleID)->value('roleName') === 'Staff';
 
-        return redirect()->route($type === 'admins' ? 'dashboard' : "admin.userManagement.$type")
+        return redirect()->route('admin.userManagement.admins')
             ->with('success', $isStaff
                 ? 'User added! Give them the password - they must change it at first login.'
                 : 'User added!');
@@ -224,8 +224,7 @@ class UserManagementController extends Controller
         if ($request->filled('password')) {
             $user->update(['password' => \Hash::make($request->password)]);
         }
-        $redirectType = $type;
-        return redirect()->route($redirectType === 'admins' || $redirectType === 'dashboard' ? 'dashboard' : "admin.userManagement.$redirectType")
+        return redirect()->route("admin.userManagement.$type")
             ->with('success', 'User updated!');
     }
 
