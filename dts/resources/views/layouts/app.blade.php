@@ -450,17 +450,36 @@
         align-items: center;
         gap: 0.85rem;
         margin-bottom: 1.25rem;
+        position: relative;
       }
+      /* Icon sits inside the left edge of the textbox instead of beside it */
       .input-group-custom .icon-wrapper {
-        width: 32px;
-        display: flex;
-        justify-content: center;
-        font-size: 1.6rem;
-        color: var(--brand-dark);
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: auto;
+        padding-left: 1rem;
+        font-size: 1.75rem;
+        color: rgb(100, 116, 139);
+        opacity: 1;
+        pointer-events: none;
+        z-index: 2;
       }
-      .form-control, .form-select, .input-pill {
+      .form-control, .form-select {
         border-radius: 50px !important;
         padding: 0.65rem 1.25rem;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        color: var(--brand-dark);
+        font-size: 0.925rem;
+        width: 100%;
+      }
+      /* Sharper inputs on the setup & login pages */
+      .input-pill {
+        border-radius: 8px !important;
+        padding: 0.65rem 1.25rem;
+        padding-left: 3rem !important;
         background-color: var(--input-bg);
         border: 1px solid var(--border-color);
         color: var(--brand-dark);
@@ -478,10 +497,21 @@
         box-shadow: none;
         outline: none;
       }
-      .btn-brand, .btn-custom-dark, .btn-login-submit {
+      .btn-brand, .btn-custom-dark {
         background-color: var(--btn-dark);
         color: #ffffff;
         border-radius: 50px;
+        padding: 0.65rem 1.5rem;
+        font-weight: 600;
+        border: none;
+        width: 100%;
+        transition: background-color 0.2s ease;
+      }
+      /* Sharper submit buttons on the setup & login pages */
+      .btn-login-submit {
+        background-color: var(--btn-dark);
+        color: #ffffff;
+        border-radius: 8px;
         padding: 0.65rem 1.5rem;
         font-weight: 600;
         border: none;
@@ -524,7 +554,7 @@
       body.theme-dark .btn-brand:hover,
       body.theme-dark .btn-custom-dark:hover,
       body.theme-dark .btn-login-submit:hover {
-        color: #0f172a;
+        color: #ffffff;
       }
       body.theme-dark .table-clean thead th {
         background-color: #111827;
