@@ -837,7 +837,7 @@
     {{-- Session idle-timeout warning modal --}}
     <div class="modal fade" id="sessionIdleTimeoutModal" tabindex="-1" aria-labelledby="sessionIdleTimeoutModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
       <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 20px; background-color: #ffffff; color: #1e293b;">
+        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 8px; background-color: #ffffff; color: #1e293b;">
           <div class="modal-body p-4">
             <div class="mb-2" style="font-size: 2.75rem; line-height: 1; color: #ea3a14;">
               <i class="bi bi-clock"></i>
@@ -845,8 +845,8 @@
             <p id="sessionIdleTimeoutText" class="fw-semibold mb-3">Your session will expire due to inactivity.</p>
             <p id="sessionIdleCountdown" class="text-muted small mb-4">Logging off in <span id="sessionIdleSeconds">30</span> seconds...</p>
             <div class="d-flex justify-content-center gap-2">
-              <button type="button" class="btn rounded-pill px-4" style="background-color: #001253; color: #ffffff;" id="sessionIdleStaySignedIn">Stay signed in</button>
-              <button type="button" class="btn rounded-pill px-4" id="sessionIdleLogoutNow" style="background-color: #ea3a14; color: #ffffff; border: none;">Log out now</button>
+              <button type="button" class="btn px-4" style="border-radius: 4px; background-color: #001253; color: #ffffff;" id="sessionIdleStaySignedIn">Stay signed in</button>
+              <button type="button" class="btn px-4" style="border-radius: 4px; background-color: #ea3a14; color: #ffffff; border: none;" id="sessionIdleLogoutNow">Log out now</button>
             </div>
           </div>
         </div>
@@ -943,7 +943,7 @@
     @if($flashMessage)
     <div class="modal fade" id="flashModal" tabindex="-1" aria-labelledby="flashModalMessage" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 20px; background-color: #ffffff; color: #1e293b;">
+        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 8px; background-color: #ffffff; color: #1e293b;">
           <div class="modal-body p-4">
             <div class="mb-2" style="font-size: 2.75rem; line-height: 1; color: {{ $flashIsError ? '#dc2626' : '#16a34a' }};">
               <i class="bi {{ $flashIsError ? 'bi-x-circle-fill' : 'bi-check-circle-fill' }}"></i>
@@ -956,10 +956,10 @@
               @if(session('undo_delete_id') && \Illuminate\Support\Facades\Route::has('staff.document.undo'))
                 <form method="POST" action="{{ route('staff.document.undo', session('undo_delete_id')) }}" class="m-0">
                   @csrf
-                  <button type="submit" class="btn btn-outline-dark rounded-pill px-4">Undo</button>
+                  <button type="submit" class="btn btn-outline-dark px-4" style="border-radius: 4px;">Undo</button>
                 </form>
               @endif
-              <button type="button" class="btn rounded-pill px-4 text-white" style="background-color: #001253;" data-bs-dismiss="modal">OK</button>
+              <button type="button" class="btn px-4 text-white" style="border-radius: 4px; background-color: #001253;" data-bs-dismiss="modal">OK</button>
             </div>
           </div>
         </div>

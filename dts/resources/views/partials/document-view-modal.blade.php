@@ -147,8 +147,8 @@
 
           {{-- EDIT STATE footer buttons --}}
           <div id="documentEditFooter" @class(['d-none' => $editMode === 'view'])>
-            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" id="documentEditCancel">Cancel</button>
-            <button type="submit" form="documentEditForm" class="btn btn-dark rounded-pill px-4 text-uppercase fw-bold" style="background-color: #000; color: #fff;">Save Changes</button>
+            <button type="button" class="btn btn-outline-secondary px-4" id="documentEditCancel">Cancel</button>
+            <button type="submit" form="documentEditForm" class="btn btn-dark px-4 text-uppercase fw-bold" style="background-color: #000; color: #fff;">Save Changes</button>
           </div>
         </div>
       @endif
@@ -158,7 +158,7 @@
 
 @push('head')
 <style>
-  #documentViewModal .modal-content { border: 0; border-radius: 8px; overflow: hidden; background: #fff; color: #1f2937; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25); }
+  #documentViewModal .modal-content { border: 0; border-radius: 4px; overflow: hidden; background: #fff; color: #1f2937; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25); }
   #documentViewModal .modal-header { background: #f8f9fa; border-bottom: 1px solid #e5e7eb; padding: 1rem 1.5rem; }
   #documentViewModal .modal-title { display: flex; align-items: center; gap: 0.6rem; font-size: 1.05rem; font-weight: 700; color: #1f2937; word-break: break-word; }
   #documentViewModal .doc-title-icon { color: #001253; font-size: 1.15rem; }
@@ -167,7 +167,7 @@
 
   /* View / Download: two equal full-width buttons */
   #documentViewModal .doc-actions { display: flex; gap: 1rem; }
-  #documentViewModal .doc-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1rem; border-radius: 4px; font-weight: 700; color: #fff; text-decoration: none; transition: background 0.15s; }
+  #documentViewModal .doc-action-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1rem; border-radius: 2px; font-weight: 700; color: #fff; text-decoration: none; transition: background 0.15s; }
   #documentViewModal .doc-action-view { background: #001253; }
   #documentViewModal .doc-action-view:hover { background: #284096; color: #fff; }
   #documentViewModal .doc-action-download { background: #ea3a14; }
@@ -178,7 +178,7 @@
   #documentViewModal .doc-divider { border: 0; border-top: 1px solid #e5e7eb; opacity: 1; margin: 1.25rem 0; }
 
   /* Document Information card */
-  #documentViewModal .doc-info-card { background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 1.25rem 1.5rem 0.5rem; }
+  #documentViewModal .doc-info-card { background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 4px; padding: 1.25rem 1.5rem 0.5rem; }
   #documentViewModal .doc-info-title { display: flex; align-items: center; gap: 0.6rem; font-size: 1.05rem; font-weight: 700; color: #1f2937; padding-bottom: 0.6rem; margin-bottom: 1rem; border-bottom: 2px solid #001253; }
   #documentViewModal .doc-info-title i { color: #001253; font-size: 1rem; }
   #documentViewModal .doc-info-row { display: grid; grid-template-columns: minmax(130px, 30%) 1fr; border-bottom: 1px solid #e5e7eb; }
@@ -187,7 +187,7 @@
   #documentViewModal .doc-info-value { padding: 0.9rem 1rem; background: #fff; color: #4b5563; word-break: break-word; }
 
   /* Edit state: textboxes inside the same card rows */
-  #documentViewModal .edit-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #1f2937; font-size: 0.95rem; }
+  #documentViewModal .edit-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; color: #1f2937; font-size: 0.95rem; }
   #documentViewModal .edit-input:focus { border-color: #000; outline: none; box-shadow: 0 0 0 2px rgba(0,0,0,0.12); }
   #documentViewModal .edit-textarea { min-height: 90px; resize: vertical; font-family: inherit; }
 
