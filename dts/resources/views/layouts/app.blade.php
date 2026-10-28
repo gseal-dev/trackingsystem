@@ -791,6 +791,10 @@
              class="sidebar-link {{ request()->routeIs('admin.userManagement.history') ? 'active' : '' }}" title="History">
             <i class="bi bi-clock-history"></i><span class="sidebar-label">History</span>
           </a>
+          <a href="{{ route('admin.userManagement.securityHistory') }}"
+             class="sidebar-link {{ request()->routeIs('admin.userManagement.securityHistory') ? 'active' : '' }}" title="Security History">
+            <i class="bi bi-shield-check"></i><span class="sidebar-label">Security History</span>
+          </a>
           
         @elseif($role === 'Staff')
           <a href="{{ route('dashboard') }}"

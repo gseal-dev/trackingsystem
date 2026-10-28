@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Role;
+use App\Models\SecurityHistory;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -81,6 +82,38 @@ class UserManagementController extends Controller
         $departments = Department::all();
 
         return view('admin.UserManagement.history', compact('histories', 'departments'));
+    }
+
+    /** Admin sees account security events (logins, failed logins, locks, password resets, role changes). */
+    public function securityHistory(Request $request)
+    {
+        $search = $request->input('q');
+
+        $query = SecurityHistory::with('user')->orderByDesc('historyID');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $like = '%' . $search . '%';
+                $q->where('action', 'like', $like)
+                  ->orWhere('details', 'like', $like)
+                  ->orWhereHas('user', function ($uq) use ($like) {
+                      $uq->where('username', 'like', $like)
+                         ->orWhere('firstName', 'like', $like)
+                         ->orWhere('lastName', 'like', $like);
+                  });
+            });
+        }
+
+        $histories = $query
+            ->paginate(DocumentList::perPage($request))
+            ->withQueryString();
+
+        // e.g. the last page emptied out after deletions: go to the new last page
+        if ($histories->isEmpty() && $histories->currentPage() > 1) {
+            return redirect()->to($histories->url($histories->lastPage()));
+        }
+
+        return view('admin.UserManagement.security_history', compact('histories'));
     }
 
 
@@ -218,12 +251,23 @@ class UserManagementController extends Controller
             'roleID' => 'required|exists:roles,roleID',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
+        $oldRoleID = $user->roleID;
         $user->update($request->only([
             'username', 'firstName', 'lastName', 'roleID'
         ]));
         if ($request->filled('password')) {
             $user->update(['password' => \Hash::make($request->password)]);
         }
+
+        // Record a role change so admins can audit who was promoted/demoted and by whom.
+        if ($request->filled('roleID') && $oldRoleID != $request->roleID) {
+            SecurityHistory::record(
+                auth()->user(),
+                'role_change',
+                'Changed role of ' . $user->firstName . ' ' . $user->lastName . ' (' . $user->username . ')'
+            );
+        }
+
         return redirect()->route("admin.userManagement.$type")
             ->with('success', 'User updated!');
     }
@@ -276,12 +320,22 @@ class UserManagementController extends Controller
         }
 
         $user->update(['is_locked' => true, 'locked_at' => now()]);
+        SecurityHistory::record(
+            auth()->user(),
+            'lock',
+            'Locked account ' . $user->firstName . ' ' . $user->lastName . ' (' . $user->username . ')'
+        );
         return back()->with('success', $user->firstName . ' ' . $user->lastName . ' has been locked.');
     }
 
     /** Unlock a user account so they can log in again. */
     public function unlock(Request $request, $type, User $user) {
         $user->update(['is_locked' => false, 'locked_at' => null]);
+        SecurityHistory::record(
+            auth()->user(),
+            'unlock',
+            'Unlocked account ' . $user->firstName . ' ' . $user->lastName . ' (' . $user->username . ')'
+        );
         return back()->with('success', $user->firstName . ' ' . $user->lastName . ' has been unlocked.');
     }
 
@@ -323,6 +377,12 @@ class UserManagementController extends Controller
             'password' => \Hash::make($password),
             'must_change_password' => $mustChange,
         ]);
+
+        SecurityHistory::record(
+            auth()->user(),
+            'password_reset',
+            'Reset password for ' . $user->firstName . ' ' . $user->lastName . ' (' . $user->username . ')' . ($usingDefault ? ' (default password)' : '')
+        );
 
         return back()->with('success', 'Password reset for ' . $user->firstName . ' ' . $user->lastName . '.');
     }

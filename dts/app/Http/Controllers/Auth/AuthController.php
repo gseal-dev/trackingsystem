@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Models\User;
+use App\Models\SecurityHistory;
 
 class AuthController extends Controller
 {
@@ -69,6 +70,8 @@ class AuthController extends Controller
                 $this->recordFailedAttempt($user);
             }
 
+            SecurityHistory::record($user, 'login_failed', 'Failed login attempt for ' . $login);
+
             return back()->withErrors([
                 'login' => 'Invalid login credentials.',
             ])->withInput(['login' => $login]);
@@ -87,6 +90,8 @@ class AuthController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+
+        SecurityHistory::record($user, 'login', 'Successful login');
 
         // Force a password change on first login before allowing any other action.
         if ($user->must_change_password) {
