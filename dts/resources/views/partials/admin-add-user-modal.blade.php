@@ -29,7 +29,7 @@
             </div>
             <div style="border-bottom: 1px solid #cbd5e1; padding-bottom: 0.75rem;">
               <label for="lastName" style="display: block; margin-bottom: 0.45rem; color: #64748b; font-size: 0.875rem; font-weight: 600;">Last Name</label>
-              <input type="text" id="lastName" name="lastName" class="form-control add-user-input" value="{{ old('lastName') }}" required style="width: 100%; min-height: 44px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; color: #000; padding: 0.5rem 0.75rem; font-size: 0.925rem;">
+              <input type="text" id="lastName" name="lastName" class="form-control add-user-input" value="{{ old('lastName') }}" style="width: 100%; min-height: 44px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; color: #000; padding: 0.5rem 0.75rem; font-size: 0.925rem;">
             </div>
             <div style="border-bottom: 1px solid #cbd5e1; padding-bottom: 0.75rem; grid-column: 1 / -1;">
               <label for="username" style="display: block; margin-bottom: 0.45rem; color: #64748b; font-size: 0.875rem; font-weight: 600;">Username</label>

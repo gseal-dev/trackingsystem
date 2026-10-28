@@ -64,7 +64,7 @@
           <div class="icon-wrapper">
             <i class="bi bi-person-fill"></i>
           </div>
-          <input type="text" name="lastName" id="lastName" class="input-pill" placeholder="Last Name" value="{{ old('lastName') }}" required>
+          <input type="text" name="lastName" id="lastName" class="input-pill" placeholder="Last Name" value="{{ old('lastName') }}">
         </div>
 
         {{-- Password Field --}}

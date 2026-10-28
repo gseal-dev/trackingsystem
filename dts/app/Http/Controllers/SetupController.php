@@ -31,7 +31,7 @@ class SetupController extends Controller
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
             'firstName' => 'required|string|max:255',
-            'lastName' => 'required|string|max:255',
+            'lastName' => 'nullable|string|max:255',
             'password' => 'required|string|min:8|confirmed',
         ], [], [
             'username' => 'username',
