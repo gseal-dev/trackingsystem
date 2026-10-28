@@ -22,7 +22,6 @@ class StaffSettingsController extends Controller
             'account' => [
                 'Username'   => $user->username,
                 'Full Name'  => $fullName,
-                'Email'      => $user->email,
                 'Department' => $user->departmentID
                     ? Department::where('depID', $user->departmentID)->value('depName')
                     : null,

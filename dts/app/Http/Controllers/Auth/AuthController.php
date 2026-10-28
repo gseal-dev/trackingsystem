@@ -50,10 +50,8 @@ class AuthController extends Controller
         }
         RateLimiter::hit($rateLimitKey, self::RATE_LIMIT_WINDOW);
 
-        // Try to find user by username or email without revealing which one matched.
-        $user = User::where('username', $login)
-            ->orWhere('email', $login)
-            ->first();
+        // Find user by username.
+        $user = User::where('username', $login)->first();
 
         // A locked account rejects every login (admin-locked or auto-locked below).
         if ($user && $this->isLocked($user)) {

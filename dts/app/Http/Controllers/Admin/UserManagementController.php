@@ -138,8 +138,8 @@ class UserManagementController extends Controller
     public function exportUsers(Request $request) {
         return CsvExport::stream(
             $this->usersQuery($request),
-            ['Name', 'Email', 'Role'],
-            fn ($u) => [trim($u->firstName . ' ' . $u->lastName), $u->email, $u->role->roleName ?? 'Admin'],
+            ['Name', 'Role'],
+            fn ($u) => [trim($u->firstName . ' ' . $u->lastName), $u->role->roleName ?? 'Admin'],
             'admin-users.csv'
         );
     }
@@ -153,7 +153,6 @@ class UserManagementController extends Controller
 
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
-            'email' => 'required|email|unique:users,email',
             'firstName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
             'roleID' => 'required|exists:roles,roleID',
@@ -175,7 +174,6 @@ class UserManagementController extends Controller
 
         User::create([
             'username' => $request->username,
-            'email' => $request->email,
             'firstName' => $request->firstName,
             'lastName' => $request->lastName,
             'roleID' => $roleID,
@@ -215,14 +213,13 @@ class UserManagementController extends Controller
     public function edit(Request $request, $type, User $user) {
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username,' . $user->userID . ',userID',
-            'email' => 'required|email|ends_with:@gmail.com|unique:users,email,' . $user->userID . ',userID',
             'firstName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
             'roleID' => 'required|exists:roles,roleID',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
         $user->update($request->only([
-            'username', 'email', 'firstName', 'lastName', 'roleID'
+            'username', 'firstName', 'lastName', 'roleID'
         ]));
         if ($request->filled('password')) {
             $user->update(['password' => \Hash::make($request->password)]);

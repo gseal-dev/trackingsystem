@@ -28,10 +28,6 @@
               <input type="text" id="username" name="username" class="form-control add-user-input" value="{{ old('username') }}" required autofocus style="width: 100%; min-height: 44px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; color: #000; padding: 0.5rem 0.75rem; font-size: 0.925rem;">
             </div>
             <div style="border-bottom: 1px solid #cbd5e1; padding-bottom: 0.75rem;">
-              <label for="email" style="display: block; margin-bottom: 0.45rem; color: #64748b; font-size: 0.875rem; font-weight: 600;">Email</label>
-              <input type="email" id="email" name="email" class="form-control add-user-input" value="{{ old('email') }}" required style="width: 100%; min-height: 44px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; color: #000; padding: 0.5rem 0.75rem; font-size: 0.925rem;">
-            </div>
-            <div style="border-bottom: 1px solid #cbd5e1; padding-bottom: 0.75rem;">
               <label for="firstName" style="display: block; margin-bottom: 0.45rem; color: #64748b; font-size: 0.875rem; font-weight: 600;">First Name</label>
               <input type="text" id="firstName" name="firstName" class="form-control add-user-input" value="{{ old('firstName') }}" required style="width: 100%; min-height: 44px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; color: #000; padding: 0.5rem 0.75rem; font-size: 0.925rem;">
             </div>

@@ -51,14 +51,6 @@
           <input type="text" name="username" id="username" class="input-pill" placeholder="Username" value="{{ old('username') }}" required autofocus>
         </div>
 
-        {{-- Email Field --}}
-        <div class="input-group-custom mb-3">
-          <div class="icon-wrapper">
-            <i class="bi bi-envelope"></i>
-          </div>
-          <input type="email" name="email" id="email" class="input-pill" placeholder="Email Address" value="{{ old('email') }}" required>
-        </div>
-
         {{-- First Name --}}
         <div class="input-group-custom mb-3">
           <div class="icon-wrapper">
