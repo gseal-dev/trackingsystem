@@ -92,7 +92,7 @@
               <th class="border-0">Timestamp</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody id="security-history-rows" data-live-refresh>
             @forelse($histories as $history)
               <tr>
                 <td class="fw-bold">
