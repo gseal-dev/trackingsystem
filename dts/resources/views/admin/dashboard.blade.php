@@ -282,22 +282,28 @@
       <div class="mb-4">
         <h5 class="quick-title"><i class="bi bi-lightning-charge-fill"></i> Quick Access</h5>
         <div class="row g-3">
-          <div class="col-12 col-md-4">
+          <div class="col-12 col-md-3">
             <a href="{{ route('admin.documents') }}" class="quick-btn" id="quickDocuments">
               <span class="quick-icon"><i class="bi bi-folder2-open"></i></span>
               <span>Documents</span>
             </a>
           </div>
-          <div class="col-12 col-md-4">
+          <div class="col-12 col-md-3">
             <a href="{{ route('admin.userManagement.admins') }}" class="quick-btn" id="quickUsers">
               <span class="quick-icon"><i class="bi bi-people-fill"></i></span>
               <span>Users</span>
             </a>
           </div>
-          <div class="col-12 col-md-4">
+          <div class="col-12 col-md-3">
             <a href="{{ route('admin.userManagement.history') }}" class="quick-btn" id="quickHistory">
               <span class="quick-icon"><i class="bi bi-clock-history"></i></span>
               <span>History</span>
+            </a>
+          </div>
+          <div class="col-12 col-md-3">
+            <a href="{{ route('admin.userManagement.securityHistory') }}" class="quick-btn" id="quickSecurity">
+              <span class="quick-icon"><i class="bi bi-shield-check"></i></span>
+              <span>Security History</span>
             </a>
           </div>
         </div>
