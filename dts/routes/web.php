@@ -100,8 +100,6 @@ Route::middleware(['auth', 'ensure-password-changed'])->group(function () {
         Route::get('/admin/documents/export', [DashboardController::class, 'exportDocuments'])->name('admin.documents.export');
     });
 
-    Route::post('/staff/documents/import', [StaffDocumentController::class, 'import'])->name('staff.document.import');
-    Route::get('/staff/documents/template', [StaffDocumentController::class, 'downloadTemplate'])->name('staff.document.template');
     Route::get('/staff/documents/export', [StaffDocumentController::class, 'exportDocuments'])->name('staff.documents.export');
     Route::get('/staff/user-search', [UserManagementController::class, 'searchUser'])
         ->middleware('role:Admin')
