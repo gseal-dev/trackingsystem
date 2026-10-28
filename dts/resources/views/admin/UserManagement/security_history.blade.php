@@ -98,12 +98,12 @@
                 <td class="fw-bold">
                   @php
                     $user = $history->user;
-                    $name = $user ? (trim($user->firstName . ' ' . $user->lastName) ?: $user->username) : 'Unknown';
-                    echo e($name);
+                    if ($user) {
+                        echo e(trim($user->firstName . ' ' . $user->lastName) ?: $user->username);
+                    } else {
+                        echo '<span class="badge bg-warning text-dark fw-normal small">(unknown)</span>';
+                    }
                   @endphp
-                  @if($history->userID === null)
-                    <span class="badge bg-warning text-dark fw-normal ms-1 small">(unknown)</span>
-                  @endif
                 </td>
                 <td>{{ e($history->action) }}</td>
                 <td class="text-muted small">{{ e($history->ip ?? '-') }}</td>
