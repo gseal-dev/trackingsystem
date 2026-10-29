@@ -99,7 +99,7 @@ class AdminDefaultPasswordTest extends TestCase
     );
 
     // No password typed -> falls back to default -> Staff user is forced to change.
-    $this->addUser(['password' => null])->assertSessionHasNoErrors()->assertRedirect(route('dashboard'));
+    $this->addUser(['password' => null])->assertSessionHasNoErrors()->assertRedirect(route('admin.userManagement.admins'));
 
     $user = User::where('username', 'newstaff')->firstOrFail();
     $this->assertTrue((bool) $user->must_change_password);
@@ -116,7 +116,11 @@ class AdminDefaultPasswordTest extends TestCase
 
 public function test_the_success_message_tells_the_admin_to_hand_the_password_over(): void
     {
-        $this->addUser()->assertSessionHas('success', fn ($m) => str_contains($m, 'default password') && str_contains($m, 'Settings'));
+        $this->addUser()->assertSessionHas('success', function ($m) {
+            return stripos($m, 'give them the password') !== false
+                && stripos($m, 'change it at first login') !== false
+                && stripos($m, 'default password') === false;
+        });
 
         $this->addUser(['username' => 'newadmin', 'email' => 'newadmin@example.com', 'roleID' => $this->roleId('Admin')])
             ->assertSessionHas('success', 'User added!');           // admins cannot use Settings, so no promise is made
@@ -177,7 +181,7 @@ public function test_the_success_message_tells_the_admin_to_hand_the_password_ov
     {
         $modal = $this->modal();
 
-        $this->assertStringContainsString('>Default password</label>', $modal);
+        $this->assertMatchesRegularExpression('/<label[^>]*for="password"[^>]*>\s*Password\s*<\/label>/', $modal);
         $this->assertSame(1, preg_match_all('/<input[^>]*type="password"/', $modal), 'one password field, not two');
         $this->assertStringNotContainsString('password_confirmation', $modal);
         $this->assertStringNotContainsString('Confirm Password', $modal);
