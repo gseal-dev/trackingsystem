@@ -186,7 +186,6 @@
             <thead class="bg-light">
               <tr>
                 <th class="border-0">Name</th>
-                <th class="border-0">Email</th>
                 <th class="border-0">Role</th>
                 <th class="border-0">Password</th>
                 <th class="border-0 text-end">Actions</th>
@@ -196,13 +195,12 @@
               @forelse($users as $user)
                 <tr>
                   <td class="fw-bold">{{ $user->firstName }} {{ $user->lastName }}</td>
-                  <td>{{ $user->email }}</td>
                   <td><span class="badge bg-light text-dark border">{{ $user->role->roleName ?? 'Admin' }}</span></td>
                   <td><span class="text-muted" style="letter-spacing: 0.12em;">********</span></td>
                   <td>
                     <div class="actions-cell justify-content-end">
                       <button type="button" class="btn-action"
-                              data-user-edit="{{ json_encode(['id' => $user->userID, 'username' => $user->username, 'email' => $user->email, 'firstName' => $user->firstName, 'lastName' => $user->lastName, 'roleID' => $user->roleID ?? '', 'editUrl' => route('admin.userManagement.edit', ['type' => 'admins', 'user' => $user->userID])]) }}"
+                              data-user-edit="{{ json_encode(['id' => $user->userID, 'username' => $user->username, 'firstName' => $user->firstName, 'lastName' => $user->lastName, 'roleID' => $user->roleID ?? '', 'editUrl' => route('admin.userManagement.edit', ['type' => 'admins', 'user' => $user->userID])]) }}"
                               title="Edit user"><i class="bi bi-pencil"></i></button>
                       @php $isLocked = (bool) ($user->is_locked ?? false); @endphp
                       @if($isLocked)
@@ -223,7 +221,7 @@
                 </tr>
               @empty
                 <tr>
-                  <td colspan="5" class="text-center py-5 text-muted">
+                  <td colspan="4" class="text-center py-5 text-muted">
                     <i class="bi bi-people display-4 mb-3 d-block"></i>
                     No users found.
                   </td>
@@ -279,7 +277,6 @@
     };
 
     fill('editUsername', user.username);
-    fill('editEmail', user.email);
     fill('editFirstName', user.firstName);
     fill('editLastName', user.lastName);
     fill('editRoleID', user.roleID);

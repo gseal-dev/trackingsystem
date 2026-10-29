@@ -1,0 +1,55 @@
+name: Laravel CI
+
+on:
+  push:
+    branches: [main, security, development]
+  pull_request:
+    branches: [main, development]
+
+jobs:
+  laravel-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: [8.4, 8.5]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, gd, intl, iconv, fileinfo
+          coverage: none
+          tools: composer:v2
+
+      - name: Get composer cache directory
+        id: composer-cache
+        working-directory: dts
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ matrix.php }}-${{ hashFiles('dts/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-${{ matrix.php }}-
+
+      - name: Install composer dependencies
+        working-directory: dts
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Setup environment
+        working-directory: dts
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Run test suite
+        working-directory: dts
+        run: vendor/bin/phpunit

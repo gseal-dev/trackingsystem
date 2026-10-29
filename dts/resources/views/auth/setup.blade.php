@@ -51,14 +51,6 @@
           <input type="text" name="username" id="username" class="input-pill" placeholder="Username" value="{{ old('username') }}" required autofocus>
         </div>
 
-        {{-- Email Field --}}
-        <div class="input-group-custom mb-3">
-          <div class="icon-wrapper">
-            <i class="bi bi-envelope"></i>
-          </div>
-          <input type="email" name="email" id="email" class="input-pill" placeholder="Email Address" value="{{ old('email') }}" required>
-        </div>
-
         {{-- First Name --}}
         <div class="input-group-custom mb-3">
           <div class="icon-wrapper">
@@ -72,7 +64,7 @@
           <div class="icon-wrapper">
             <i class="bi bi-person-fill"></i>
           </div>
-          <input type="text" name="lastName" id="lastName" class="input-pill" placeholder="Last Name" value="{{ old('lastName') }}" required>
+          <input type="text" name="lastName" id="lastName" class="input-pill" placeholder="Last Name" value="{{ old('lastName') }}">
         </div>
 
         {{-- Password Field --}}

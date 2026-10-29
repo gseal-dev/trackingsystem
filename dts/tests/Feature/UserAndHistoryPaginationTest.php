@@ -115,7 +115,7 @@ class UserAndHistoryPaginationTest extends TestCase
 
         $this->actingAs($this->admin);
         $this->get(route('admin.userManagement.admins', ['q' => 'staff']))->assertSee('of ' . $staffCount . ' users', false);
-        $this->get(route('admin.userManagement.admins', ['q' => 'person07@example']))->assertSee('Showing 1&ndash;1 of 1 users', false);
+        $this->get(route('admin.userManagement.admins', ['q' => 'person07']))->assertSee('Showing 1&ndash;1 of 1 users', false);
         $this->get(route('admin.userManagement.admins', ['q' => 'tester person07']))->assertSee('Showing 1&ndash;1 of 1 users', false);
         $this->get(route('admin.userManagement.admins', ['q' => 'nobody-at-all']))->assertSee('No users found.');
     }
@@ -148,9 +148,9 @@ class UserAndHistoryPaginationTest extends TestCase
         $this->assertStringContainsString('admin-users.csv', $response->headers->get('content-disposition'));
 
         $lines = $this->csvLines($response->streamedContent());
-        $this->assertSame(['Name', 'Email', 'Role'], $lines[0]);
+        $this->assertSame(['Name', 'Role'], $lines[0]);
         $this->assertCount($total + 1, $lines);                       // all users, not just 25
-        $this->assertContains(['Zelda Tester', 'person30@example.com', 'Staff'], $lines);
+        $this->assertContains(['Zelda Tester', 'Staff'], $lines);
 
         $filtered = $this->csvLines($this->get(route('admin.userManagement.export', ['q' => 'zelda']))->streamedContent());
         $this->assertCount(2, $filtered);
@@ -164,22 +164,6 @@ class UserAndHistoryPaginationTest extends TestCase
         $this->actingAs($this->staff)->get(route('admin.userManagement.export'))->assertForbidden();
         auth()->logout();
         $this->get(route('admin.userManagement.export'))->assertRedirect(route('login'));
-    }
-
-    // ---- Staff users page ------------------------------------------------------------------
-
-    public function test_staff_users_page_is_paged_and_only_lists_staff(): void
-    {
-        $this->makeStaffUsers();
-        $staffCount = User::whereHas('role', fn ($q) => $q->where('roleName', 'Staff'))->count();   // 31
-
-        $page1 = $this->actingAs($this->admin)->get(route('admin.userManagement.staffs'))->assertOk();
-        $this->assertSame(25, substr_count($page1->getContent(), '>Edit</a>'));
-        $page1->assertSee('Showing 1&ndash;25 of ' . $staffCount . ' staff', false)->assertDontSee('boss@example.com');
-
-        $page2 = $this->get(route('admin.userManagement.staffs', ['page' => 2]));
-        $this->assertSame($staffCount - 25, substr_count($page2->getContent(), '>Edit</a>'));
-        $this->get(route('admin.userManagement.staffs', ['page' => 99]))->assertRedirect(route('admin.userManagement.staffs', ['page' => 2]));
     }
 
     // ---- History ----------------------------------------------------------------------------

@@ -30,13 +30,11 @@ class SetupController extends Controller
 
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
-            'email' => 'required|email|max:255|unique:users,email',
             'firstName' => 'required|string|max:255',
-            'lastName' => 'required|string|max:255',
+            'lastName' => 'nullable|string|max:255',
             'password' => 'required|string|min:8|confirmed',
         ], [], [
             'username' => 'username',
-            'email' => 'email address',
             'firstName' => 'first name',
             'lastName' => 'last name',
             'password' => 'password',
@@ -49,7 +47,6 @@ class SetupController extends Controller
 
         $user = User::create([
             'username' => $request->username,
-            'email' => $request->email,
             'firstName' => $request->firstName,
             'lastName' => $request->lastName,
             'roleID' => $adminRole->roleID,

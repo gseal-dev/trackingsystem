@@ -5,7 +5,7 @@
 <!-- Default Password Modal -->
 <div class="modal fade" id="defaultPasswordModal" tabindex="-1" aria-labelledby="defaultPasswordModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content" style="border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; background: #ffffff; box-shadow: 0 20px 50px rgba(0,0,0,0.25);">
+    <div class="modal-content" style="border: 1px solid #cbd5e1; border-radius: 4px; overflow: hidden; background: #ffffff; box-shadow: 0 20px 50px rgba(0,0,0,0.25);">
       <div class="modal-header" style="background: #fff; border-bottom: 1px solid #cbd5e1; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between;">
         <h5 class="modal-title" id="defaultPasswordModalLabel" style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #000; display: flex; align-items: center; gap: 0.6rem;">
           <i class="bi bi-key" style="color: #ea3a14; font-size: 1.15rem;"></i> Default Password
@@ -29,8 +29,8 @@
           </div>
         </div>
         <div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #e5e7eb; padding: 0.75rem 1.5rem; gap: 0.5rem;">
-          <button type="button" class="btn" style="min-height: 46px; border-radius: 4px; border: 1px solid #cbd5e1; color: #475569; background: #ffffff; font-weight: 600;" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn" style="min-height: 46px; border-radius: 4px; background-color: #ea3a14; color: #fff; border: none; font-weight: 600;">Save Default Password</button>
+          <button type="button" class="btn" style="min-height: 46px; border-radius: 2px; border: 1px solid #cbd5e1; color: #475569; background: #ffffff; font-weight: 600;" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn" style="min-height: 46px; border-radius: 2px; background-color: #ea3a14; color: #fff; border: none; font-weight: 600;">Save Default Password</button>
         </div>
       </form>
     </div>

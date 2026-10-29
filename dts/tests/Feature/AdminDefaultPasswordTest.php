@@ -24,7 +24,7 @@ class AdminDefaultPasswordTest extends TestCase
         $this->seed();
 
         $this->admin = User::create([
-            'username' => 'boss', 'email' => 'boss@example.com', 'password' => 'boss-password-1',
+            'username' => 'boss', 'password' => 'boss-password-1',
             'firstName' => 'Ana', 'lastName' => 'Boss', 'roleID' => $this->roleId('Admin'),
         ]);
     }
@@ -37,7 +37,7 @@ class AdminDefaultPasswordTest extends TestCase
     private function addUser(array $overrides = [])
     {
         return $this->actingAs($this->admin)->post(route('admin.userManagement.add', ['type' => 'admins']), array_merge([
-            'username' => 'newstaff', 'email' => 'newstaff@example.com', 'firstName' => 'Nina', 'lastName' => 'Newhire',
+            'username' => 'newstaff', 'firstName' => 'Nina', 'lastName' => 'Newhire',
             'roleID' => $this->roleId('Staff'), 'password' => 'Welcome-2026',
         ], $overrides));
     }
@@ -55,7 +55,7 @@ class AdminDefaultPasswordTest extends TestCase
 
     public function test_an_admin_can_create_a_user_with_just_a_default_password(): void
     {
-        $this->addUser()->assertSessionHasNoErrors()->assertRedirect(route('dashboard'));
+        $this->addUser()->assertSessionHasNoErrors()->assertRedirect(route('admin.userManagement.admins'));
 
         $user = User::where('username', 'newstaff')->firstOrFail();
         $this->assertSame($this->roleId('Staff'), $user->roleID);
@@ -78,7 +78,7 @@ class AdminDefaultPasswordTest extends TestCase
         $this->assertNull(User::where('username', 'newstaff')->first(), 'nothing was created');
 
         $this->addUser(['password' => 'exactly8'])->assertSessionHasNoErrors();
-        $this->addUser(['username' => 'longpw', 'email' => 'longpw@example.com', 'password' => str_repeat('a', 72)])->assertSessionHasNoErrors();
+        $this->addUser(['username' => 'longpw', 'password' => str_repeat('a', 72)])->assertSessionHasNoErrors();
         $this->assertNotNull(User::where('username', 'longpw')->first());
     }
 
@@ -86,15 +86,41 @@ class AdminDefaultPasswordTest extends TestCase
     {
         $this->addUser()->assertSessionHasNoErrors();
 
-        $this->addUser(['email' => 'other@example.com'])->assertSessionHasErrors('username');            // same username
-        $this->addUser(['username' => 'other'])->assertSessionHasErrors('email');                        // same email
-        $this->addUser(['username' => 'x1', 'email' => 'x1@example.com', 'roleID' => 9999])->assertSessionHasErrors('roleID');
+        $this->addUser(['username' => 'newstaff'])->assertSessionHasErrors('username');            // same username
+        $this->addUser(['username' => 'x1', 'roleID' => 9999])->assertSessionHasErrors('roleID');
         $this->assertSame(1 + 1, User::count(), 'only the admin and the first new user exist');
     }
 
-    public function test_the_success_message_tells_the_admin_to_hand_the_password_over(): void
+    public function test_adding_a_staff_user_with_default_password_sets_must_change_password(): void
+{
+    \App\Models\Setting::updateOrCreate(
+        ['key' => 'default_password'],
+        ['value' => 'Default-Pass-1']
+    );
+
+    // No password typed -> falls back to default -> Staff user is forced to change.
+    $this->addUser(['password' => null])->assertSessionHasNoErrors()->assertRedirect(route('admin.userManagement.admins'));
+
+    $user = User::where('username', 'newstaff')->firstOrFail();
+    $this->assertTrue((bool) $user->must_change_password);
+
+    // A new admin typed a custom password, so no force change.
+    $this->addUser([
+        'username' => 'newadmin',
+        'roleID' => $this->roleId('Admin'), 'password' => 'Admin-Pass-999',
+    ]);
+
+    $adminUser = User::where('username', 'newadmin')->firstOrFail();
+    $this->assertFalse((bool) $adminUser->must_change_password);
+}
+
+public function test_the_success_message_tells_the_admin_to_hand_the_password_over(): void
     {
-        $this->addUser()->assertSessionHas('success', fn ($m) => str_contains($m, 'default password') && str_contains($m, 'Settings'));
+        $this->addUser()->assertSessionHas('success', function ($m) {
+            return stripos($m, 'give them the password') !== false
+                && stripos($m, 'change it at first login') !== false
+                && stripos($m, 'default password') === false;
+        });
 
         $this->addUser(['username' => 'newadmin', 'email' => 'newadmin@example.com', 'roleID' => $this->roleId('Admin')])
             ->assertSessionHas('success', 'User added!');           // admins cannot use Settings, so no promise is made
@@ -114,11 +140,11 @@ class AdminDefaultPasswordTest extends TestCase
         $this->post(route('admin.userManagement.add', ['type' => 'admins']), [])->assertRedirect(route('login'));
 
         $staff = User::create([
-            'username' => 'worker', 'email' => 'worker@example.com', 'password' => 'worker-password-1',
+            'username' => 'worker', 'password' => 'worker-password-1',
             'firstName' => 'Wes', 'lastName' => 'Worker', 'roleID' => $this->roleId('Staff'),
         ]);
         $this->actingAs($staff)->post(route('admin.userManagement.add', ['type' => 'admins']), [
-            'username' => 'sneaky', 'email' => 'sneaky@example.com', 'firstName' => 'S', 'lastName' => 'S',
+            'username' => 'sneaky', 'firstName' => 'S', 'lastName' => 'S',
             'roleID' => $this->roleId('Admin'), 'password' => 'Sneaky-pass-1',
         ])->assertForbidden();
         $this->assertNull(User::where('username', 'sneaky')->first());
@@ -155,7 +181,7 @@ class AdminDefaultPasswordTest extends TestCase
     {
         $modal = $this->modal();
 
-        $this->assertStringContainsString('>Default password</label>', $modal);
+        $this->assertMatchesRegularExpression('/<label[^>]*for="password"[^>]*>\s*Password\s*<\/label>/', $modal);
         $this->assertSame(1, preg_match_all('/<input[^>]*type="password"/', $modal), 'one password field, not two');
         $this->assertStringNotContainsString('password_confirmation', $modal);
         $this->assertStringNotContainsString('Confirm Password', $modal);

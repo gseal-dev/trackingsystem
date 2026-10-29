@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Role;
+use App\Models\SecurityHistory;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -83,6 +84,38 @@ class UserManagementController extends Controller
         return view('admin.UserManagement.history', compact('histories', 'departments'));
     }
 
+    /** Admin sees account security events (logins, failed logins, locks, password resets, role changes). */
+    public function securityHistory(Request $request)
+    {
+        $search = $request->input('q');
+
+        $query = SecurityHistory::with('user')->orderByDesc('historyID');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $like = '%' . $search . '%';
+                $q->where('action', 'like', $like)
+                  ->orWhere('details', 'like', $like)
+                  ->orWhereHas('user', function ($uq) use ($like) {
+                      $uq->where('username', 'like', $like)
+                         ->orWhere('firstName', 'like', $like)
+                         ->orWhere('lastName', 'like', $like);
+                  });
+            });
+        }
+
+        $histories = $query
+            ->paginate(DocumentList::perPage($request))
+            ->withQueryString();
+
+        // e.g. the last page emptied out after deletions: go to the new last page
+        if ($histories->isEmpty() && $histories->currentPage() > 1) {
+            return redirect()->to($histories->url($histories->lastPage()));
+        }
+
+        return view('admin.UserManagement.security_history', compact('histories'));
+    }
+
 
     /** CSV export of admin history matching the current filters. */
     public function exportHistory(Request $request)
@@ -138,8 +171,8 @@ class UserManagementController extends Controller
     public function exportUsers(Request $request) {
         return CsvExport::stream(
             $this->usersQuery($request),
-            ['Name', 'Email', 'Role'],
-            fn ($u) => [trim($u->firstName . ' ' . $u->lastName), $u->email, $u->role->roleName ?? 'Admin'],
+            ['Name', 'Role'],
+            fn ($u) => [trim($u->firstName . ' ' . $u->lastName), $u->role->roleName ?? 'Admin'],
             'admin-users.csv'
         );
     }
@@ -153,9 +186,8 @@ class UserManagementController extends Controller
 
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
-            'email' => 'required|email|unique:users,email',
             'firstName' => 'required|string|max:255',
-            'lastName' => 'required|string|max:255',
+            'lastName' => 'nullable|string|max:255',
             'roleID' => 'required|exists:roles,roleID',
             'password' => $passwordRule,
         ]);
@@ -166,20 +198,27 @@ class UserManagementController extends Controller
         }
 
         $roleID = $request->input('roleID');
+        // When a default/admin-assigned password is used, force the user to
+        // change it at first login so the plain-text default never persists.
+        // Only Staff users can reach the password-change page (staff.settings),
+        // so only they are forced to change it.
+        $isStaffRole = \App\Models\Role::where('roleID', $roleID)->value('roleName') === 'Staff';
+        $mustChange = $isStaffRole && !$request->filled('password');
+
         User::create([
             'username' => $request->username,
-            'email' => $request->email,
             'firstName' => $request->firstName,
             'lastName' => $request->lastName,
             'roleID' => $roleID,
             'password' => \Hash::make($password),
+            'must_change_password' => $mustChange,
         ]);
 
         $isStaff = \App\Models\Role::where('roleID', $roleID)->value('roleName') === 'Staff';
 
-        return redirect()->route($type === 'admins' ? 'dashboard' : "admin.userManagement.$type")
+        return redirect()->route('admin.userManagement.admins')
             ->with('success', $isStaff
-                ? 'User added! Give them the password - they can change it in Settings after logging in.'
+                ? 'User added! Give them the password - they must change it at first login.'
                 : 'User added!');
     }
 
@@ -207,24 +246,42 @@ class UserManagementController extends Controller
     public function edit(Request $request, $type, User $user) {
         $request->validate([
             'username' => 'required|string|max:255|unique:users,username,' . $user->userID . ',userID',
-            'email' => 'required|email|ends_with:@gmail.com|unique:users,email,' . $user->userID . ',userID',
             'firstName' => 'required|string|max:255',
             'lastName' => 'required|string|max:255',
             'roleID' => 'required|exists:roles,roleID',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
+        $oldRoleID = $user->roleID;
         $user->update($request->only([
-            'username', 'email', 'firstName', 'lastName', 'roleID'
+            'username', 'firstName', 'lastName', 'roleID'
         ]));
         if ($request->filled('password')) {
             $user->update(['password' => \Hash::make($request->password)]);
         }
-        $redirectType = $type;
-        return redirect()->route($redirectType === 'admins' || $redirectType === 'dashboard' ? 'dashboard' : "admin.userManagement.$redirectType")
+
+        // Record a role change so admins can audit who was promoted/demoted and by whom.
+        if ($request->filled('roleID') && $oldRoleID != $request->roleID) {
+            SecurityHistory::record(
+                auth()->user(),
+                'role_change',
+                'Changed role of ' . $user->firstName . ' ' . $user->lastName . ' (' . $user->username . ')'
+            );
+        }
+
+        return redirect()->route("admin.userManagement.$type")
             ->with('success', 'User updated!');
     }
 
+    /** Delete a user account. */
     public function delete($type, User $user) {
+        if ($user->getKey() === auth()->id()) {
+            return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        if ($this->isLastActiveAdmin($user)) {
+            return back()->with('error', 'At least one administrator must remain active. The account was not deleted.');
+        }
+
         $user->delete();
         $redirectType = $type;
         return redirect()->route($redirectType === 'admins' || $redirectType === 'staffs' || $redirectType === 'dashboard' ? 'dashboard' : "admin.userManagement.$redirectType")
@@ -254,14 +311,43 @@ class UserManagementController extends Controller
             return back()->with('error', 'Incorrect password. The account was not locked.');
         }
 
+        if ($user->getKey() === auth()->id()) {
+            return back()->with('error', 'You cannot lock your own account.');
+        }
+
+        if ($this->isLastActiveAdmin($user)) {
+            return back()->with('error', 'At least one administrator must remain active. The account was not locked.');
+        }
+
         $user->update(['is_locked' => true, 'locked_at' => now()]);
+        SecurityHistory::record(
+            auth()->user(),
+            'lock',
+            'Locked account ' . $user->firstName . ' ' . $user->lastName . ' (' . $user->username . ')'
+        );
         return back()->with('success', $user->firstName . ' ' . $user->lastName . ' has been locked.');
     }
 
     /** Unlock a user account so they can log in again. */
     public function unlock(Request $request, $type, User $user) {
         $user->update(['is_locked' => false, 'locked_at' => null]);
+        SecurityHistory::record(
+            auth()->user(),
+            'unlock',
+            'Unlocked account ' . $user->firstName . ' ' . $user->lastName . ' (' . $user->username . ')'
+        );
         return back()->with('success', $user->firstName . ' ' . $user->lastName . ' has been unlocked.');
+    }
+
+    /** Whether removing/locking this admin would leave zero active administrators. */
+    private function isLastActiveAdmin(User $user): bool {
+        if ($user->role?->roleName !== 'Admin') {
+            return false;
+        }
+
+        return User::where('roleID', $user->roleID)
+            ->where('is_locked', false)
+            ->count() <= 1;
     }
 
     /** Reset a user's password. Falls back to the default password when none is typed. */
@@ -274,14 +360,29 @@ class UserManagementController extends Controller
         ]);
 
         $password = $request->input('password');
-        if (!$password) {
+        $usingDefault = !$password;
+        if ($usingDefault) {
             if (!$defaultPassword) {
                 return back()->withErrors(['password' => 'No default password is configured. Please type a new password.']);
             }
             $password = $defaultPassword;
         }
 
-        $user->update(['password' => \Hash::make($password)]);
+        // Only Staff users can reach the password-change page (staff.settings),
+        // so only they are forced to change a default password at next login.
+        $isStaffRole = $user->role?->roleName === 'Staff';
+        $mustChange = $isStaffRole && $usingDefault;
+
+        $user->update([
+            'password' => \Hash::make($password),
+            'must_change_password' => $mustChange,
+        ]);
+
+        SecurityHistory::record(
+            auth()->user(),
+            'password_reset',
+            'Reset password for ' . $user->firstName . ' ' . $user->lastName . ' (' . $user->username . ')' . ($usingDefault ? ' (default password)' : '')
+        );
 
         return back()->with('success', 'Password reset for ' . $user->firstName . ' ' . $user->lastName . '.');
     }
