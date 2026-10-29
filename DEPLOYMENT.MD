@@ -400,11 +400,21 @@ Run the `docker compose …` commands in `/volume1/docker/trackingsystem`.
 ### 13.2 Updating the system with new code
 
 1. **Run a backup first** (Task Scheduler → select the task → Run).
-2. Get the new code (same as 5.1). Copy it over the old files, but **keep**:
-   `tracking.env`, the `data` folder, and your edited `docker-compose.yml` if you changed the port.
-3. Rebuild:
+2. **Get the new code.**
+
+   If you installed with Git (section 5.1, Option B), just pull:
+
    ```bash
    cd /volume1/docker/trackingsystem
+   sudo git pull
+   ```
+
+   Otherwise, download the new code (same as section 5.1) and copy it over the old files.
+
+   **Keep your local files:** do not overwrite `tracking.env`, the `data` folder, or your edited `docker-compose.yml` if you changed the port. If `git pull` complains about local changes, stash them first, pull, then restore: `sudo git stash && sudo git pull`.
+
+3. **Rebuild**
+   ```bash
    sudo docker compose up -d --build
    ```
 4. Database changes are applied **automatically** when the app starts (`Updating database tables` in the log).
