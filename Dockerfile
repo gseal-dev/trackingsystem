@@ -3,12 +3,12 @@
 #  One container runs nginx + PHP-FPM (managed by supervisord).
 #  The database is a separate container (see docker-compose.yml).
 #
-#  PHP 8.4 is required: the locked Symfony 8 packages need PHP >= 8.4.1.
+#  PHP 8.5.12 is required: the locked Symfony packages need PHP >= 8.4.1.
 #  No Node/Vite build is needed: the pages load their CSS/JS from CDNs.
 # ============================================================================
 
 # ---- Stage 1: PHP with the extensions the app needs --------------------------
-FROM php:8.4-fpm-alpine AS base
+FROM php:8.5.12-fpm-alpine AS base
 
 # pdo_mysql -> talk to MariaDB, opcache -> faster PHP
 RUN docker-php-ext-install -j"$(nproc)" pdo_mysql opcache
