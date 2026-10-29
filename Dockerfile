@@ -11,7 +11,7 @@
 FROM php:8.5.12-fpm-alpine AS base
 
 # pdo_mysql -> talk to MariaDB, opcache -> faster PHP
-RUN docker-php-ext-install -j"$(nproc)" pdo_mysql opcache
+RUN docker-php-ext-install -j"$(nproc)" pdo_mysql
 
 
 # ---- Stage 2: install PHP dependencies (Composer) ----------------------------
