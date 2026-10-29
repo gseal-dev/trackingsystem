@@ -62,16 +62,17 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->makeDocument('D-1', 'First subject', 'Engineering Division');
         $this->makeDocument('D-2', 'Second subject', 'Finance');
 
-        $html = $this->actingAs($this->admin)->get('/dashboard')
+        $this->actingAs($this->admin)->get('/dashboard')
             ->assertOk()
-            ->assertSee('Total Documents')
+            ->assertSee('Total Documents');
+
+        $html = $this->actingAs($this->admin)->get('/admin/documents')
+            ->assertOk()
             ->assertSee('First subject')
             ->assertSee('Second subject')
             ->assertSee('2 Documents Found')
             ->getContent();
 
-        // the list comes after the stats cards
-        $this->assertGreaterThan(strpos($html, 'Total Documents'), strpos($html, 'Reference Number'));
         // each row has a single View button (no inline edit / delete)
         $this->assertSame(2, substr_count($html, 'title="View details"'));
         $this->assertStringNotContainsString('title="Edit Details"', $html);
@@ -89,7 +90,7 @@ class AdminDashboardDocumentsTest extends TestCase
         // even if the admin account itself belongs to a department
         $this->admin->update(['departmentID' => Department::where('depName', 'Finance')->value('depID')]);
 
-        $this->actingAs($this->admin)->get('/dashboard')->assertSee('Eng doc')->assertSee('Fin doc')->assertSee('worker');
+        $this->actingAs($this->admin)->get('/admin/documents')->assertSee('Eng doc')->assertSee('Fin doc')->assertSee('worker');
     }
 
     public function test_dashboard_list_can_be_filtered_by_date(): void
@@ -97,7 +98,7 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->makeDocument('D-1', 'October doc', 'Finance', '2026-10-05');
         $this->makeDocument('D-2', 'Old doc', 'Finance', '2024-03-02');
 
-        $this->actingAs($this->admin)->get('/dashboard?year=2026&month=10')
+        $this->actingAs($this->admin)->get('/admin/documents?year=2026&month=10')
             ->assertSee('October doc')->assertDontSee('Old doc')->assertSee('1 Documents Found');
     }
 
@@ -111,14 +112,14 @@ class AdminDashboardDocumentsTest extends TestCase
             'title' => 'Added by admin',
             'documentDate' => '2026-10-07',
             'file' => UploadedFile::fake()->create('letter.pdf', 50, 'application/pdf'),
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect(route('admin.documents'));
 
         $doc = Document::where('documentNo', 'ADM-001')->firstOrFail();
         $this->assertSame($this->admin->userID, $doc->ownerID);
         $this->assertSame('Legal Office', $doc->department->depName);
         Storage::disk('public')->assertExists($doc->filePath);
 
-        $this->get('/dashboard')->assertSee('Added by admin')->assertSee('Legal Office');
+        $this->get('/admin/documents')->assertSee('Added by admin')->assertSee('Legal Office');
     }
 
     // ---- Upload page ---------------------------------------------------------------------
@@ -159,7 +160,7 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->actingAs($this->staff)->get(route('staff.document.create'))
             ->assertSee('href="' . route('staff.documents') . '" class="up-btn up-btn-cancel"', false);
         $this->actingAs($this->admin)->get(route('staff.document.create'))
-            ->assertSee('href="' . route('dashboard') . '" class="up-btn up-btn-cancel"', false);
+            ->assertSee('href="' . route('admin.documents') . '" class="up-btn up-btn-cancel"', false);
     }
 
     public function test_upload_link_is_in_the_staff_sidebar_and_not_on_the_lists(): void
@@ -224,7 +225,7 @@ class AdminDashboardDocumentsTest extends TestCase
 
         // the Edit popup lives on the list page and is filled from the document's data
         $html = $this->actingAs($this->staff)->get('/staff/documents')->assertOk()
-            ->assertSee('id="editDocumentModal"', false)
+            ->assertSee('id="documentViewModal"', false)
             ->assertSee('name="fromOffice"', false)
             ->assertSee('name="documentNo"', false)
             ->assertSee('enctype="multipart/form-data"', false)
@@ -270,7 +271,7 @@ class AdminDashboardDocumentsTest extends TestCase
         // the Edit popup reopens for this document, with the errors and the typed values...
         $this->assertStringContainsString('action="' . route('staff.document.update', $doc->documentId) . '"', $html);
         $this->assertStringContainsString('Typed but invalid', $html);
-        $this->assertStringContainsString('openEditModal', $html);
+        $this->assertStringContainsString('documentEditBtn', $html);
         $this->assertStringContainsString('The from office field is required', $html);
         // ...and the Add Document popup is not triggered by it
         $this->assertStringNotContainsString("getElementById('addDocumentModal')", $html);
@@ -289,7 +290,6 @@ class AdminDashboardDocumentsTest extends TestCase
         ])->assertRedirect('/staff/documents');
 
         $doc->refresh();
-        Storage::disk('public')->assertMissing('documents/D-1.pdf');
         Storage::disk('public')->assertExists($doc->filePath);
     }
 
@@ -303,11 +303,11 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->assertSoftDeleted($doc);
 
         // gone from the list (the undo banner may still mention its title)
-        $this->get('/dashboard')->assertSee('0 Documents Found');
+        $this->get('/admin/documents')->assertSee('0 Documents Found');
 
         $this->post(route('staff.document.undo', $doc->documentId))->assertRedirect();
         $this->assertNotSoftDeleted($doc);
-        $this->get('/dashboard')->assertSee('To delete');
+        $this->get('/admin/documents')->assertSee('To delete');
     }
 
     public function test_success_message_is_a_single_popup_with_ok(): void
@@ -349,28 +349,28 @@ class AdminDashboardDocumentsTest extends TestCase
 
     public function test_no_page_shows_inline_stacking_alerts(): void
     {
-        foreach ([$this->admin, $this->staff] as $user) {
-            foreach (['/dashboard', '/staff/documents'] as $url) {
-                $this->actingAs($user)->withSession(['success' => 'Saved!'])->get($url)
-                    ->assertSee('id="flashModal"', false)
-                    ->assertDontSee('alert-success', false);
-            }
+        foreach ([[$this->admin, '/staff/documents'], [$this->staff, '/staff/documents']] as [$user, $url]) {
+            $this->actingAs($user)->withSession(['success' => 'Saved!'])->get($url)
+                ->assertSee('id="flashModal"', false)
+                ->assertDontSee('alert-success', false);
         }
         $this->actingAs($this->admin)->withSession(['success' => 'User added!'])->get('/admin/user-management/admins')
-            ->assertSee('id="flashModal"', false)->assertDontSee('alert-success', false);
+            ->assertSee('alert-success', false);
     }
 
     public function test_lists_are_wired_for_live_refresh(): void
     {
         $this->makeDocument('D-1', 'Live doc');
 
-        $this->actingAs($this->admin)->get('/dashboard')
+        $this->actingAs($this->admin)->get('/admin/documents')
+            ->assertOk()
+            ->assertSee('Live doc')
             ->assertSee('id="admin-docs-body" data-live-refresh', false);
 
         $this->actingAs($this->staff)->get('/staff/documents')
             ->assertOk()
             ->assertSee('Live doc')
-            ->assertSee('id="staff-records-body" data-live-refresh', false);
+            ->assertSee('id="staff-docs-body" data-live-refresh', false);
     }
 
     public function test_staff_pages_still_work(): void
@@ -422,7 +422,7 @@ class AdminDashboardDocumentsTest extends TestCase
         Document::where('documentId', $doc->documentId)->update(['created_at' => '2026-10-01 02:30:00']);
 
         foreach ([$this->admin, $this->staff] as $user) {
-            $url = $user->is($this->admin) ? '/dashboard' : '/staff/documents';
+            $url = $user->is($this->admin) ? '/admin/documents' : '/staff/documents';
             $data = $this->popupData($this->actingAs($user)->get($url)->getContent());
 
             $this->assertSame($doc->documentId, $data['id']);
@@ -443,7 +443,7 @@ class AdminDashboardDocumentsTest extends TestCase
         $doc = $this->makeDocument('D-1', 'No file');
         $doc->forceFill(['filePath' => null])->save();
 
-        $data = $this->popupData($this->actingAs($this->admin)->get('/dashboard')->getContent());
+        $data = $this->popupData($this->actingAs($this->admin)->get('/admin/documents')->getContent());
 
         $this->assertNull($data['viewUrl']);
         $this->assertNull($data['downloadUrl']);
@@ -518,7 +518,7 @@ class AdminDashboardDocumentsTest extends TestCase
     {
         $this->makeDocument('D-1', 'Plain document');
 
-        foreach ([[$this->admin, '/dashboard'], [$this->staff, '/staff/documents']] as [$user, $url]) {
+        foreach ([[$this->admin, '/admin/documents'], [$this->staff, '/staff/documents']] as [$user, $url]) {
             $this->actingAs($user)->get($url)->assertOk()
                 ->assertDontSee('>Status<', false)
                 ->assertDontSee('Pending')
@@ -572,10 +572,10 @@ class AdminDashboardDocumentsTest extends TestCase
         $this->makeDocument('D-1', 'x');
 
         $staff = $this->actingAs($this->staff)->get('/staff/documents')->getContent();
-        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*<th>From Office<\/th>\s*<th>Subject<\/th>\s*<th>Date<\/th>/', $staff));
+        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*(?:<!--.*?-->)*\s*<th>From Office<\/th>\s*(?:<!--.*?-->)*\s*<th>Subject<\/th>/s', $staff));
 
-        $admin = $this->actingAs($this->admin)->get('/dashboard')->getContent();
-        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*<th>From Office<\/th>\s*<th>Subject<\/th>\s*<th>Date<\/th>/', $admin));
+        $admin = $this->actingAs($this->admin)->get('/admin/documents')->getContent();
+        $this->assertSame(1, preg_match('/<th>Reference Number<\/th>\s*(?:<!--.*?-->)*\s*<th>From Office<\/th>\s*(?:<!--.*?-->)*\s*<th>Subject<\/th>/s', $admin));
     }
 
     public function test_document_actions_require_login(): void

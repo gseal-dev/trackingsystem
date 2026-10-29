@@ -29,7 +29,6 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'username',
-        'email',
         'password',
         'firstName',
         'middleName',
@@ -39,6 +38,9 @@ class User extends Authenticatable
         'phoneNo',
         'is_locked',
         'locked_at',
+        'failed_login_attempts',
+        'locked_until',
+        'must_change_password',
     ];
 
     /**
@@ -59,13 +61,12 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
 
     /**
-     * Search name, username, email and role. Every word typed has to match somewhere, in any order.
+     * Search name, username and role. Every word typed has to match somewhere, in any order.
      */
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
@@ -77,7 +78,6 @@ class User extends Authenticatable
                 $q->where('username', 'like', $like)
                   ->orWhere('firstName', 'like', $like)
                   ->orWhere('lastName', 'like', $like)
-                  ->orWhere('email', 'like', $like)
                   ->orWhereHas('role', fn ($r) => $r->where('roleName', 'like', $like));
             });
         }

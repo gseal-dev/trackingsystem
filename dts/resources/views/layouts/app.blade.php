@@ -450,17 +450,36 @@
         align-items: center;
         gap: 0.85rem;
         margin-bottom: 1.25rem;
+        position: relative;
       }
+      /* Icon sits inside the left edge of the textbox instead of beside it */
       .input-group-custom .icon-wrapper {
-        width: 32px;
-        display: flex;
-        justify-content: center;
-        font-size: 1.6rem;
-        color: var(--brand-dark);
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: auto;
+        padding-left: 1rem;
+        font-size: 1.75rem;
+        color: rgb(100, 116, 139);
+        opacity: 1;
+        pointer-events: none;
+        z-index: 2;
       }
-      .form-control, .form-select, .input-pill {
+      .form-control, .form-select {
         border-radius: 50px !important;
         padding: 0.65rem 1.25rem;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        color: var(--brand-dark);
+        font-size: 0.925rem;
+        width: 100%;
+      }
+      /* Sharper inputs on the setup & login pages */
+      .input-pill {
+        border-radius: 8px !important;
+        padding: 0.65rem 1.25rem;
+        padding-left: 3rem !important;
         background-color: var(--input-bg);
         border: 1px solid var(--border-color);
         color: var(--brand-dark);
@@ -478,10 +497,21 @@
         box-shadow: none;
         outline: none;
       }
-      .btn-brand, .btn-custom-dark, .btn-login-submit {
+      .btn-brand, .btn-custom-dark {
         background-color: var(--btn-dark);
         color: #ffffff;
         border-radius: 50px;
+        padding: 0.65rem 1.5rem;
+        font-weight: 600;
+        border: none;
+        width: 100%;
+        transition: background-color 0.2s ease;
+      }
+      /* Sharper submit buttons on the setup & login pages */
+      .btn-login-submit {
+        background-color: var(--btn-dark);
+        color: #ffffff;
+        border-radius: 8px;
         padding: 0.65rem 1.5rem;
         font-weight: 600;
         border: none;
@@ -524,7 +554,7 @@
       body.theme-dark .btn-brand:hover,
       body.theme-dark .btn-custom-dark:hover,
       body.theme-dark .btn-login-submit:hover {
-        color: #0f172a;
+        color: #ffffff;
       }
       body.theme-dark .table-clean thead th {
         background-color: #111827;
@@ -746,8 +776,8 @@
     </style>
     @stack('head')
   </head>
-  <body class="{{ (request()->is('/') || request()->routeIs('login') || request()->routeIs('setup')) ? 'login-page' : '' }}">
-    @if(!request()->is('/') && !request()->routeIs('login') && !request()->routeIs('setup'))
+  <body class="{{ (request()->is('/') || request()->routeIs('login') || request()->routeIs('setup') || request()->routeIs('staff.first-password-change') || request()->routeIs('staff.first-password-change.update')) ? 'login-page' : '' }}">
+    @if(!request()->is('/') && !request()->routeIs('login') && !request()->routeIs('setup') && !request()->routeIs('staff.first-password-change') && !request()->routeIs('staff.first-password-change.update'))
     <header class="official-dpwh-header">
       <div class="header-inner">
         <div class="header-logo-left">
@@ -790,6 +820,10 @@
           <a href="{{ route('admin.userManagement.history') }}"
              class="sidebar-link {{ request()->routeIs('admin.userManagement.history') ? 'active' : '' }}" title="History">
             <i class="bi bi-clock-history"></i><span class="sidebar-label">History</span>
+          </a>
+          <a href="{{ route('admin.userManagement.securityHistory') }}"
+             class="sidebar-link {{ request()->routeIs('admin.userManagement.securityHistory') ? 'active' : '' }}" title="Security History">
+            <i class="bi bi-shield-check"></i><span class="sidebar-label">Security History</span>
           </a>
           
         @elseif($role === 'Staff')
@@ -837,7 +871,7 @@
     {{-- Session idle-timeout warning modal --}}
     <div class="modal fade" id="sessionIdleTimeoutModal" tabindex="-1" aria-labelledby="sessionIdleTimeoutModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
       <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 20px; background-color: #ffffff; color: #1e293b;">
+        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 8px; background-color: #ffffff; color: #1e293b;">
           <div class="modal-body p-4">
             <div class="mb-2" style="font-size: 2.75rem; line-height: 1; color: #ea3a14;">
               <i class="bi bi-clock"></i>
@@ -845,8 +879,8 @@
             <p id="sessionIdleTimeoutText" class="fw-semibold mb-3">Your session will expire due to inactivity.</p>
             <p id="sessionIdleCountdown" class="text-muted small mb-4">Logging off in <span id="sessionIdleSeconds">30</span> seconds...</p>
             <div class="d-flex justify-content-center gap-2">
-              <button type="button" class="btn rounded-pill px-4" style="background-color: #001253; color: #ffffff;" id="sessionIdleStaySignedIn">Stay signed in</button>
-              <button type="button" class="btn rounded-pill px-4" id="sessionIdleLogoutNow" style="background-color: #ea3a14; color: #ffffff; border: none;">Log out now</button>
+              <button type="button" class="btn px-4" style="border-radius: 4px; background-color: #001253; color: #ffffff;" id="sessionIdleStaySignedIn">Stay signed in</button>
+              <button type="button" class="btn px-4" style="border-radius: 4px; background-color: #ea3a14; color: #ffffff; border: none;" id="sessionIdleLogoutNow">Log out now</button>
             </div>
           </div>
         </div>
@@ -943,7 +977,7 @@
     @if($flashMessage)
     <div class="modal fade" id="flashModal" tabindex="-1" aria-labelledby="flashModalMessage" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 20px; background-color: #ffffff; color: #1e293b;">
+        <div class="modal-content border-0 shadow-lg text-center" style="border-radius: 8px; background-color: #ffffff; color: #1e293b;">
           <div class="modal-body p-4">
             <div class="mb-2" style="font-size: 2.75rem; line-height: 1; color: {{ $flashIsError ? '#dc2626' : '#16a34a' }};">
               <i class="bi {{ $flashIsError ? 'bi-x-circle-fill' : 'bi-check-circle-fill' }}"></i>
@@ -956,10 +990,10 @@
               @if(session('undo_delete_id') && \Illuminate\Support\Facades\Route::has('staff.document.undo'))
                 <form method="POST" action="{{ route('staff.document.undo', session('undo_delete_id')) }}" class="m-0">
                   @csrf
-                  <button type="submit" class="btn btn-outline-dark rounded-pill px-4">Undo</button>
+                  <button type="submit" class="btn btn-outline-dark px-4" style="border-radius: 4px;">Undo</button>
                 </form>
               @endif
-              <button type="button" class="btn rounded-pill px-4 text-white" style="background-color: #001253;" data-bs-dismiss="modal">OK</button>
+              <button type="button" class="btn px-4 text-white" style="border-radius: 4px; background-color: #001253;" data-bs-dismiss="modal">OK</button>
             </div>
           </div>
         </div>

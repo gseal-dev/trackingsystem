@@ -50,7 +50,6 @@ class StaffSettingsTest extends TestCase
             ->assertSee('Account Information')
             ->assertSee('Change Password')
             ->assertSee('maria')
-            ->assertSee('maria@example.com')
             ->assertSee('Engineering Division')
             ->assertSee('Update Password')
             ->assertSee('requested through the system administrator');
@@ -112,7 +111,6 @@ class StaffSettingsTest extends TestCase
 
         $fresh = $this->staff->fresh();
         $this->assertSame('maria', $fresh->username);
-        $this->assertSame('maria@example.com', $fresh->email);
         $this->assertNotSame($this->admin->roleID, $fresh->roleID);
     }
 

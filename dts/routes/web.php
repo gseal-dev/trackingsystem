@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\SetupController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Auth\FirstPasswordChangeController;
 use App\Http\Controllers\Staff\StaffDocumentController;
 use App\Http\Controllers\Staff\StaffSettingsController;
 
@@ -33,13 +34,21 @@ Route::middleware('guest')->group(function () {
     Route::get('/setup', [SetupController::class, 'showSetup'])->name('setup');
     Route::post('/setup', [SetupController::class, 'createAdmin'])->name('setup.store');
 });
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+// First password change page: reachable by any logged-in user, but exempt
+// from the ensure-password-changed middleware (it is the destination).
+Route::middleware(['auth'])->group(function () {
+    Route::get('/staff/first-password-change', [FirstPasswordChangeController::class, 'show'])->name('staff.first-password-change');
+    Route::post('/staff/first-password-change', [FirstPasswordChangeController::class, 'update'])->name('staff.first-password-change.update');
+});
+
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware(['auth', 'ensure-password-changed']);
 
 // User Management - Per Role
 Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::get('/admin/user-management/admins', [UserManagementController::class, 'admins'])->name('admin.userManagement.admins');
     Route::get('/admin/user-management/history', [UserManagementController::class, 'adminHistory'])->name('admin.userManagement.history');
     Route::get('/admin/user-management/history/export', [UserManagementController::class, 'exportHistory'])->name('admin.userManagement.history.export');
+    Route::get('/admin/user-management/security-history', [UserManagementController::class, 'securityHistory'])->name('admin.userManagement.securityHistory');
     Route::get('/admin/user-management/export', [UserManagementController::class, 'exportUsers'])->middleware('role:Admin')->name('admin.userManagement.export');
     Route::post('/admin/user-management/{type}/add', [UserManagementController::class, 'add'])
         ->where('type', 'admins')
@@ -57,9 +66,12 @@ Route::middleware(['auth', 'role:Admin'])->group(function () {
     Route::post('/admin/user-management/default-password', [UserManagementController::class, 'saveDefaultPassword'])->name('admin.userManagement.defaultPassword.save');
 });
 
-// Document routes (login required)
-Route::middleware(['auth'])->group(function () {
-    Route::get('/admin/user-search', [UserManagementController::class, 'searchUser'])->name('admin.userSearch');
+// Document routes (login required) — every page here requires the password
+// to have been changed first (except the first-password-change page above).
+Route::middleware(['auth', 'ensure-password-changed'])->group(function () {
+    Route::get('/admin/user-search', [UserManagementController::class, 'searchUser'])
+        ->middleware('role:Admin')
+        ->name('admin.userSearch');
 
     // Staff
     Route::get('/documents/{document}/download', [StaffDocumentController::class, 'download'])->name('document.download');
@@ -88,8 +100,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/documents/export', [DashboardController::class, 'exportDocuments'])->name('admin.documents.export');
     });
 
-    Route::post('/staff/documents/import', [StaffDocumentController::class, 'import'])->name('staff.document.import');
-    Route::get('/staff/documents/template', [StaffDocumentController::class, 'downloadTemplate'])->name('staff.document.template');
     Route::get('/staff/documents/export', [StaffDocumentController::class, 'exportDocuments'])->name('staff.documents.export');
-    Route::get('/staff/user-search', [UserManagementController::class, 'searchUser'])->name('staff.userSearch');
+    Route::get('/staff/user-search', [UserManagementController::class, 'searchUser'])
+        ->middleware('role:Admin')
+        ->name('staff.userSearch');
 });

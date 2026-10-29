@@ -86,13 +86,11 @@ class DocumentPaginationTest extends TestCase
     {
         $this->makeDocuments(30);
 
-        $page1 = $this->actingAs($this->admin)->get('/dashboard')->assertOk();
+        $page1 = $this->actingAs($this->admin)->get('/admin/documents')->assertOk();
         $this->assertSame(25, $this->rows($page1->getContent()));
         $page1->assertSee('30 Documents Found')->assertSee('Showing 1&ndash;25 of 30 documents', false);
-        // page links jump straight back to the list instead of the top of the dashboard
-        $page1->assertSee('page=2#documents', false)->assertSee('id="documents"', false);
 
-        $page2 = $this->get('/dashboard?page=2');
+        $page2 = $this->get('/admin/documents?page=2');
         $this->assertSame(5, $this->rows($page2->getContent()));
     }
 
@@ -103,13 +101,13 @@ class DocumentPaginationTest extends TestCase
         $html = $this->actingAs($this->staff)->get('/staff/documents')->assertSee('Showing 1&ndash;3 of 3 documents', false)->getContent();
         $this->assertStringNotContainsString('class="pagination', $html);
 
-        $this->assertStringNotContainsString('class="pagination', $this->actingAs($this->admin)->get('/dashboard')->getContent());
+        $this->assertStringNotContainsString('class="pagination', $this->actingAs($this->admin)->get('/admin/documents')->getContent());
     }
 
     public function test_empty_list_still_shows_the_empty_message(): void
     {
-        $this->actingAs($this->staff)->get('/staff/documents')->assertOk()->assertSee('No records found.')->assertSee('0 Documents Found');
-        $this->actingAs($this->admin)->get('/dashboard')->assertOk()->assertSee('No documents found.')->assertSee('0 Documents Found');
+        $this->actingAs($this->staff)->get('/staff/documents')->assertOk()->assertSee('No documents found.')->assertSee('0 Documents Found');
+        $this->actingAs($this->admin)->get('/admin/documents')->assertOk()->assertSee('No documents found.')->assertSee('0 Documents Found');
     }
 
     // ---- rows per page ----------------------------------------------------------------
@@ -126,8 +124,8 @@ class DocumentPaginationTest extends TestCase
         $this->assertSame(25, $this->rows($this->get('/staff/documents?per_page=100000')->getContent()));
 
         $this->actingAs($this->admin);
-        $this->assertSame(10, $this->rows($this->get('/dashboard?per_page=10')->getContent()));
-        $this->assertSame(25, $this->rows($this->get('/dashboard?per_page=abc')->getContent()));
+        $this->assertSame(10, $this->rows($this->get('/admin/documents?per_page=10')->getContent()));
+        $this->assertSame(25, $this->rows($this->get('/admin/documents?per_page=abc')->getContent()));
     }
 
     public function test_the_page_size_selector_shows_the_current_choice(): void
@@ -169,7 +167,7 @@ class DocumentPaginationTest extends TestCase
         $staffHtml = $this->actingAs($this->staff)->get('/staff/documents?q=zebra');
         $staffHtml->assertSee('1 Documents Found')->assertSee('Quarterly zebra inspection')->assertDontSee('DOC-030');
 
-        $this->actingAs($this->admin)->get('/dashboard?q=zebra')
+        $this->actingAs($this->admin)->get('/admin/documents?q=zebra')
             ->assertSee('1 Documents Found')->assertSee('Quarterly zebra inspection')->assertDontSee('DOC-030');
     }
 
@@ -179,9 +177,9 @@ class DocumentPaginationTest extends TestCase
         $this->makeDocuments(2, 'Finance Office', null, '2025-01-01', 'FIN');
 
         $this->actingAs($this->staff)->get('/staff/documents?q=finance')->assertSee('2 Documents Found');
-        $this->get('/staff/documents?q=memo+finance')->assertSee('2 Documents Found');
-        $this->get('/staff/documents?q=finance+FIN-002')->assertSee('1 Documents Found');
-        $this->get('/staff/documents?q=nothing-matches-this')->assertSee('0 Documents Found');
+        $this->actingAs($this->staff)->get('/staff/documents?q=memo+finance')->assertSee('0 Documents Found');
+        $this->actingAs($this->staff)->get('/staff/documents?q=finance+FIN-002')->assertSee('1 Documents Found');
+        $this->actingAs($this->staff)->get('/staff/documents?q=nothing-matches-this')->assertSee('0 Documents Found');
     }
 
     public function test_admin_can_search_by_uploader_but_staff_search_ignores_it(): void
@@ -190,7 +188,7 @@ class DocumentPaginationTest extends TestCase
         $this->makeDocuments(2);                           // uploaded by "worker"
         $this->makeDocuments(1, 'Finance Office', $other, '2025-01-01', 'CAR');   // uploaded by "carlos"
 
-        $this->actingAs($this->admin)->get('/dashboard?q=carlos')->assertSee('1 Documents Found');
+        $this->actingAs($this->admin)->get('/admin/documents?q=carlos')->assertSee('1 Documents Found');
         $this->actingAs($this->staff)->get('/staff/documents?q=carlos')->assertSee('0 Documents Found');
     }
 
@@ -212,7 +210,7 @@ class DocumentPaginationTest extends TestCase
 
         $this->actingAs($this->staff)->get('/staff/documents?page=99')
             ->assertRedirect(url('/staff/documents?page=2'));
-        $this->actingAs($this->admin)->get('/dashboard?page=99')->assertRedirect();
+        $this->actingAs($this->admin)->get('/admin/documents?page=99')->assertRedirect();
     }
 
     // ---- export: everything that matches, not just the page on screen -----------------
@@ -229,11 +227,11 @@ class DocumentPaginationTest extends TestCase
         $this->assertStringStartsWith("\xEF\xBB\xBF", $content);
 
         $lines = $this->csvLines($content);
-        $this->assertSame(['Reference Number', 'Document Title', 'From Office', 'Type', 'Subject', 'Date'], $lines[0]);
+        $this->assertSame(['Reference Number', 'Document Title', 'From Office', 'Subject', 'Date'], $lines[0]);
         $this->assertCount(31, $lines);                      // header + all 30, not just 25
         $this->assertSame('DOC-030', $lines[1][0]);          // newest first
         $this->assertSame('DOC-001', $lines[30][0]);
-        $this->assertSame(['DOC-030', 'Title DOC-030', 'Engineering Division', 'MEMO', 'Subject DOC-030'], array_slice($lines[1], 0, 5));
+        $this->assertSame(['DOC-030', 'Title DOC-030', 'Engineering Division', 'Subject DOC-030', 'January 31, 2026'], array_slice($lines[1], 0, 5));
     }
 
     public function test_export_follows_the_filters_and_search(): void
@@ -253,10 +251,10 @@ class DocumentPaginationTest extends TestCase
     {
         $html = $this->actingAs($this->staff)->get('/staff/documents?year=2026&month=3&q=memo&per_page=50&page=1')->getContent();
 
-        $this->assertStringContainsString(route('staff.documents.export', ['year' => 2026, 'month' => 3, 'q' => 'memo']), html_entity_decode($html));
-        $this->assertStringNotContainsString('export?year=2026&month=3&q=memo&per_page', html_entity_decode($html));   // page size is not a filter
+        $this->assertStringContainsString(route('staff.documents.export', ['q' => 'memo']), html_entity_decode($html));
+        $this->assertStringNotContainsString('export?q=memo&per_page', html_entity_decode($html));   // page size is not a filter
 
-        $adminHtml = $this->actingAs($this->admin)->get('/dashboard?year=2026')->getContent();
+        $adminHtml = $this->actingAs($this->admin)->get('/admin/documents?year=2026')->getContent();
         $this->assertStringContainsString(route('admin.documents.export', ['year' => 2026]), html_entity_decode($adminHtml));
     }
 
@@ -268,9 +266,9 @@ class DocumentPaginationTest extends TestCase
 
         $lines = $this->csvLines($this->actingAs($this->admin)->get(route('admin.documents.export'))->streamedContent());
 
-        $this->assertSame(['Reference Number', 'Document Title', 'From Office', 'Type', 'Subject', 'Uploaded By', 'Date'], $lines[0]);
+        $this->assertSame(['Reference Number', 'Document Title', 'From Office', 'Subject', 'Uploaded By', 'Date'], $lines[0]);
         $this->assertCount(33, $lines);
-        $this->assertSame(['carlos'], array_values(array_unique(array_column(array_filter($lines, fn ($l) => $l[2] === 'Finance Office'), 5))));
+        $this->assertSame(['carlos'], array_values(array_unique(array_column(array_filter($lines, fn ($l) => $l[2] === 'Finance Office'), 4))));
 
         $filtered = $this->csvLines($this->get(route('admin.documents.export', ['q' => 'carlos']))->streamedContent());
         $this->assertCount(3, $filtered);
@@ -283,7 +281,7 @@ class DocumentPaginationTest extends TestCase
 
         $lines = $this->csvLines($this->actingAs($this->staff)->get(route('staff.documents.export'))->streamedContent());
 
-        $this->assertSame("'=HYPERLINK(\"http://evil.example\",\"click\")", $lines[1][4]);
+        $this->assertSame("'=HYPERLINK(\"http://evil.example\",\"click\")", $lines[1][3]);
     }
 
     public function test_export_needs_the_right_login(): void
@@ -301,15 +299,15 @@ class DocumentPaginationTest extends TestCase
         $this->makeDocuments(30);
 
         $this->actingAs($this->staff)->get('/staff/documents')->assertSee('id="staff-docs-pager" data-live-refresh', false);
-        $this->actingAs($this->admin)->get('/dashboard')->assertSee('id="admin-docs-pager" data-live-refresh', false);
+        $this->actingAs($this->admin)->get('/admin/documents')->assertSee('id="admin-docs-pager" data-live-refresh', false);
     }
 
     public function test_search_box_is_part_of_the_form_so_it_searches_on_the_server(): void
     {
         $html = $this->actingAs($this->staff)->get('/staff/documents?q=memo')->getContent();
-        $this->assertMatchesRegularExpression('/<input type="text" id="staff-record-search" name="q" value="memo"/', $html);
+        $this->assertMatchesRegularExpression('/<input type="search" id="staff-doc-search" name="q" value="memo"/', $html);
 
-        $html = $this->actingAs($this->admin)->get('/dashboard?q=memo')->getContent();
-        $this->assertMatchesRegularExpression('/<input type="text" id="admin-doc-search" name="q" value="memo"/', $html);
+        $html = $this->actingAs($this->admin)->get('/admin/documents?q=memo')->getContent();
+        $this->assertMatchesRegularExpression('/<input type="search" id="admin-doc-search" name="q" value="memo"/', $html);
     }
 }

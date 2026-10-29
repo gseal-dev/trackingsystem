@@ -118,7 +118,7 @@
 
         <div class="set-note">
           <i class="bi bi-info-circle-fill me-2"></i><strong>Note:</strong>
-          Username, name, email, department and role changes must be requested through the system administrator.
+          Username, name, department and role changes must be requested through the system administrator.
         </div>
       </div>
 

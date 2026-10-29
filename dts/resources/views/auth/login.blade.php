@@ -33,7 +33,9 @@
       </div>
 
       @if($errors->any())
-        <div class="alert alert-danger text-start py-2 px-3 mb-4 rounded-4" style="font-size: 0.85rem;">
+        <div class="alert alert-danger text-start py-2 px-3 mb-4 rounded-4" style="font-size: 0.85rem;"
+             id="loginError"
+             data-retry-after="{{ session('login_retry_after') ? session('login_retry_after')->timestamp : '' }}">
           @foreach($errors->all() as $error)
             <div>{{ $error }}</div>
           @endforeach
@@ -87,7 +89,7 @@
 
         {{-- Log in Submit Button --}}
         <div class="mt-4">
-          <button type="submit" class="btn-login-submit py-3 fw-bold shadow-sm">Log in</button>
+          <button type="submit" id="loginSubmit" class="btn-login-submit py-3 fw-bold shadow-sm">Log in</button>
         </div>
       </form>
     </div>
@@ -105,10 +107,53 @@
     togglePassword.addEventListener('click', function () {
       const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
       password.setAttribute('type', type);
-      
+
       toggleIcon.classList.toggle('bi-eye');
       toggleIcon.classList.toggle('bi-eye-slash');
     });
+  });
+</script>
+@endpush
+
+@push('scripts')
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const error = document.getElementById('loginError');
+    const submit = document.getElementById('loginSubmit');
+    const retryAfter = error ? error.dataset.retryAfter : '';
+
+    if (!retryAfter) {
+      return;
+    }
+
+    const deadline = parseInt(retryAfter, 10) * 1000;
+    const timer = setInterval(function () {
+      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+
+      if (error) {
+        error.querySelectorAll('div').forEach(function (div) {
+          div.textContent = 'Too many login attempts. Please try again in ' + remaining + ' second' + (remaining === 1 ? '' : 's') + '.';
+        });
+      }
+
+      if (submit) {
+        submit.disabled = remaining > 0;
+        submit.textContent = remaining > 0
+          ? 'Too many attempts (' + remaining + 's)'
+          : 'Log in';
+      }
+
+      if (remaining <= 0) {
+        clearInterval(timer);
+        if (error) {
+          error.remove();
+        }
+        if (submit) {
+          submit.disabled = false;
+          submit.textContent = 'Log in';
+        }
+      }
+    }, 1000);
   });
 </script>
 @endpush
