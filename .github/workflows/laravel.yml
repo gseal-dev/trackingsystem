@@ -29,27 +29,23 @@ jobs:
 
       - name: Get composer cache directory
         id: composer-cache
-        working-directory: dts
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache composer dependencies
         uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ matrix.php }}-${{ hashFiles('dts/composer.lock') }}
+          key: ${{ runner.os }}-composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
           restore-keys: |
             ${{ runner.os }}-composer-${{ matrix.php }}-
 
       - name: Install composer dependencies
-        working-directory: dts
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Setup environment
-        working-directory: dts
         run: |
           cp .env.example .env
           php artisan key:generate --ansi
 
       - name: Run test suite
-        working-directory: dts
         run: vendor/bin/phpunit
