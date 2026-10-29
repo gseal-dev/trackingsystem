@@ -22,7 +22,6 @@ return new class extends Migration
             
             // Foreign key constraints
             $table->foreign('ownerID')->references('userID')->on('users');
-            $table->foreign('currentStatus')->references('statusID')->on('document_statuses');
             $table->foreign('currentDepartmentID')->references('depID')->on('departments');
         });
     }

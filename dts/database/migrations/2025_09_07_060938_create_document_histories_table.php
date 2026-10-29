@@ -21,7 +21,6 @@ return new class extends Migration
             $table->foreign('documentId')->references('documentId')->on('documents')->onDelete('cascade');
             $table->foreign('prevDepartmentID')->references('depID')->on('departments');
             $table->foreign('currentDepartmentID')->references('depID')->on('departments');
-            $table->foreign('statusID')->references('statusID')->on('document_statuses');
             $table->foreign('userID')->references('userID')->on('users');
         });
     }
