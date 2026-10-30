@@ -1,0 +1,107 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Models\User;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\SetupController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Auth\FirstPasswordChangeController;
+use App\Http\Controllers\Staff\StaffDocumentController;
+use App\Http\Controllers\Staff\StaffSettingsController;
+
+Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+
+    // On a fresh deploy with no accounts yet, the admin must set up
+    // their first account via /setup instead of logging in.
+    if (User::count() === 0) {
+        return redirect()->route('setup');
+    }
+
+    return view('auth.login');
+});
+
+// Auth & Dashboard
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// One-time setup: create the first admin account on a fresh deploy.
+Route::middleware('guest')->group(function () {
+    Route::get('/setup', [SetupController::class, 'showSetup'])->name('setup');
+    Route::post('/setup', [SetupController::class, 'createAdmin'])->name('setup.store');
+});
+// First password change page: reachable by any logged-in user, but exempt
+// from the ensure-password-changed middleware (it is the destination).
+Route::middleware(['auth'])->group(function () {
+    Route::get('/staff/first-password-change', [FirstPasswordChangeController::class, 'show'])->name('staff.first-password-change');
+    Route::post('/staff/first-password-change', [FirstPasswordChangeController::class, 'update'])->name('staff.first-password-change.update');
+});
+
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware(['auth', 'ensure-password-changed']);
+
+// User Management - Per Role
+Route::middleware(['auth', 'role:Admin'])->group(function () {
+    Route::get('/admin/user-management/admins', [UserManagementController::class, 'admins'])->name('admin.userManagement.admins');
+    Route::get('/admin/user-management/history', [UserManagementController::class, 'adminHistory'])->name('admin.userManagement.history');
+    Route::get('/admin/user-management/history/export', [UserManagementController::class, 'exportHistory'])->name('admin.userManagement.history.export');
+    Route::get('/admin/user-management/security-history', [UserManagementController::class, 'securityHistory'])->name('admin.userManagement.securityHistory');
+    Route::get('/admin/user-management/export', [UserManagementController::class, 'exportUsers'])->middleware('role:Admin')->name('admin.userManagement.export');
+    Route::post('/admin/user-management/{type}/add', [UserManagementController::class, 'add'])
+        ->where('type', 'admins')
+        ->name('admin.userManagement.add');
+    Route::post('/admin/user-management/{type}/edit/{user}', [UserManagementController::class, 'edit'])->name('admin.userManagement.edit');
+    Route::post('/admin/user-management/{type}/delete/{user}', [UserManagementController::class, 'delete'])->name('admin.userManagement.delete');
+    Route::post('/admin/user-management/{type}/lock/{user}', [UserManagementController::class, 'lock'])->name('admin.userManagement.lock');
+    Route::post('/admin/user-management/{type}/unlock/{user}', [UserManagementController::class, 'unlock'])->name('admin.userManagement.unlock');
+    Route::post('/admin/user-management/{type}/reset-password/{user}', [UserManagementController::class, 'resetPassword'])->name('admin.userManagement.resetPassword');
+
+    // Documents list (admin-only page)
+    Route::get('/admin/documents', [DashboardController::class, 'documents'])->name('admin.documents');
+
+    // Save the default password applied to newly created users
+    Route::post('/admin/user-management/default-password', [UserManagementController::class, 'saveDefaultPassword'])->name('admin.userManagement.defaultPassword.save');
+});
+
+// Document routes (login required) — every page here requires the password
+// to have been changed first (except the first-password-change page above).
+Route::middleware(['auth', 'ensure-password-changed'])->group(function () {
+    Route::get('/admin/user-search', [UserManagementController::class, 'searchUser'])
+        ->middleware('role:Admin')
+        ->name('admin.userSearch');
+
+    // Staff
+    Route::get('/documents/{document}/download', [StaffDocumentController::class, 'download'])->name('document.download');
+    Route::get('/staff/history', [StaffDocumentController::class, 'history'])->name('staff.history');
+    Route::get('/staff/history/export', [StaffDocumentController::class, 'exportHistory'])->name('staff.history.export');
+    Route::get('/staff/documents', [StaffDocumentController::class, 'documents'])->name('staff.documents');
+    Route::get('/staff/documents/create', [StaffDocumentController::class, 'create'])->name('staff.document.create');
+    Route::post('/staff/documents/create', [StaffDocumentController::class, 'store'])->name('staff.document.store');
+
+    // Staff can edit documents (in a popup) but not delete them
+    Route::middleware('role:Staff')->group(function () {
+        Route::post('/staff/documents/{document}/edit', [StaffDocumentController::class, 'update'])->name('staff.document.update');
+
+        // Replace just the attached file (upload a new version) without editing metadata.
+        Route::post('/staff/documents/{document}/upload-version', [StaffDocumentController::class, 'uploadVersion'])->name('staff.document.uploadVersion');
+
+        // Staff settings: staff can change their own password (nothing else)
+        Route::get('/staff/settings', [StaffSettingsController::class, 'show'])->name('staff.settings');
+        Route::post('/staff/settings/password', [StaffSettingsController::class, 'updatePassword'])->name('staff.settings.password');
+    });
+
+    // Admins can delete documents (and undo a delete) but not edit them
+    Route::middleware('role:Admin')->group(function () {
+        Route::delete('/staff/documents/{document}', [StaffDocumentController::class, 'delete'])->name('staff.document.delete');
+        Route::post('/staff/documents/{id}/undo', [StaffDocumentController::class, 'undoDelete'])->name('staff.document.undo');
+        Route::get('/admin/documents/export', [DashboardController::class, 'exportDocuments'])->name('admin.documents.export');
+    });
+
+    Route::get('/staff/documents/export', [StaffDocumentController::class, 'exportDocuments'])->name('staff.documents.export');
+    Route::get('/staff/user-search', [UserManagementController::class, 'searchUser'])
+        ->middleware('role:Admin')
+        ->name('staff.userSearch');
+});

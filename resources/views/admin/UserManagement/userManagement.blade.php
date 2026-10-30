@@ -1,0 +1,22 @@
+@extends('layouts.app')
+@section('title', 'User Management')
+@section('content')
+<div class="page-container">
+  <div class="container" style="max-width: 1100px;">
+    <div class="page-header mb-4">
+      <h1 class="h3 mb-1">User Management</h1>
+      <div class="text-muted">Select a user type to manage:</div>
+    </div>
+    <div class="card-grid mb-4">
+      <div class="dash-card">
+        <div class="dash-icon"><i class="bi bi-person-badge"></i></div>
+        <div class="dash-title">Admins</div>
+        <div class="dash-subtitle">Manage admin users</div>
+        <div class="d-flex gap-2 mt-3">
+          <a href="{{ route('admin.userManagement.admins') }}" class="btn btn-success"><i class="bi bi-person-plus"></i> Add</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+@endsection

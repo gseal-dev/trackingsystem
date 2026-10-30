@@ -1,0 +1,25 @@
+# Keep secrets, local data and development leftovers OUT of the image
+.git
+.gitignore
+.gitattributes
+.editorconfig
+.env
+.env.*
+tracking.env
+tracking.env.example
+data
+node_modules
+vendor
+tests
+image
+.phpunit.cache
+.phpunit.result.cache
+public/hot
+public/storage
+storage/**
+bootstrap/cache/*.php
+Dockerfile
+docker-compose.yml
+.dockerignore
+*.md
+*.MD
