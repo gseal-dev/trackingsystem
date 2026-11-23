@@ -6,7 +6,12 @@ use App\Models\Department;
 use App\Models\Document;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Http\RedirectResponse;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -216,6 +221,69 @@ class AdminDashboardDocumentsTest extends TestCase
     public function test_upload_page_needs_login(): void
     {
         $this->get(route('staff.document.create'))->assertRedirect('/login');
+    }
+
+    // PostTooLargeException is thrown by middleware based on PHP's post_max_size,
+    // which PHPUnit cannot trigger with a real oversized POST, so we exercise the
+    // registered exception renderer directly.
+    public function test_oversized_upload_renders_a_redirect_back_with_a_file_error(): void
+    {
+        $handler = app(Handler::class);
+
+        $session = app('session.store');
+        $session->start();
+        $session->put('_previous.url', route('staff.document.create'));
+
+        $request = Request::create(route('staff.document.create'), 'POST');
+        $request->setLaravelSession($session);
+
+        $response = $handler->render($request, new PostTooLargeException());
+
+        $this->assertInstanceOf(RedirectResponse::class, $response);
+        $this->assertSame(route('staff.document.create'), $response->getTargetUrl());
+
+        $this->assertTrue($session->has('error'), 'A popup error flash should be set.');
+        $this->assertTrue($session->has('errors'), 'An error bag should be flashed.');
+        $this->assertTrue(
+            $session->get('errors')->getBag('default')->has('file'),
+            'The error bag should flag the file field.'
+        );
+        $this->assertStringContainsString('too large', $session->get('error'));
+        $this->assertNotNull(
+            $response->headers->getCookies()[0] ?? null,
+            'A session cookie should be attached to the redirect response (prevents 419 Page Expired).'
+        );
+    }
+
+    public function test_419_page_expired_renders_a_redirect_back_with_a_file_error(): void
+    {
+        $handler = app(Handler::class);
+
+        $session = app('session.store');
+        $session->start();
+        $session->put('_previous.url', route('staff.document.create'));
+
+        $request = Request::create(route('staff.document.create'), 'POST');
+        $request->setLaravelSession($session);
+
+        // TokenMismatchException is converted to HttpException(419) by
+        // Handler::prepareException(), so 419 must be caught via HttpException.
+        $response = $handler->render($request, new HttpException(419, 'Token mismatch.'));
+
+        $this->assertInstanceOf(RedirectResponse::class, $response);
+        $this->assertSame(route('staff.document.create'), $response->getTargetUrl());
+
+        $this->assertTrue($session->has('error'), 'A popup error flash should be set.');
+        $this->assertTrue($session->has('errors'), 'An error bag should be flashed.');
+        $this->assertTrue(
+            $session->get('errors')->getBag('default')->has('file'),
+            'The error bag should flag the file field.'
+        );
+        $this->assertStringContainsString('too large', $session->get('error'));
+        $this->assertNotNull(
+            $response->headers->getCookies()[0] ?? null,
+            'A session cookie should be attached to the redirect response (prevents 419 Page Expired).'
+        );
     }
 
     public function test_staff_can_edit_a_document_in_a_popup(): void
